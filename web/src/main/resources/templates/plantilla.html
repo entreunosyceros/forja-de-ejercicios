@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" th:fragment="plantilla(contenido)">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"/>
+    <title th:text="${tituloPagina != null ? tituloPagina + ' — Forja de ejercicios' : 'Forja de ejercicios'}">Forja de ejercicios</title>
+    <link rel="icon" type="image/png" th:href="@{/img/forja-de-examenes.png}"/>
+    <link rel="stylesheet" th:href="@{/css/aplicacion.css(v=2)}"/>
+</head>
+<body>
+<header class="site-header">
+    <div class="container header-inner">
+        <a class="brand" th:href="@{/}">
+            <img class="brand-logo" th:src="@{/img/forja-de-examenes.png}"
+                 src="/img/forja-de-examenes.png"
+                 alt="Forja de ejercicios — luego es tarde para estudiar" width="52" height="52"/>
+            <span class="brand-text">luego es tarde<span class="muted">… para estudiar</span></span>
+        </a>
+        <nav class="nav">
+            <a th:href="@{/}">Inicio</a>
+            <a th:href="@{/ejercicio/nuevo}">Ejercicio aleatorio</a>
+        </nav>
+        <div class="conmutador-tema" role="group" aria-label="Tema de la interfaz">
+            <button type="button" class="btn-tema" data-tema="claro" aria-pressed="false">Claro</button>
+            <button type="button" class="btn-tema" data-tema="oscuro" aria-pressed="false">Oscuro</button>
+        </div>
+    </div>
+</header>
+
+<main class="container main-content">
+    <div th:replace="${contenido}">Contenido</div>
+</main>
+
+<footer class="site-footer">
+    <div class="container">
+        <p>La máquina de ejercicios · Forja de ejercicios · práctica en Docker</p>
+    </div>
+</footer>
+
+<script th:src="@{/js/tema.js}"></script>
+<script th:src="@{/vendor/chart.umd.min.js}"></script>
+<script th:src="@{/js/progreso.js(v=1)}"></script>
+<script th:src="@{/js/practica.js(v=1)}"></script>
+</body>
+</html>

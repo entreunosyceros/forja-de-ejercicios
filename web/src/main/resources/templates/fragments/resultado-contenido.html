@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="contenido" id="zona-practica"
+     th:attr="data-modulo=${escenario.modulo},data-ejercicio-id=${escenario.id}">
+    <div class="exam-header">
+        <span class="badge" th:text="${escenario.modulo}">modulo</span>
+        <h1 th:text="${escenario.titulo}">Título</h1>
+    </div>
+
+    <p class="mensaje-motivacion card" id="mensaje-motivacion" hidden></p>
+
+    <div class="card score-card" th:classappend="${resultado.aprobado} ? ' score-pass' : ' score-fail'"
+         th:attr="data-nota=${resultado.nota},data-aprobado=${resultado.aprobado}">
+        <p class="score-label">Nota</p>
+        <p class="score-value"><span th:text="${resultado.nota}">0</span> / 10</p>
+        <p class="score-status" th:text="${resultado.aprobado} ? 'APROBADO' : 'SUSPENSO'">—</p>
+        <p class="retroalimentacion" th:text="${resultado.retroalimentacion}">—</p>
+        <p class="peso" th:text="'Puntos: ' + ${resultado.pesoObtenido} + '/' + ${resultado.pesoTotal}">—</p>
+        <p class="tiempo-resultado" th:if="${tiempoSegundos != null}"
+           th:text="'Tiempo: ' + ${tiempoSegundos} + ' s'">—</p>
+    </div>
+
+    <article class="card">
+        <h2>Criterios</h2>
+        <ul class="criteria-list criteria-detalle">
+            <li th:each="d : ${resultado.detalles}"
+                th:classappend="${d.cumplido} ? ' criterion-ok' : ' criterion-fail'">
+                <span class="criterion-icon" th:text="${d.cumplido} ? '✅' : '❌'">?</span>
+                <div class="criterion-body">
+                    <code th:text="${d.patron}">patron</code>
+                    <p class="criterion-esperado" th:if="${d.esperado != null}">
+                        <strong>Esperado:</strong> <span th:text="${d.esperado}">—</span>
+                    </p>
+                    <p class="criterion-pista" th:if="${!d.cumplido and d.pista != null}">
+                        <strong>Pista:</strong> <span th:text="${d.pista}">—</span>
+                    </p>
+                </div>
+                <span class="peso-badge" th:text="'+' + ${d.peso}">+1</span>
+            </li>
+        </ul>
+    </article>
+
+    <article class="card">
+        <h2>Tu respuesta</h2>
+        <pre class="respuesta-alumno" th:text="${resultado.respuestaAlumno}">...</pre>
+    </article>
+
+    <details class="card collapsible" th:if="${modoProfesor}">
+        <summary>Solución de referencia (profesor)</summary>
+        <pre th:text="${resultado.solucionReferencia}">...</pre>
+    </details>
+
+    <div class="form-actions">
+        <button type="button" class="btn btn-primary btn-otro-ejercicio"
+                th:attr="data-modulo=${escenario.modulo}">Práctica infinita — otro ejercicio</button>
+        <a class="btn btn-secondary" th:href="@{/ejercicio/{id}/pdf(id=${escenario.id})}">Descargar PDF</a>
+        <a class="btn btn-ghost" th:href="@{/ejercicio/{id}/json(id=${escenario.id})}">Exportar JSON</a>
+        <a class="btn btn-ghost" th:href="@{/}">Inicio</a>
+    </div>
+</div>
+</body>
+</html>

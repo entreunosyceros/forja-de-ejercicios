@@ -1,0 +1,19 @@
+FROM ubuntu:22.04
+# Desactivar interacción con el usuario
+ENV DEBIAN_FRONTEND=noninteractive
+# Instalar paquetes necesarios
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    bash curl git iproute2 net-tools sudo vim \
+    mariadb-client python3 \
+    && rm -rf /var/lib/apt/lists/*
+# Crear usuario alumno
+RUN useradd -m -s /bin/bash alumno \
+    && echo "alumno:practica" | chpasswd \
+    && usermod -aG sudo alumno \
+    && echo "alumno ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+WORKDIR /home/alumno/practica
+USER alumno
+
+# Comando por defecto
+CMD ["/bin/bash"]

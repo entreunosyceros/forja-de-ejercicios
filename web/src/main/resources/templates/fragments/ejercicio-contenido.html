@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="contenido" id="zona-practica"
+     th:attr="data-modulo=${escenario.modulo},data-ejercicio-id=${escenario.id},data-dificultad=${escenario.dificultad}">
+    <div class="exam-header">
+        <span class="badge" th:text="${escenario.modulo}">modulo</span>
+        <span class="badge badge-nivel" th:if="${escenario.dificultad != null}"
+              th:text="'Nivel ' + ${escenario.dificultad}">Nivel</span>
+        <h1 th:text="${escenario.titulo}">Título</h1>
+        <p class="exam-id">ID: <code th:text="${escenario.id}">abc</code></p>
+    </div>
+
+    <div class="barra-practica card">
+        <span class="temporizador" id="temporizador" aria-live="polite">⏱ 00:00</span>
+        <span class="hint">Tiempo orientativo (sin penalización)</span>
+    </div>
+
+    <article class="card enunciado-card">
+        <h2>Enunciado</h2>
+        <pre class="enunciado" th:text="${escenario.enunciado}">...</pre>
+    </article>
+
+    <article class="card" th:if="${modoProfesor}">
+        <h2>Solución (modo profesor)</h2>
+        <pre class="solucion-profesor" th:text="${escenario.solucionReferencia}">...</pre>
+    </article>
+
+    <article class="card">
+        <h2>Tu solución</h2>
+        <p class="hint">Escribe los comandos o el código que usarías en la práctica.</p>
+        <form id="formulario-ejercicio" class="formulario-ejercicio"
+              th:attr="data-action-evaluar=@{/ejercicio/{id}/evaluar-ajax(id=${escenario.id})}">
+            <textarea name="respuesta" id="textarea-respuesta" rows="14" required
+                      placeholder="Tu respuesta..."></textarea>
+            <input type="hidden" name="tiempoSegundos" id="input-tiempo-segundos" value="0"/>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Enviar y corregir</button>
+                <button type="button" class="btn btn-secondary btn-otro-ejercicio"
+                        th:attr="data-modulo=${escenario.modulo}">Otro ejercicio (mismo módulo)</button>
+                <a class="btn btn-ghost" th:href="@{/ejercicio/{id}/pdf(id=${escenario.id})}">PDF enunciado</a>
+                <a class="btn btn-ghost" th:href="@{/ejercicio/{id}/json(id=${escenario.id})}">JSON (profesor)</a>
+            </div>
+        </form>
+    </article>
+</div>
+</body>
+</html>

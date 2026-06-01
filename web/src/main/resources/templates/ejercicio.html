@@ -1,0 +1,7 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{plantilla :: plantilla(~{::section})}">
+<section th:with="tituloPagina=${escenario.titulo}">
+    <div th:replace="~{fragments/ejercicio-contenido :: contenido}"></div>
+</section>
+</html>

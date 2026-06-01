@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{plantilla :: plantilla(~{::section})}">
+<section>
+    <div class="hero hero-inicio">
+        <div class="hero-logo-banda">
+            <img class="hero-logo" th:src="@{/img/forja-de-examenes.png}"
+                 src="/img/forja-de-examenes.png"
+                 alt="Forja de ejercicios — luego es tarde para estudiar"
+                 width="640" height="320"/>
+        </div>
+        <h1 class="hero-titulo" th:text="${titulo}">luego es tarde... para estudiar</h1>
+        <p class="lead">
+            Genera ejercicios prácticos aleatorios, practica en Docker y obtén corrección automática al instante.
+            Incluye escenarios del certificado de profesionalidad en POO y bases de datos.
+        </p>
+    </div>
+
+    <div class="card-grid">
+        <div class="card">
+            <h2>Ejercicio aleatorio</h2>
+            <p>Un problema de cualquier módulo, distinto para cada alumno.</p>
+            <div class="module-buttons">
+                <a class="btn btn-primary" th:href="@{/ejercicio/nuevo}">Empezar ahora</a>
+                <a class="btn btn-secondary" id="btn-ejercicio-sorpresa" th:href="@{/ejercicio/nuevo(sorpresa=true)}">🎲 Ejercicio sorpresa</a>
+            </div>
+            <p class="hint">La dificultad sube sola: nivel 1 al principio, nivel 3 tras varios aprobados (sin red, solo en tu navegador).</p>
+        </div>
+
+        <div class="card card-wide">
+            <h2>Certificado: Programación OO (Java)</h2>
+            <p class="hint">Herencia, interfaces, excepciones, colecciones, encapsulamiento (variante aleatoria).</p>
+            <div class="module-buttons">
+                <a class="btn btn-secondary" th:href="@{/ejercicio/nuevo(modulo='poo')}">POO Java</a>
+            </div>
+        </div>
+
+        <div class="card card-wide">
+            <h2>Certificado: Bases de datos</h2>
+            <p class="hint">SQL, modelado, transacciones, JDBC y rendimiento.</p>
+            <div class="module-buttons">
+                <a class="btn btn-secondary" th:href="@{/ejercicio/nuevo(modulo='bd_sql')}">SQL / JOIN</a>
+                <a class="btn btn-secondary" th:href="@{/ejercicio/nuevo(modulo='bd_modelo')}">Modelado / 3FN</a>
+                <a class="btn btn-secondary" th:href="@{/ejercicio/nuevo(modulo='bd_transacciones')}">Transacciones</a>
+                <a class="btn btn-secondary" th:href="@{/ejercicio/nuevo(modulo='bd_jdbc')}">JDBC</a>
+                <a class="btn btn-secondary" th:href="@{/ejercicio/nuevo(modulo='bd')}">Rendimiento / índices</a>
+            </div>
+        </div>
+
+        <div class="card card-wide">
+            <h2>Sistemas y herramientas</h2>
+            <div class="module-buttons">
+                <a class="btn btn-secondary" th:href="@{/ejercicio/nuevo(modulo='redes')}">Redes</a>
+                <a class="btn btn-secondary" th:href="@{/ejercicio/nuevo(modulo='sistemas')}">Sistemas</a>
+                <a class="btn btn-secondary" th:href="@{/ejercicio/nuevo(modulo='docker')}">Docker</a>
+                <a class="btn btn-secondary" th:href="@{/ejercicio/nuevo(modulo='git')}">Git</a>
+            </div>
+        </div>
+
+        <div class="card card-accent">
+            <h2>Entorno Docker</h2>
+            <p>Levanta el contenedor de práctica con herramientas reales.</p>
+            <pre class="code-block">cd examenforge
+docker compose up -d practica
+docker exec -it forjaexamenes-practica bash</pre>
+        </div>
+    </div>
+
+    <div class="card-grid panel-superacion">
+        <div class="card card-wide">
+            <h2>Tu progreso (local, sin red)</h2>
+            <p class="hint">Historial, récords y medallas se guardan solo en este navegador.</p>
+            <label class="filtro-grafico-label" for="filtro-grafico-modulo">Gráfico por módulo:</label>
+            <select id="filtro-grafico-modulo" class="filtro-grafico">
+                <option value="">Todos (últimos 5)</option>
+                <option value="poo">POO</option>
+                <option value="bd_sql">bd_sql</option>
+                <option value="bd_modelo">bd_modelo</option>
+                <option value="bd_jdbc">bd_jdbc</option>
+                <option value="bd">bd</option>
+                <option value="redes">redes</option>
+                <option value="docker">docker</option>
+            </select>
+            <canvas id="grafico-progreso" class="grafico-progreso" height="120"></canvas>
+        </div>
+        <div class="card">
+            <h2>Últimos ejercicios</h2>
+            <ul id="lista-historial" class="lista-historial"></ul>
+        </div>
+        <div class="card">
+            <h2>Tu ranking personal</h2>
+            <p class="hint">Media de notas por módulo (solo tú, sin comparar con otros).</p>
+            <ul id="lista-ranking" class="lista-ranking"></ul>
+        </div>
+        <div class="card">
+            <h2>Medallas</h2>
+            <div id="lista-medallas" class="lista-medallas"></div>
+        </div>
+    </div>
+
+    <table class="compare-table">
+        <thead>
+        <tr><th>Antes</th><th>Con Forja de ejercicios</th></tr>
+        </thead>
+        <tbody>
+        <tr><td>Ejercicio en papel</td><td>Evaluación automática en Docker</td></tr>
+        <tr><td>Corregir 20 a mano</td><td>Corrección instantánea</td></tr>
+        <tr><td>Memorizar</td><td>Practicar en entorno real</td></tr>
+        </tbody>
+    </table>
+</section>
+</html>

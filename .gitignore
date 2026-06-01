@@ -1,0 +1,13 @@
+web/target/
+target/
+*.class
+*.jar
+examenes/*.pdf
+!examenes/.gitkeep
+.idea/
+*.iml
+.DS_Store
+__pycache__/
+*.pyc
+.env
+

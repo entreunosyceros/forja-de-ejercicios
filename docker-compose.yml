@@ -1,0 +1,36 @@
+services:
+  practica:
+    build:
+      context: .
+      dockerfile: Dockerfile.practica
+    container_name: forjaexamenes-practica
+    hostname: practica
+    volumes:
+      - ./datos-practica:/home/alumno/practica
+    stdin_open: true
+    tty: true
+    networks:
+      - forjaexamenes-red
+      
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: forjaexamenes-web
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./examenes:/app/examenes
+      - ./generador.py:/app/generador.py:ro
+      - ./evaluador.py:/app/evaluador.py:ro
+    environment:
+      - FORJAEXAMENES_RAIZ=/app
+    depends_on:
+      - practica
+    networks:
+      - forjaexamenes-red
+
+networks:
+  forjaexamenes-red:
+    driver: bridge

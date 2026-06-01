@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{plantilla :: plantilla(~{::section})}">
+<section>
+    <div class="card score-fail">
+        <h1>Error</h1>
+        <p th:text="${error}">Mensaje de error</p>
+        <a class="btn btn-primary" th:href="@{/}">Volver al inicio</a>
+    </div>
+</section>
+</html>
