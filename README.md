@@ -1,6 +1,6 @@
 # Forja de ejercicios — *luego es tarde... para estudiar*
 
-<img width="768" height="419" alt="forja-de-examenes" src="https://github.com/user-attachments/assets/3dd588bb-8bfb-4213-8f4c-708cfee3a27c" />
+<img width="768" height="419" alt="forja-de-examenes" src="https://github.com/user-attachments/assets/7afefe21-33a0-4796-8376-8ce24c1ba2b2" />
 
 **La máquina de ejercicios**: genera ejercicios prácticos aleatorios, permite practicar en Docker y corrige automáticamente. Se pueden añadir más ejercicios al gusto del consumidor.
 
