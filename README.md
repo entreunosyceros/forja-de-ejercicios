@@ -2,307 +2,280 @@
 
 <img width="768" height="419" alt="forja-de-examenes" src="https://github.com/user-attachments/assets/7afefe21-33a0-4796-8376-8ce24c1ba2b2" />
 
-**La máquina de ejercicios**: genera ejercicios prácticos aleatorios, permite practicar en Docker y corrige automáticamente. Se pueden añadir más ejercicios al gusto del consumidor.
+Genera ejercicios prácticos al azar, permite practicar en Docker y corrige la respuesta del alumno con criterios verificables. La interfaz es **Spring Boot**; la generación y corrección las hace **Python** (`generador.py`, `evaluador.py`, `modelo_ejercicio.py`).
+
+**Guía en la web (sin login):** con la aplicación arrancada, abre **http://localhost:8080/como-funciona** — también enlazada desde la pantalla de login.
+
+---
+
+## Arranque rápido
+
+### Requisitos
+
+| Herramienta | Versión | Obligatorio |
+|-------------|---------|-------------|
+| JDK | 21 | Sí |
+| Maven | 3.8+ | Sí |
+| Python | 3.10+ | Sí (al crear/corregir ejercicios) |
+| pip + `requirements-docs.txt` | — | Solo si usas PDF + Gemini |
+
+```bash
+java -version
+mvn -version
+python3 --version
+```
+
+### Poner la web en marcha
+
+```bash
+cd examenforge
+chmod +x arrancar-web.sh    # solo la primera vez
+./arrancar-web.sh
+```
+
+Espera `Started AplicacionForjaExamenes` y abre **http://localhost:8080**.
+
+- **Login:** `alumno` / `practica` o `demo` / `demo`
+- **Ayuda:** http://localhost:8080/como-funciona
+
+> El `pom.xml` está en **`web/`**. Usa `./arrancar-web.sh` o `cd web && mvn spring-boot:run`.
+
+**Detener:** `Ctrl+C` en la misma terminal.
+
+### Contenedor de práctica (Docker)
+
+La aplicación web se ejecuta en el host (apartado anterior). Docker sirve solo para el **entorno shell** de práctica:
+
+```bash
+cd examenforge
+docker compose up -d --build practica
+docker exec -it forjaexamenes-practica bash
+```
+
+- Usuario del contenedor: `alumno` / `practica`
+- Carpeta en el host: `datos-practica/` → `/home/alumno/practica` dentro del contenedor
+
+> El servicio `web` del `docker-compose.yml` no monta Python ni el proyecto completo; no uses `docker compose up web` como sustituto de `./arrancar-web.sh`.
+
+---
+
+## Datos locales (no en Git)
+
+Estos ficheros se generan al usar la app y están en `.gitignore` (no deben subirse a GitHub):
+
+| Ruta | Contenido |
+|------|-----------|
+| `datos/estadisticas/*.json` | Estadísticas por usuario (intentos, notas, racha…) |
+| `datos/usuarios.json` | Perfiles y contraseñas si se editan desde la web |
+| `datos-practica/` | Archivos del alumno en el contenedor de práctica |
+| `indice/*.json` | Índice de PDFs indexados |
+| `banco/pendientes/` | Propuestas Gemini pendientes de revisión |
+| `.env` | Clave de Gemini y secretos |
+
+Solo se versionan los `.gitkeep` de las carpetas vacías.
+
+---
+
+## Qué hace la aplicación (resumen)
+
+1. El alumno elige un módulo en la portada (POO, SQL, Docker, apuntes PDF, banco verificado…).
+2. La web ejecuta `generador.py` y muestra un enunciado (con nombre y fecha del alumno).
+3. El alumno escribe la respuesta; `evaluador.py` aplica criterios y calcula la nota (0–10, aprueba ≥ 5).
+4. Opcional: contenedor Docker para practicar comandos reales.
+5. Estadísticas de uso y progreso local (historial, medallas) en la portada.
+
+Los módulos clásicos (`poo`, `bd_sql`, `docker`, etc.) **no necesitan** Gemini.
+
+---
+
+## Cuenta y perfil
+
+| Acción | Dónde |
+|--------|--------|
+| Entrar | `/login` |
+| Cambiar nombre, usuario o contraseña | `/perfil` (enlace **Perfil** en la cabecera) |
+| Guía técnica (Gemini, PDF, nuevos módulos) | `/perfil` (sección inferior) o `/como-funciona` |
+| Revisar propuestas IA (profesor) | Entrar como `profesor` / `profesor` → `/profesor/revisar` |
+| Vista rápida del banco | `/profesor/banco` (misma cuenta profesor) |
+
+Usuarios por defecto: `alumno`, `demo`, `profesor` (ver `application.properties` o `FORJAEXAMENES_USUARIOS`). Los logins con rol profesor se configuran en `forjaexamenes.login.profesores` / `FORJAEXAMENES_PROFESORES`. Los datos viven en `datos/usuarios.json` (no se sube a Git).
+
+### Revisión del banco (profesor)
+
+1. Activa `forjaexamenes.gemini-guardar-pendientes=true` para acumular propuestas en `banco/pendientes/`.
+2. Entra con la cuenta **profesor** (`profesor` / `profesor` por defecto).
+3. Abre **Revisar propuestas** (`/profesor/revisar/{id}`): tabla comparativa Gemini vs criterios, pruebas automáticas y alias de comandos.
+4. Descarga el **paquete ZIP** o aprueba/rechaza desde la misma pantalla.
+
+CLI equivalente:
+
+```bash
+python3 herramientas/revision_profesor.py --id <id_pendiente>
+python3 herramientas/paquete_entrega.py <id_pendiente>
+```
+
+Los sinónimos de comandos (`docker run` ↔ `docker container run`, etc.) están en `vocabulario_claves.json` → sección `alias_comandos`.
+
+---
+
+## Módulos disponibles
+
+| Módulo | Contenido |
+|--------|-----------|
+| `poo` | POO Java (certificado) |
+| `bd_sql`, `bd_modelo`, `bd_transacciones`, `bd_jdbc`, `bd` | Bases de datos |
+| `redes`, `sistemas`, `docker`, `git` | Infraestructura |
+| `docs_*` | Apuntes indexados + Gemini (tras indexar PDFs) |
+| `banco_*` | Ejercicios JSON en `banco/aprobados/` |
+
+CLI:
+
+```bash
+python3 generador.py -m poo --formateado
+python3 evaluador.py -e escenario.json -r "respuesta del alumno"
+```
+
+---
+
+## Apuntes en PDF + Gemini (opcional)
+
+```bash
+cd examenforge
+cp .env.example .env          # GEMINI_API_KEY real desde https://aistudio.google.com/apikey
+pip install -r requirements-docs.txt
+```
+
+Coloca PDFs en `documentacion/<tema>/` → módulo `docs_<tema>` (p. ej. `documentacion/docker/` → `docs_docker`).
+
+**Desde la web:** en la portada, *Apuntes del profesor* → **Subir e indexar** (alumno o profesor). Tras subir, se indexa automáticamente.
+
+Indexación manual: al arrancar la web, botón **Actualizar apuntes**, o `python3 indexador_docs.py`.
+
+Detalle de carpetas: **[documentacion/README.md](documentacion/README.md)**.
+
+---
+
+## Arquitectura de ejercicios
+
+| Tipo | Origen | Corrección |
+|------|--------|------------|
+| **A — plantilla** | `generador.py` | `regex` definidos en código |
+| **B — apuntes + IA** | PDF → Gemini → `modelo_ejercicio.py` | `contiene_todos` / `contiene_alguno` |
+| **Banco** | `banco/aprobados/*.json` | Tipos definidos en el JSON |
+
+Gemini solo propone `tema`, `pregunta`, `palabras_clave` (y opcional `variantes`). El sistema valida con [vocabulario_claves.json](vocabulario_claves.json) y exige que cada clave aparezca en el fragmento del PDF.
+
+### Calidad de `palabras_clave`
+
+| Regla | Detalle |
+|-------|---------|
+| Mínimo | 2 claves distintas |
+| Técnica | Al menos una con comando/flag (≥6 caracteres, `-`, `/`, etc.) |
+| Prohibidas | Lista negra global + por módulo |
+| Fragmento | Cada clave debe estar en el texto indexado |
+
+### Banco y aprobación
+
+```
+banco/aprobados/     → publicados (portada + generador)
+banco/pendientes/    → propuestas Gemini en espera
+banco/catalogo.json  → índice (se regenera al arrancar)
+```
+
+| Propiedad / variable | Efecto |
+|----------------------|--------|
+| `forjaexamenes.gemini-guardar-pendientes=true` | Guarda cada ejercicio `docs_*` en pendientes |
+| `forjaexamenes.gemini-solo-aprobados=true` | Solo ejercicios del banco (sin Gemini en vivo) |
+| `FORJAEXAMENES_MODO_PROFESOR=true` | `/profesor/banco` + solución visible |
+
+CLI del banco:
+
+```bash
+python3 herramientas/revisar_banco.py listar
+python3 herramientas/revisar_banco.py aprobar <id>
+python3 herramientas/revisar_banco.py rechazar <id>
+python3 herramientas/revisar_banco.py reindexar
+```
+
+---
 
 ## Estructura del proyecto
 
 ```
 examenforge/
-├── docker-compose.yml
-├── Dockerfile.practica
-├── generador.py              # Escenarios y criterios de corrección
-├── evaluador.py              # Comprueba respuestas del alumno
-├── web/                      # Panel Spring Boot + Thymeleaf
-│   ├── src/main/resources/
-│   │   ├── application.properties
-│   │   └── templates/inicio.html   # Secciones y botones de la portada
-│   └── src/img/              # Logo (forja-de-examenes.png)
-├── examenes/                 # PDFs generados
-├── datos-practica/
-└── pruebas/
+├── arrancar-web.sh
+├── generador.py / evaluador.py
+├── generador_gemini.py / generador_docs.py
+├── modelo_ejercicio.py / banco_loader.py
+├── vocabulario_claves.json
+├── documentacion/          # PDFs de entrada
+├── indice/                 # JSON indexado
+├── banco/
+│   ├── aprobados/
+│   ├── pendientes/
+│   └── catalogo.json
+├── herramientas/revisar_banco.py
+├── datos/                  # usuarios, estadísticas
+└── web/                    # Spring Boot
+    └── src/main/resources/templates/
+        ├── login.html
+        ├── como-funciona.html   # guía pública
+        └── fragments/
 ```
-
-## Módulos de ejercicio disponibles
-
-| Módulo (`-m`) | Área | Contenido |
-|---------------|------|-----------|
-| `poo` | Certificado POO Java | Herencia, interfaces, excepciones, colecciones, encapsulamiento (aleatorio) |
-| `bd_sql` | Certificado BD | Consultas `JOIN` |
-| `bd_modelo` | Certificado BD | Normalización, PK/FK, 3FN |
-| `bd_transacciones` | Certificado BD | `COMMIT` / `ROLLBACK` |
-| `bd_jdbc` | Certificado BD + POO | `PreparedStatement` |
-| `bd` | Certificado BD | `EXPLAIN`, índices |
-| `redes`, `sistemas`, `docker`, `git` | Infraestructura | Administración de sistemas |
 
 ---
 
-## Arranque de la aplicación web
+## Configuración útil (`application.properties` / entorno)
 
-### Sin Docker (desarrollo)
-
-```bash
-cd examenforge/web
-mvn clean spring-boot:run
-```
-
-Abre **http://localhost:8080** (puerto por defecto).
-
-> Ejecuta siempre desde `examenforge/web`. Así `forjaexamenes.raiz=../` apunta a `examenforge/` y encuentra `generador.py` y `evaluador.py`.
-
-### Con Docker
-
-```bash
-cd examenforge
-docker compose up -d --build
-```
-
-- Web: http://localhost:8080  
-- Contenedor de práctica: `docker exec -it forjaexamenes-practica bash` (usuario `alumno` / contraseña `practica`)
-
-### Cambiar el puerto
-
-**Opción A — Fichero de configuración (recomendado)**
-
-Edita `web/src/main/resources/application.properties`:
-
-```properties
-server.port=9090
-```
-
-**Opción B — Solo para una ejecución**
-
-```bash
-cd examenforge/web
-mvn spring-boot:run -Dspring-boot.run.arguments=--server.port=9090
-```
-
-O con el JAR:
-
-```bash
-java -jar target/forjaexamenes-web-1.0.0.jar --server.port=9090
-```
-
-**Opción C — Docker**
-
-En `docker-compose.yml`, servicio `web`:
-
-```yaml
-ports:
-  - "9090:8080"   # host:contenedor
-```
-
-El contenedor sigue escuchando en 8080 por dentro; desde el navegador usas http://localhost:9090.
+| Clave | Descripción |
+|-------|-------------|
+| `forjaexamenes.raiz` | Raíz del proyecto (por defecto `../` desde `web/`) |
+| `forjaexamenes.modo-profesor` | `FORJAEXAMENES_MODO_PROFESOR` |
+| `forjaexamenes.gemini-guardar-pendientes` | Cola de revisión |
+| `forjaexamenes.gemini-solo-aprobados` | Sin generación Gemini en vivo |
+| `forjaexamenes.subida-pdf-max-mb` | Máximo MB por PDF subido (default 30) |
+| `forjaexamenes.login.usuarios` | `FORJAEXAMENES_USUARIOS` |
 
 ---
 
-## Solución de problemas al arrancar
+## Problemas frecuentes
 
-| Síntoma | Causa habitual | Qué hacer |
-|---------|----------------|-----------|
-| `BindException: La dirección ya se está usando` | El puerto 8080 (u otro) está ocupado | Ver qué proceso lo usa: `ss -tlnp \| grep 8080` o `fuser 8080/tcp`. Detenerlo: `fuser -k 8080/tcp`, o cambiar `server.port` (ver arriba) |
-| `No se encuentra generador.py` | Arranque desde carpeta incorrecta | Usar `cd examenforge/web` antes de `mvn spring-boot:run`, o definir `FORJAEXAMENES_RAIZ=/ruta/a/examenforge` |
-| `generador.py falló` / `evaluador.py falló` | Python no instalado o error en el script | Comprobar: `python3 --version`. Probar: `python3 ../generador.py -m poo` desde `web/` |
-| La web arranca pero al crear un ejercicio sale error | Misma causa que arriba | Revisar logs de la consola; validar rutas en `application.properties` |
-| Cambios en HTML/CSS no se ven | Caché del navegador o `target/` antiguo | `mvn clean spring-boot:run` y recargar con **Ctrl+F5** |
-| Logo o estilos viejos (p. ej. 280×280) | `target/classes` desactualizado | `cd web && mvn clean process-resources` y reiniciar la app |
-| `mvn: command not found` | Maven no instalado | Instalar Maven 3.8+ y JDK 21 |
-| Docker: web no responde | Contenedor no levantado o puerto distinto | `docker compose ps` y `docker compose logs web` |
-
-### Comprobar que todo está bien
-
-```bash
-# Desde examenforge/
-python3 generador.py -m poo --formateado | head
-
-# Desde examenforge/web/ (con la app parada o en marcha)
-mvn -q test
-curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8080/
-```
-
-Un `200` en el último comando indica que la portada responde.
+| Síntoma | Qué hacer |
+|---------|-----------|
+| `no POM in this directory` | `./arrancar-web.sh` o `cd web` antes de `mvn` |
+| Puerto 8080 ocupado | `fuser -k 8080/tcp` o cambiar `server.port` |
+| `API_KEY_INVALID` | Clave real en `.env`; reinicia; `unset GEMINI_API_KEY` en el shell si molesta |
+| Cuota Gemini `429` | `FORJAEXAMENES_GEMINI_MODEL=gemini-2.5-flash` en `.env` |
+| Error tras «Actualizar apuntes» | Reinicia la app (sesión solo por cookie) |
+| `generador.py falló` | `python3 generador.py -m poo` desde `examenforge/` |
 
 ---
 
-## Cómo añadir una nueva sección en la portada
+## Ampliar el proyecto
 
-Una **sección** es el bloque visual de la página de inicio (tarjeta con título y botones). No genera ejercicios por sí sola: solo enlaza a módulos ya registrados en `generador.py`.
-
-Archivo: **`web/src/main/resources/templates/inicio.html`**
-
-### Añadir botones a una sección existente
-
-Dentro del `<div class="card card-wide">` correspondiente, añade un enlace:
-
-```html
-<a class="btn btn-secondary" th:href="@{/ejercicio/nuevo(modulo='mi_modulo')}">Texto del botón</a>
-```
-
-`mi_modulo` debe existir en `generador.py` (tupla `MODULOS` y diccionario `GENERADORES`).
-
-### Crear una sección nueva
-
-Copia un bloque `card-wide` completo y adapta título y botones:
-
-```html
-<div class="card card-wide">
-    <h2>Mi nueva sección</h2>
-    <p class="hint">Descripción breve para el alumno.</p>
-    <div class="module-buttons">
-        <a class="btn btn-secondary" th:href="@{/ejercicio/nuevo(modulo='mi_modulo')}">Ejercicio 1</a>
-        <a class="btn btn-secondary" th:href="@{/ejercicio/nuevo(modulo='otro_modulo')}">Ejercicio 2</a>
-    </div>
-</div>
-```
-
-No hace falta tocar Java: `ControladorEjercicio` ya acepta cualquier `?modulo=` válido.
-
-Tras editar plantillas, reinicia la app o usa `mvn spring-boot:run` (con `spring.thymeleaf.cache=false` los cambios se ven al recargar).
+| Objetivo | Dónde |
+|----------|--------|
+| Texto de la guía pública | `templates/fragments/guia-funcionamiento.html` |
+| Botón en portada | `templates/inicio.html` |
+| Nuevo módulo plantilla | `generador.py` + `pruebas/pruebas_generador_evaluador.py` |
+| Nuevo tema PDF | `documentacion/<tema>/` + indexar |
+| Ejercicio verificado manual | `banco/aprobados/<tema>/<id>.json` + `reindexar` |
 
 ---
-
-## Cómo añadir un nuevo ejercicio (módulo)
-
-Un **ejercicio** (módulo) es un tipo de problema que genera `generador.py` y corrige `evaluador.py` mediante criterios regex.
-
-### 1. Crear la función generadora
-
-En **`generador.py`**, añade una función que devuelva este diccionario:
-
-```python
-def generar_mi_tema() -> dict:
-    parametro = random.choice(["valor1", "valor2"])
-    return {
-        "id": _generar_identificador(),
-        "modulo": "mi_tema",              # identificador único, sin espacios
-        "titulo": "Título corto del ejercicio",
-        "enunciado": "Enunciado largo para el alumno...",
-        "parametros": {"clave": parametro},   # opcional (auditoría / depuración)
-        "criterios": [
-            {"tipo": "regex", "patron": r"palabra_clave", "peso": 3},
-            {"tipo": "regex", "patron": r"otro", "peso": 2, "flags": "i"},
-        ],
-        "solucion_referencia": "Respuesta modelo visible tras corregir",
-    }
-```
-
-| Campo | Uso |
-|-------|-----|
-| `criterios` | Cada `patron` es una expresión regular sobre la respuesta del alumno |
-| `peso` | Ponderación; nota = `10 × (peso cumplido / peso total)` |
-| `flags: "i"` | Regex sin distinguir mayúsculas/minúsculas |
-| Aleatoriedad | Usa `random.choice`, `randint`, etc. para variantes por alumno |
-
-### 2. Registrar el módulo
-
-Al inicio de `generador.py`:
-
-```python
-MODULOS = (
-    # ... existentes ...
-    "mi_tema",
-)
-
-GENERADORES = {
-    # ... existentes ...
-    "mi_tema": generar_mi_tema,
-}
-```
-
-### 3. Varias preguntas en un solo módulo (patrón `poo`)
-
-Varias funciones y una despachadora:
-
-```python
-def generar_poo() -> dict:
-    return random.choice([
-        generar_poo_herencia,
-        generar_poo_interfaz,
-        # ...
-    ])()
-```
-
-En la web un solo botón: `modulo='poo'`.
-
-### 4. Probar el ejercicio
-
-```bash
-cd examenforge
-python3 generador.py -m mi_tema --formateado
-python3 generador.py -m mi_tema -s /tmp/escenario.json
-python3 evaluador.py -e /tmp/escenario.json -r "$(python3 -c "import json; print(json.load(open('/tmp/escenario.json'))['solucion_referencia'])")"
-```
-
-La última línea debería devolver `"nota": 10.0` si la solución de referencia cumple todos los criterios.
-
-### 5. Mostrarlo en la portada
-
-Añade el botón en `inicio.html` (ver sección anterior).
-
-### 6. Añadir prueba automática
-
-En **`pruebas/pruebas_generador_evaluador.py`**, incluye `"mi_tema"` en la tupla `MODULOS_PRUEBA`:
-
-```bash
-python3 pruebas/pruebas_generador_evaluador.py
-```
-
-### Consejos (certificado POO y BD)
-
-- **POO**: pide código Java (`class`, `extends`, `implements`, `@Override`, `try-catch`).
-- **BD**: pide SQL ejecutable (`SELECT`, `JOIN`, `CREATE TABLE`, `START TRANSACTION`).
-- Evita patrones demasiado amplios (`.*`) o frases literales completas.
-- Comprueba que `solucion_referencia` cumple **todos** los criterios antes de usarlo en clase.
-
-> **`evaluador.py`** no suele necesitar cambios: lee el JSON del escenario y aplica los `criterios`. Solo modifícalo si cambias la estructura del JSON.
-
----
-
-## Uso por línea de comandos
-
-```bash
-cd examenforge
-python3 generador.py -m bd_sql --formateado
-python3 evaluador.py -e escenario.json -r "respuesta del alumno"
-```
 
 ## Pruebas
 
 ```bash
 python3 pruebas/pruebas_generador_evaluador.py
+python3 pruebas/pruebas_modelo_ejercicio.py
+python3 pruebas/pruebas_evaluador_tipos.py
+python3 pruebas/pruebas_banco_loader.py
+python3 pruebas/pruebas_indexador_docs.py
 cd web && mvn test
 ```
 
-## Funciones para el alumno (sin red)
+---
 
-| Función | Descripción |
-|---------|-------------|
-| **Práctica infinita** | En resultado, «Otro ejercicio» recarga solo el contenido (AJAX), mismo módulo |
-| **Ejercicio sorpresa** | `/ejercicio/nuevo?sorpresa=true` — módulo aleatorio |
-| **Historial** | Últimos 5 ejercicios en `localStorage` (portada) |
-| **Ranking personal** | Media de notas por módulo (solo tú, en tu navegador) |
-| **Medallas** | Novato, Forjador, DBA, Completista, etc. (`progreso.js`) |
-| **Gráfico** | Chart.js local en `static/vendor/` |
-| **Temporizador** | Orientativo, sin penalización; se guarda en el historial |
-| **Dificultad progresiva** | Nivel 1→3 según aprobados (`generador.py --nivel` + `Progreso.calcularNivel`) |
-| **PDF detallado** | ✅/❌, esperado y pista por criterio fallido |
-| **Exportar JSON** | `/ejercicio/{id}/json` — enunciado, parámetros, criterios, solución |
-| **Modo profesor** | `FORJAEXAMENES_MODO_PROFESOR=true` — muestra la solución antes de enviar |
+## Licencia
 
-Scripts: `web/src/main/resources/static/js/progreso.js`, `practica.js`.
-
-## Logo y tema
-
-- Logo: `web/src/img/forja-de-examenes.png` → URL `/img/forja-de-examenes.png`
-- Portada: banner 640×320 px centrado
-- Tema **Claro** / **Oscuro** en la cabecera (se guarda en `localStorage`)
-
-## Configuración (`application.properties`)
-
-| Propiedad | Descripción |
-|-----------|-------------|
-| `server.port` | Puerto HTTP (por defecto `8080`) |
-| `forjaexamenes.raiz` | Carpeta `examenforge/` (`FORJAEXAMENES_RAIZ`) |
-| `forjaexamenes.directorio-examenes` | Carpeta de PDFs (`examenes/`) |
-| `forjaexamenes.script-generador` | Ruta a `generador.py` |
-| `forjaexamenes.script-evaluador` | Ruta a `evaluador.py` |
-| `spring.thymeleaf.cache` | `false` en desarrollo (recarga plantillas al refrescar) |
+Ver [LICENSE](LICENSE).

@@ -3,11 +3,34 @@ target/
 *.class
 *.jar
 examenes/*.pdf
+examenes/paquetes/
 !examenes/.gitkeep
 .idea/
 *.iml
 .DS_Store
 __pycache__/
 *.pyc
+
+# Claves API (Gemini) y secretos 
 .env
+.env.*
+!.env.example
+*.env.local
+secrets.properties
+**/application-local.properties
+**/application-secrets.properties
+**/application-*.local.properties
+
+indice/*.json
+!indice/.gitkeep
+
+# Datos de uso local (no subir a GitHub)
+datos/usuarios.json
+datos/estadisticas/*
+!datos/estadisticas/.gitkeep
+!datos/.gitkeep
+datos-practica/*
+!datos-practica/.gitkeep
+banco/pendientes/
+!banco/.gitkeep
 

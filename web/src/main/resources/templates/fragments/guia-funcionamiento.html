@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<article th:fragment="funcionamiento" class="guia-usuario guia-funcionamiento">
+    <p class="lead guia-intro">
+        <strong>Forja de ejercicios</strong> genera problemas prácticos de informática, los corrige de forma automática
+        y opcionalmente te deja practicar en un contenedor Docker. Esta página explica el flujo completo sin necesidad
+        de iniciar sesión.
+    </p>
+
+    <nav class="guia-indice" aria-label="Índice">
+        <a href="#gf-resumen">Resumen</a>
+        <a href="#gf-flujo">Flujo del alumno</a>
+        <a href="#gf-tipos">Tipos de ejercicio</a>
+        <a href="#gf-correccion">Corrección</a>
+        <a href="#gf-banco">Banco y profesor</a>
+        <a href="#gf-docker">Docker</a>
+        <a href="#gf-cuenta">Cuenta y estadísticas</a>
+        <a href="#gf-tecnico">Configuración técnica</a>
+    </nav>
+
+    <section id="gf-resumen" class="guia-seccion">
+        <h2>¿Qué es?</h2>
+        <p>Es una aplicación web (Spring Boot) que delega en Python la <strong>generación</strong> y la
+            <strong>evaluación</strong> de ejercicios. Cada alumno recibe enunciados distintos; al corregir se guardan
+            nota, tiempo y estadísticas de uso.</p>
+        <ul class="guia-pasos">
+            <li><strong>Portada:</strong> elige módulo (POO, SQL, Docker, apuntes del profesor, banco verificado…).</li>
+            <li><strong>Apuntes PDF:</strong> sube ficheros desde la portada (<em>Subir e indexar</em>) o colócalos en <code>documentacion/</code> y pulsa <em>Actualizar apuntes</em>.</li>
+            <li><strong>Ejercicio:</strong> lees el enunciado, escribes comandos o código en un cuadro de texto.</li>
+            <li><strong>Corrección:</strong> el sistema comprueba criterios verificables y muestra nota y pistas.</li>
+            <li><strong>PDF / JSON:</strong> puedes descargar el enunciado; el profesor puede ver la solución de referencia.</li>
+        </ul>
+    </section>
+
+    <section id="gf-flujo" class="guia-seccion">
+        <h2>Flujo del alumno</h2>
+        <ol class="guia-pasos">
+            <li>Entras en <strong>/login</strong> con tu usuario y contraseña (demo: <code>alumno</code> / <code>practica</code>).</li>
+            <li>En la portada pulsas <strong>Empezar ahora</strong>, un módulo concreto o un tema de apuntes indexados.</li>
+            <li>La web ejecuta <code>generador.py</code> y muestra el ejercicio con tu <strong>nombre</strong> y la <strong>fecha de inicio</strong>.</li>
+            <li>Escribes tu respuesta y pulsas <strong>Enviar y corregir</strong> (hay temporizador orientativo, sin penalización).</li>
+            <li><code>evaluador.py</code> devuelve nota (0–10), criterios cumplidos o no, y enlace a apuntes si el ejercicio venía de un PDF.</li>
+            <li>Puedes pedir <strong>Otro ejercicio</strong> del mismo módulo o volver al inicio; tus últimos resultados y medallas se guardan en el navegador.</li>
+        </ol>
+        <p class="hint">Los ejercicios generados con Gemini desde PDF muestran una pantalla de carga mientras la IA prepara la propuesta.</p>
+    </section>
+
+    <section id="gf-tipos" class="guia-seccion">
+        <h2>Tipos de ejercicio</h2>
+        <table class="guia-tabla">
+            <thead>
+            <tr><th>Tipo</th><th>Origen</th><th>¿Necesita Gemini?</th></tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td><strong>A — Plantilla</strong></td>
+                <td><code>generador.py</code> (POO, SQL, redes, Docker, Git…)</td>
+                <td>No</td>
+            </tr>
+            <tr>
+                <td><strong>B — Apuntes + IA</strong></td>
+                <td>PDF en <code>documentacion/</code> → índice → fragmento → Gemini → <code>modelo_ejercicio.py</code></td>
+                <td>Sí</td>
+            </tr>
+            <tr>
+                <td><strong>Banco</strong></td>
+                <td>JSON en <code>banco/aprobados/</code> (manual o aprobado por el profesor)</td>
+                <td>No</td>
+            </tr>
+            </tbody>
+        </table>
+        <p>Gemini <strong>no</strong> escribe el ejercicio final ni inventa expresiones regulares. Solo propone un JSON con
+            <code>tema</code>, <code>pregunta</code> y <code>palabras_clave</code>; el sistema construye enunciado y criterios
+            y valida que las claves aparezcan en el fragmento del PDF.</p>
+        <pre class="code-block">PDF → indexador → fragmento → Gemini (propuesta)
+     → modelo_ejercicio.py → escenario JSON → pantalla del alumno</pre>
+    </section>
+
+    <section id="gf-correccion" class="guia-seccion">
+        <h2>Cómo se corrige</h2>
+        <p>Cada ejercicio lleva una lista de <strong>criterios</strong> con peso. El evaluador comprueba la respuesta del alumno:</p>
+        <ul class="guia-pasos">
+            <li><code>regex</code> — expresión regular (módulos plantilla, ejercicios del banco escritos a mano).</li>
+            <li><code>contiene_todos</code> — deben aparecer todos los términos (orden irrelevante).</li>
+            <li><code>contiene_alguno</code> — basta con un sinónimo de la lista (p. ej. <code>nginx</code> o <code>nginx:latest</code>).</li>
+        </ul>
+        <p>La nota es proporcional al peso de criterios cumplidos; ≥ 5 aprueba. Las palabras clave vagas («configurar», «servidor»)
+            se rechazan al generar ejercicios desde apuntes.</p>
+    </section>
+
+    <section id="gf-banco" class="guia-seccion">
+        <h2>Banco de ejercicios y modo profesor</h2>
+        <p>Entra con la cuenta <strong>profesor</strong> y revisa sin JSON crudo:</p>
+        <ul class="guia-pasos">
+            <li><code>banco/pendientes/</code> — propuestas si <code>gemini-guardar-pendientes=true</code>.</li>
+            <li><code>/profesor/revisar</code> — tabla comparativa, pruebas automáticas y paquete ZIP.</li>
+            <li><code>vocabulario_claves.json</code> → <code>alias_comandos</code> (sinónimos como <code>docker container run</code>).</li>
+        </ul>
+        <pre class="code-block">python3 herramientas/revision_profesor.py --id &lt;id&gt;
+python3 herramientas/paquete_entrega.py &lt;id&gt;
+python3 herramientas/revisar_banco.py aprobar &lt;id&gt;</pre>
+    </section>
+
+    <section id="gf-docker" class="guia-seccion">
+        <h2>Práctica en Docker (opcional)</h2>
+        <p>El enunciado se corrige en la web (arrancada con <code>./arrancar-web.sh</code> en el host). Para practicar con herramientas reales, levanta solo el servicio <code>practica</code>:</p>
+        <pre class="code-block">cd examenforge
+docker compose up -d --build practica
+docker exec -it forjaexamenes-practica bash</pre>
+        <p class="hint">Usuario del contenedor: <code>alumno</code> / <code>practica</code> (distinto del login web).
+            Archivos de práctica en <code>examenforge/datos-practica/</code>.</p>
+    </section>
+
+    <section id="gf-cuenta" class="guia-seccion">
+        <h2>Cuenta, perfil y estadísticas</h2>
+        <ul class="guia-pasos">
+            <li><strong>Perfil</strong> (<code>/perfil</code>): cambia nombre visible, usuario de acceso y contraseña.</li>
+            <li>El nombre visible sale en ejercicios y PDF; el login identifica tus estadísticas en el servidor.</li>
+            <li>En la portada: panel de progreso (historial, ranking por módulo, medallas) en el navegador.</li>
+            <li>Al final: <strong>Tus estadísticas de uso</strong> (ejercicios hechos, nota media, racha, tiempo, desglose por módulo).</li>
+        </ul>
+    </section>
+
+    <section id="gf-tecnico" class="guia-seccion">
+        <h2>Configuración técnica</h2>
+        <p>Arranque, clave Gemini, PDFs y ampliación del generador:</p>
+        <div th:replace="~{fragments/guia-contenido :: guia}"></div>
+        <p class="hint">Documentación ampliada en el repositorio: <code>README.md</code> y <code>documentacion/README.md</code>.</p>
+    </section>
+</article>
+</body>
+</html>

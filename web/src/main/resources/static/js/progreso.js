@@ -2,9 +2,16 @@
  * Progreso local (localStorage): historial, medallas, nivel, ranking personal, gráfico.
  */
 const Progreso = (function () {
-    const CLAVE_HISTORIAL = "forjaexamenes-historial";
-    const CLAVE_STATS = "forjaexamenes-stats";
-    const CLAVE_MEDALLAS = "forjaexamenes-medallas";
+    const PREFIJO = "forjaexamenes";
+    let sufijoUsuario = "";
+
+    function clave(base) {
+        return sufijoUsuario ? `${PREFIJO}-${base}-${sufijoUsuario}` : `${PREFIJO}-${base}`;
+    }
+
+    const CLAVE_HISTORIAL = () => clave("historial");
+    const CLAVE_STATS = () => clave("stats");
+    const CLAVE_MEDALLAS = () => clave("medallas");
     const MAX_HISTORIAL = 5;
 
     const MODULOS_BD = ["bd", "bd_sql", "bd_modelo", "bd_transacciones", "bd_jdbc"];
@@ -34,7 +41,7 @@ const Progreso = (function () {
     }
 
     function obtenerStats() {
-        return leerJson(CLAVE_STATS, {
+        return leerJson(CLAVE_STATS(), {
             porModulo: {},
             totalAprobados: 0,
             rachaActual: 0,
@@ -64,10 +71,10 @@ const Progreso = (function () {
             fecha: new Date().toISOString(),
         };
 
-        let historial = leerJson(CLAVE_HISTORIAL, []);
+        let historial = leerJson(CLAVE_HISTORIAL(), []);
         historial.unshift(entrada);
         historial = historial.slice(0, MAX_HISTORIAL);
-        guardarJson(CLAVE_HISTORIAL, historial);
+        guardarJson(CLAVE_HISTORIAL(), historial);
 
         const stats = obtenerStats();
         if (!stats.porModulo[modulo]) {
@@ -87,21 +94,21 @@ const Progreso = (function () {
             stats.rachaActual = 0;
         }
         stats.modulosDistintos = Object.keys(stats.porModulo).length;
-        guardarJson(CLAVE_STATS, stats);
+        guardarJson(CLAVE_STATS(), stats);
 
         actualizarMedallas(stats);
         return { entrada, stats, mensaje: mensajeMotivacion(modulo, nota, aprobado, pm) };
     }
 
     function actualizarMedallas(stats) {
-        const obtenidas = leerJson(CLAVE_MEDALLAS, []);
+        const obtenidas = leerJson(CLAVE_MEDALLAS(), []);
         const ids = new Set(obtenidas.map((m) => m.id));
         MEDALLAS.forEach((def) => {
             if (!ids.has(def.id) && def.prueba(stats)) {
                 obtenidas.push({ id: def.id, icono: def.icono, nombre: def.nombre, fecha: new Date().toISOString() });
             }
         });
-        guardarJson(CLAVE_MEDALLAS, obtenidas);
+        guardarJson(CLAVE_MEDALLAS(), obtenidas);
         return obtenidas;
     }
 
@@ -130,11 +137,11 @@ const Progreso = (function () {
     }
 
     function obtenerHistorial() {
-        return leerJson(CLAVE_HISTORIAL, []);
+        return leerJson(CLAVE_HISTORIAL(), []);
     }
 
     function obtenerMedallas() {
-        return leerJson(CLAVE_MEDALLAS, []);
+        return leerJson(CLAVE_MEDALLAS(), []);
     }
 
     function rankingLocal() {
@@ -221,6 +228,10 @@ const Progreso = (function () {
     }
 
     document.addEventListener("DOMContentLoaded", function () {
+        const pagina = document.querySelector(".pagina-inicio");
+        if (pagina && pagina.dataset.loginUsuario) {
+            sufijoUsuario = pagina.dataset.loginUsuario;
+        }
         renderizarPanelInicio();
         const sel = document.getElementById("filtro-grafico-modulo");
         if (sel) {

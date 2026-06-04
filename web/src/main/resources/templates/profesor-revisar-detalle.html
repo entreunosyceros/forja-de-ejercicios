@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{plantilla :: plantilla(~{::section})}">
+<section class="pagina-profesor-revisar-detalle" th:with="comp=${revision['comparativa_propuesta']},
+         prop=${revision['propuesta_gemini']}, esc=${revision['escenario']}">
+    <div class="card card-wide">
+        <h1>Revisión: <code th:text="${ejercicioId}">id</code></h1>
+        <p class="hint">
+            <span th:text="${revision['modulo']}">mod</span>
+            · Creado: <span th:text="${revision['creado']}">—</span>
+        </p>
+
+        <p class="alerta-indexacion alerta-ok" th:if="${mensajePerfilOk}" th:text="${mensajePerfilOk}">OK</p>
+        <p class="alerta-indexacion alerta-error" th:if="${errorPerfil}" th:text="${errorPerfil}">Error</p>
+
+        <div class="revision-acciones-top form-actions">
+            <a class="btn btn-secondary"
+               th:href="@{/profesor/revisar/{id}/paquete(id=${ejercicioId})}">Descargar paquete ZIP</a>
+            <form method="post" th:action="@{/profesor/revisar/{id}/aprobar(id=${ejercicioId})}" class="form-inline">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <button type="submit" class="btn btn-primary">Aprobar y publicar</button>
+            </form>
+            <form method="post" th:action="@{/profesor/revisar/{id}/rechazar(id=${ejercicioId})}" class="form-inline">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <button type="submit" class="btn btn-ghost">Rechazar</button>
+            </form>
+            <a class="btn btn-ghost" th:href="@{/profesor/revisar}">Volver al listado</a>
+        </div>
+    </div>
+
+    <div class="card-grid card-grid-inicio">
+        <div class="card card-wide">
+            <h2>Comparativa: propuesta Gemini vs escenario</h2>
+            <table class="tabla-comparativa-gemini">
+                <tbody>
+                <tr>
+                    <th>Pregunta (IA)</th>
+                    <td th:text="${prop['pregunta']}">—</td>
+                </tr>
+                <tr>
+                    <th>Palabras clave (IA)</th>
+                    <td th:text="${comp['palabras_gemini']}">—</td>
+                </tr>
+                <tr>
+                    <th>Palabras en criterios</th>
+                    <td th:text="${comp['palabras_criterios']}">—</td>
+                </tr>
+                <tr>
+                    <th>Título publicado</th>
+                    <td th:text="${esc['titulo']}">—</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card card-wide">
+            <h2>Enunciado</h2>
+            <pre class="preview-enunciado" th:text="${esc['enunciado']}">...</pre>
+        </div>
+
+        <div class="card card-wide">
+            <h2>Solución de referencia</h2>
+            <pre class="solucion-profesor" th:text="${esc['solucion_referencia']}">...</pre>
+        </div>
+
+        <div class="card card-wide">
+            <h2>Criterios y pruebas automáticas</h2>
+            <p class="hint">
+                <strong>Ref. OK</strong> = con la solución de referencia debe cumplirse.
+                <strong>Alt.</strong> = variante con sinónimo (p. ej. <code>docker container run</code>).
+                <strong>Insuf.</strong> = respuesta incompleta; debe <em>fallar</em> (❌ esperado).
+            </p>
+            <div class="tabla-revision-wrap">
+                <table class="tabla-revision-criterios">
+                    <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Tipo</th>
+                        <th>Exigencia</th>
+                        <th>Peso</th>
+                        <th>Alias</th>
+                        <th>Ref. OK</th>
+                        <th>Alt.</th>
+                        <th>Insuf.</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="fila : ${revision['filas_criterios']}">
+                        <td th:text="${fila['indice']}">1</td>
+                        <td><code th:text="${fila['tipo']}">tipo</code></td>
+                        <td th:text="${fila['exigencia']}">—</td>
+                        <td th:text="${fila['peso']}">1</td>
+                        <td class="celda-alias" th:text="${fila['aliases'] != null and !#strings.isEmpty(fila['aliases']) ? fila['aliases'] : '—'}">—</td>
+                        <td th:classappend="${fila['prueba_referencia']['cumplido'] == true} ? ' celda-ok' : ' celda-fail'"
+                            th:text="${fila['prueba_referencia']['cumplido'] == true} ? '✅' : '❌'">?</td>
+                        <td>
+                            <span th:if="${fila['prueba_alternativa']['aplica'] == true}">
+                                <span th:classappend="${fila['prueba_alternativa']['cumplido'] == true} ? ' celda-ok' : ' celda-fail'"
+                                      th:text="${fila['prueba_alternativa']['cumplido'] == true} ? '✅' : '❌'">?</span>
+                                <code class="prueba-respuesta" th:text="${fila['prueba_alternativa']['respuesta']}">...</code>
+                            </span>
+                            <span th:if="${fila['prueba_alternativa']['aplica'] != true}">—</span>
+                        </td>
+                        <td th:classappend="${fila['prueba_insuficiente']['cumplido'] != true} ? ' celda-ok' : ' celda-fail'"
+                            th:text="${fila['prueba_insuficiente']['cumplido'] == true} ? '⚠️ cumple' : '❌ ok'">?</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+</html>

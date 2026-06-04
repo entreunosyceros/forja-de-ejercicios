@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org"
       th:replace="~{plantilla :: plantilla(~{::section})}">
-<section>
+<section class="pagina-inicio" th:attr="data-login-usuario=${loginUsuario}">
     <div class="hero hero-inicio">
         <div class="hero-logo-banda">
             <img class="hero-logo" th:src="@{/img/forja-de-examenes.png}"
@@ -16,7 +16,7 @@
         </p>
     </div>
 
-    <div class="card-grid">
+    <div class="card-grid card-grid-inicio">
         <div class="card">
             <h2>Ejercicio aleatorio</h2>
             <p>Un problema de cualquier módulo, distinto para cada alumno.</p>
@@ -47,6 +47,121 @@
             </div>
         </div>
 
+        <div class="card card-wide card-apuntes">
+            <h2>Apuntes del profesor (Gemini)</h2>
+            <p class="hint" th:if="${autoIndexarActivo}">
+                Al <strong>arrancar la aplicación</strong> se indexan solos los PDF en
+                <code>documentacion/</code> — cada carpeta nueva (p. ej. <code>ansible/</code>) genera su tema
+                <code>docs_ansible</code> sin modificar el código.
+            </p>
+            <p class="hint" th:if="${!autoIndexarActivo}">
+                Auto-indexación desactivada. Usa «Actualizar apuntes» tras añadir PDFs.
+            </p>
+
+            <p class="alerta-indexacion alerta-ok" th:if="${indexacionMensaje != null and indexacionExito}"
+               th:text="${indexacionMensaje}">OK</p>
+            <p class="alerta-indexacion alerta-error" th:if="${indexacionMensaje != null and !indexacionExito}"
+               th:text="${indexacionMensaje}">Error</p>
+            <p class="hint hint-estado-indexacion" th:if="${ultimaIndexacion != null and indexacionMensaje == null}"
+               th:classappend="${ultimaIndexacion.exito()} ? ' hint-ok' : ' hint-warn'"
+               th:text="${ultimaIndexacion.mensaje()}">Estado</p>
+
+            <form class="form-reindexar" method="post" th:action="@{/documentacion/reindexar}">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <button type="submit" class="btn btn-secondary">🔄 Actualizar apuntes</button>
+                <span class="hint">Vuelve a leer <code>documentacion/</code> tras copiar PDFs por otro medio.</span>
+            </form>
+
+            <div class="form-subida-apuntes">
+                <h3>Subir apuntes (PDF)</h3>
+                <p class="hint">
+                    Alumno o profesor: elige el tema, opcionalmente un capítulo (subcarpeta) y los PDF.
+                    Se guardan en <code>documentacion/</code> y se indexan automáticamente.
+                    Máximo <span th:text="${subidaPdfMaxMb}">30</span> MB por archivo.
+                </p>
+                <form class="form-subida-pdf" method="post" th:action="@{/documentacion/subir}"
+                      enctype="multipart/form-data" id="form-subida-pdf">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+                    <label for="tema-select">Tema (carpeta)</label>
+                    <select id="tema-select" name="tema" required>
+                        <option value="" disabled selected>— Elige un tema —</option>
+                        <option th:each="t : ${temasDocumentacion}"
+                                th:value="${t.slug}"
+                                th:text="${t.tituloVisible} + ' → ' + ${t.moduloDocs} + ' (' + ${t.pdfsEnDisco} + ' PDF)'">
+                        </option>
+                        <option value="__nuevo__">➕ Crear tema nuevo…</option>
+                    </select>
+
+                    <div class="campo-tema-nuevo" id="campo-tema-nuevo" hidden>
+                        <label for="tema-nuevo">Nombre del tema nuevo</label>
+                        <input type="text" id="tema-nuevo" name="temaNuevo" maxlength="50"
+                               placeholder="p. ej. ansible, forense, java_poo"
+                               pattern="[a-zA-Z0-9áéíóúñÁÉÍÓÚÑ _\-]+"
+                               title="Letras, números, espacios o guiones"/>
+                        <p class="hint">Se creará <code>documentacion/&lt;tema&gt;/</code> y el módulo <code>docs_&lt;tema&gt;</code>.</p>
+                    </div>
+
+                    <label for="capitulo-input">Capítulo (opcional, subcarpeta)</label>
+                    <input type="text" id="capitulo-input" name="capitulo" maxlength="50"
+                           placeholder="p. ej. volumenes, unidad1"/>
+
+                    <label for="archivos-pdf">Archivos PDF</label>
+                    <input type="file" id="archivos-pdf" name="archivos" accept=".pdf,application/pdf"
+                           multiple required class="input-archivos-pdf"/>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary" id="btn-subir-pdf">
+                            Subir e indexar
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <p class="hint" th:if="${geminiConfigurado}">
+                Un <strong>fragmento</strong> de apuntes por ejercicio — la IA no pregunta fuera del material indexado.
+            </p>
+            <p class="hint hint-warn" th:if="${!geminiConfigurado}">
+                Define <code>GEMINI_API_KEY</code> para generar ejercicios desde PDF.
+            </p>
+
+            <p class="hint" th:if="${#lists.isEmpty(modulosDocumentacion)}">
+                Aún no hay temas indexados. Crea <code>documentacion/&lt;tema&gt;/</code> con PDFs y pulsa
+                «Actualizar apuntes» o reinicia la aplicación.
+            </p>
+
+            <div class="docs-modulos-lista" th:if="${!#lists.isEmpty(modulosDocumentacion)}">
+                <details class="docs-modulo" th:each="doc : ${modulosDocumentacion}">
+                    <summary>
+                        <span class="docs-modulo-titulo" th:text="${doc.titulo}">Tema</span>
+                        <span class="docs-modulo-meta" th:text="${doc.fragmentos} + ' fragmentos'">0</span>
+                    </summary>
+                    <div class="module-buttons">
+                        <a class="btn btn-secondary" th:href="@{/ejercicio/nuevo(modulo=${doc.id})}">
+                            Aleatorio (todo el tema)
+                        </a>
+                    </div>
+                    <ul class="docs-secciones" th:if="${!#lists.isEmpty(doc.secciones)}">
+                        <li th:each="sec : ${doc.secciones}">
+                            <a class="btn btn-ghost btn-sm"
+                               th:href="@{/ejercicio/nuevo(modulo=${doc.id}, capitulo=${sec.capitulo})}"
+                               th:text="${sec.titulo} + ' (' + ${sec.fragmentos} + ')'">Sección</a>
+                        </li>
+                    </ul>
+                </details>
+            </div>
+        </div>
+
+        <div class="card card-wide" th:if="${!#lists.isEmpty(modulosBanco)}">
+            <h2>Ejercicios del banco</h2>
+            <p class="hint">Ejercicios verificados (escritos o aprobados por el profesor). Misma corrección automática que el resto.</p>
+            <div class="module-buttons">
+                <a class="btn btn-secondary" th:each="b : ${modulosBanco}"
+                   th:href="@{/ejercicio/nuevo(modulo=${b.modulo})}"
+                   th:text="${b.titulo}">Módulo</a>
+            </div>
+        </div>
+
         <div class="card card-wide">
             <h2>Sistemas y herramientas</h2>
             <div class="module-buttons">
@@ -58,15 +173,17 @@
         </div>
 
         <div class="card card-accent">
-            <h2>Entorno Docker</h2>
-            <p>Levanta el contenedor de práctica con herramientas reales.</p>
+            <h2>Entorno Docker (práctica)</h2>
+            <p>La web se arranca en el host con <code>./arrancar-web.sh</code>. El contenedor es solo para practicar comandos reales (redes, Docker, SQL…).</p>
             <pre class="code-block">cd examenforge
-docker compose up -d practica
+docker compose up -d --build practica
 docker exec -it forjaexamenes-practica bash</pre>
+            <p class="hint">Usuario del contenedor: <code>alumno</code> / <code>practica</code>.
+                Carpeta en tu máquina: <code>examenforge/datos-practica/</code> (montada en <code>/home/alumno/practica</code>).</p>
         </div>
     </div>
 
-    <div class="card-grid panel-superacion">
+    <div class="card-grid card-grid-inicio panel-superacion">
         <div class="card card-wide">
             <h2>Tu progreso (local, sin red)</h2>
             <p class="hint">Historial, récords y medallas se guardan solo en este navegador.</p>
@@ -98,15 +215,80 @@ docker exec -it forjaexamenes-practica bash</pre>
         </div>
     </div>
 
-    <table class="compare-table">
-        <thead>
-        <tr><th>Antes</th><th>Con Forja de ejercicios</th></tr>
-        </thead>
-        <tbody>
-        <tr><td>Ejercicio en papel</td><td>Evaluación automática en Docker</td></tr>
-        <tr><td>Corregir 20 a mano</td><td>Corrección instantánea</td></tr>
-        <tr><td>Memorizar</td><td>Practicar en entorno real</td></tr>
-        </tbody>
-    </table>
+    <div class="panel-estadisticas-usuario card card-wide" th:if="${estadisticas != null}">
+        <h2>Tus estadísticas de uso</h2>
+        <p class="hint">
+            Resumen de <strong th:text="${nombreUsuario}">Usuario</strong>
+            <span th:if="${estadisticas.ultimaActividad != null and !estadisticas.ultimaActividad.isEmpty()}">
+                · Última actividad: <span th:text="${estadisticas.ultimaActividad}">—</span>
+            </span>
+        </p>
+
+        <p class="hint" th:if="${estadisticas.totalIntentos == 0}">
+            Aún no has completado ningún ejercicio. Haz uno desde las tarjetas de arriba y vuelve aquí para ver tu progreso.
+        </p>
+
+        <div class="stats-resumen-grid" th:if="${estadisticas.totalIntentos > 0}">
+            <div class="stat-card">
+                <span class="stat-valor" th:text="${estadisticas.totalIntentos}">0</span>
+                <span class="stat-etiqueta">Ejercicios hechos</span>
+            </div>
+            <div class="stat-card stat-ok">
+                <span class="stat-valor" th:text="${estadisticas.totalAprobados}">0</span>
+                <span class="stat-etiqueta">Aprobados</span>
+            </div>
+            <div class="stat-card stat-fail">
+                <span class="stat-valor" th:text="${estadisticas.totalSuspensos}">0</span>
+                <span class="stat-etiqueta">Suspensos</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-valor" th:text="${#numbers.formatDecimal(estadisticas.notaMedia, 1, 1)}">0</span>
+                <span class="stat-etiqueta">Nota media</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-valor" th:text="${#numbers.formatDecimal(estadisticas.mejorNota, 1, 1)}">0</span>
+                <span class="stat-etiqueta">Mejor nota</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-valor" th:text="${estadisticas.rachaActual}">0</span>
+                <span class="stat-etiqueta">Racha actual</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-valor" th:text="${tiempoPracticado}">0:00</span>
+                <span class="stat-etiqueta">Tiempo practicado</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-valor" th:text="${#maps.size(estadisticas.porModulo)}">0</span>
+                <span class="stat-etiqueta">Módulos distintos</span>
+            </div>
+        </div>
+
+        <div class="stats-modulos-wrap" th:if="${!#maps.isEmpty(estadisticas.porModulo)}">
+            <h3>Por módulo</h3>
+            <div class="stats-modulos-scroll">
+                <table class="stats-modulos-table">
+                    <thead>
+                    <tr>
+                        <th>Módulo</th>
+                        <th>Intentos</th>
+                        <th>Aprobados</th>
+                        <th>Media</th>
+                        <th>Mejor</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="entry : ${estadisticas.porModulo}">
+                        <td><code th:text="${entry.key}">mod</code></td>
+                        <td th:text="${entry.value.intentos}">0</td>
+                        <td th:text="${entry.value.aprobados}">0</td>
+                        <td th:text="${#numbers.formatDecimal(entry.value.notaMedia, 1, 1)}">0</td>
+                        <td th:text="${#numbers.formatDecimal(entry.value.mejorNota, 1, 1)}">0</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <script th:src="@{/js/subida-apuntes.js(v=1)}"></script>
 </section>
 </html>

@@ -1,0 +1,39 @@
+{
+  "global": {
+    "prohibidas": [
+      "configurar", "configuracion", "servidor", "sistema", "usar", "hacer",
+      "importante", "necesario", "correcto", "apropiado", "ejemplo", "proceso",
+      "informacion", "datos", "archivo", "programa", "aplicacion", "usuario"
+    ],
+    "permitidas_extra": []
+  },
+  "docs_docker": {
+    "prohibidas": ["contenedor", "imagen"],
+    "permitidas_extra": ["docker", "compose", "volume", "volumen"]
+  },
+  "docs_*": {
+    "prohibidas": [],
+    "permitidas_extra": []
+  },
+  "alias_comandos": {
+    "docker run": ["docker run", "docker container run"],
+    "docker compose up": ["docker compose up", "docker-compose up"],
+    "docker compose down": ["docker compose down", "docker-compose down"],
+    "docker ps": ["docker ps", "docker container ls"],
+    "docker logs": ["docker logs", "docker container logs"],
+    "docker exec": ["docker exec", "docker container exec"],
+    "git commit": ["git commit"],
+    "git push": ["git push"],
+    "git pull": ["git pull"],
+    "git clone": ["git clone"],
+    "SELECT": ["SELECT", "select"],
+    "INSERT": ["INSERT", "insert"],
+    "UPDATE": ["UPDATE", "update"],
+    "DELETE": ["DELETE", "delete"],
+    "CREATE TABLE": ["CREATE TABLE", "create table"],
+    "FOREIGN KEY": ["FOREIGN KEY", "foreign key"],
+    "BEGIN": ["BEGIN", "START TRANSACTION", "start transaction"],
+    "COMMIT": ["COMMIT", "commit"],
+    "ROLLBACK": ["ROLLBACK", "rollback"]
+  }
+}

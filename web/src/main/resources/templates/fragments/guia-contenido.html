@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<article th:fragment="guia" class="guia-usuario">
+    <nav class="guia-indice" aria-label="Secciones de la guía">
+        <a href="#guia-gemini">Clave Gemini</a>
+        <a href="#guia-apuntes">Apuntes PDF</a>
+        <a href="#guia-ejercicios">Nuevos ejercicios</a>
+    </nav>
+
+    <section id="guia-gemini" class="guia-seccion">
+        <h2>Clave API de Gemini</h2>
+        <p>Necesaria solo para ejercicios generados desde <strong>apuntes PDF</strong>. Los módulos
+            <code>poo</code>, <code>docker</code>, <code>redes</code>, etc. funcionan sin ella.</p>
+
+        <p class="guia-estado" th:if="${geminiConfigurado}">
+            ✅ La aplicación detecta una clave configurada.
+        </p>
+        <p class="guia-estado guia-estado-warn" th:if="${!geminiConfigurado}">
+            ⚠️ Aún no hay clave válida. Sigue estos pasos:
+        </p>
+
+        <ol class="guia-pasos">
+            <li>Entra en <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio → API keys</a> e inicia sesión con tu cuenta Google.</li>
+            <li>Pulsa <strong>Create API key</strong> y copia la clave (suele empezar por <code>AIza…</code>).</li>
+            <li>En la carpeta del proyecto, crea o edita el fichero <code>examenforge/.env</code>:</li>
+        </ol>
+        <pre class="code-block">cp .env.example .env
+# Edita .env y pega tu clave REAL (sin comillas):
+GEMINI_API_KEY=AIzaSy_tu_clave_aqui
+FORJAEXAMENES_GEMINI_MODEL=gemini-2.5-flash</pre>
+        <p class="hint">No subas <code>.env</code> a GitHub. Usa <code>.env.example</code> solo como plantilla.</p>
+        <ol class="guia-pasos" start="4">
+            <li>Instala dependencias Python (solo la primera vez):</li>
+        </ol>
+        <pre class="code-block">cd examenforge
+pip install -r requirements-docs.txt</pre>
+        <ol class="guia-pasos" start="5">
+            <li><strong>Reinicia la aplicación</strong> (<code>./arrancar-web.sh</code>). En la portada debe desaparecer el aviso de clave pendiente.</li>
+        </ol>
+        <details class="guia-detalle">
+            <summary>Si aparece error de cuota (<code>429</code>)</summary>
+            <p>La clave es válida pero Google limita peticiones. Usa el modelo
+                <code>gemini-2.5-flash</code> en <code>.env</code> o espera un minuto y reintenta.</p>
+        </details>
+    </section>
+
+    <section id="guia-apuntes" class="guia-seccion">
+        <h2>Añadir apuntes (PDF)</h2>
+        <p>Cada carpeta bajo <code>documentacion/</code> genera un módulo <code>docs_&lt;tema&gt;</code> en la portada, sin tocar Java.</p>
+
+        <pre class="code-block">examenforge/documentacion/
+├── docker/
+│   └── apuntes.pdf          →  docs_docker
+├── ansible/
+│   └── intro.pdf            →  docs_ansible
+└── forense/
+    └── modulos.pdf          →  docs_forense</pre>
+
+        <ol class="guia-pasos">
+            <li>Copia tus PDF en <code>documentacion/&lt;nombre-tema&gt;/</code>, o súbelos desde la portada (sección <strong>Subir apuntes</strong>).</li>
+            <li>Indexa (elige una opción):
+                <ul>
+                    <li>Reinicia la web (auto-indexación al arrancar), o</li>
+                    <li>En la portada: <strong>Actualizar apuntes</strong>, o</li>
+                    <li>Terminal: <code>python3 indexador_docs.py</code></li>
+                </ul>
+            </li>
+            <li>En la portada, sección <strong>Apuntes del profesor</strong>, elige tema o capítulo.</li>
+        </ol>
+        <p class="hint">Subcarpetas dentro de un tema = capítulos (p. ej. <code>documentacion/docker/volumenes/</code>).</p>
+    </section>
+
+    <section id="guia-ejercicios" class="guia-seccion">
+        <h2>Añadir un nuevo tipo de ejercicio</h2>
+        <p>Los ejercicios clásicos viven en Python; la web solo enlaza módulos ya registrados.</p>
+
+        <ol class="guia-pasos">
+            <li>En <code>generador.py</code>, crea una función que devuelva un diccionario con
+                <code>titulo</code>, <code>enunciado</code>, <code>criterios</code> (regex) y
+                <code>solucion_referencia</code>.</li>
+            <li>Regístrala en las tuplas <code>MODULOS</code> y <code>GENERADORES</code> del mismo fichero.</li>
+            <li>Prueba en terminal:</li>
+        </ol>
+        <pre class="code-block">python3 generador.py -m mi_modulo --formateado</pre>
+        <ol class="guia-pasos" start="4">
+            <li>Añade un botón en <code>web/src/main/resources/templates/inicio.html</code>:</li>
+        </ol>
+        <pre class="code-block">&lt;a class="btn btn-secondary"
+   th:href="@{/ejercicio/nuevo(modulo='mi_modulo')}"&gt;Mi módulo&lt;/a&gt;</pre>
+        <ol class="guia-pasos" start="5">
+            <li>Reinicia la aplicación. La corrección la hace <code>evaluador.py</code> con los criterios regex del JSON generado.</li>
+        </ol>
+        <p class="hint">Para ejercicios desde PDF + IA no hace falta editar <code>generador.py</code>: basta indexar apuntes y configurar Gemini.</p>
+    </section>
+</article>
+</body>
+</html>

@@ -3,6 +3,7 @@ package com.luegoestarde.forjaexamenes.servicio;
 import com.luegoestarde.forjaexamenes.configuracion.PropiedadesForjaExamenes;
 import com.luegoestarde.forjaexamenes.modelo.Escenario;
 import com.luegoestarde.forjaexamenes.modelo.ResultadoEvaluacion;
+import com.luegoestarde.forjaexamenes.util.TextoPlano;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -30,32 +31,64 @@ public class ServicioPdf {
         this.propiedades = propiedades;
     }
 
-    public Path generarPdf(Escenario escenario, ResultadoEvaluacion resultado) throws IOException {
+    public Path generarPdf(Escenario escenario, ResultadoEvaluacion resultado, Long tiempoSegundos)
+            throws IOException {
         Path directorio = Path.of(propiedades.getDirectorioExamenes()).toAbsolutePath().normalize();
         Files.createDirectories(directorio);
 
         String marcaTiempo = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"));
         Path rutaPdf = directorio.resolve("ejercicio-" + escenario.getId() + "-" + marcaTiempo + ".pdf");
+        String metadatos = construirMetadatos(escenario, resultado, tiempoSegundos);
 
         try (PDDocument documento = new PDDocument()) {
             agregarPaginaTexto(documento, "EJERCICIO — Forja de ejercicios / luego es tarde para estudiar",
                     "[" + escenario.getModulo().toUpperCase() + "] " + escenario.getTitulo(),
-                    escenario.getEnunciado() + "\n\n[ID: " + escenario.getId() + "]");
+                    metadatos + "\n\n"
+                            + TextoPlano.sinMarkdown(escenario.getEnunciado())
+                            + "\n\n[ID: " + escenario.getId() + "]");
 
             if (resultado != null) {
                 String titulo = "Nota: " + resultado.getNota() + "/10 — "
                         + (resultado.isAprobado() ? "APROBADO" : "SUSPENSO");
                 agregarPaginaTexto(documento, "CORRECCION — Forja de ejercicios", titulo,
-                        construirCuerpoCorreccion(resultado));
+                        metadatos + "\n\n" + construirCuerpoCorreccion(resultado));
             } else {
                 agregarPaginaTexto(documento, "SOLUCION — Forja de ejercicios (solo profesor)",
                         escenario.getTitulo(),
-                        escenario.getSolucionReferencia());
+                        metadatos + "\n\n" + TextoPlano.sinMarkdown(escenario.getSolucionReferencia()));
             }
 
             documento.save(rutaPdf.toFile());
         }
         return rutaPdf;
+    }
+
+    private String construirMetadatos(
+            Escenario escenario, ResultadoEvaluacion resultado, Long tiempoSegundos) {
+        StringBuilder texto = new StringBuilder();
+        if (escenario.getUsuario() != null && !escenario.getUsuario().isBlank()) {
+            texto.append("Alumno: ").append(escenario.getUsuario()).append('\n');
+        }
+        if (escenario.getFechaHora() != null && !escenario.getFechaHora().isBlank()) {
+            texto.append("Fecha y hora del ejercicio: ").append(escenario.getFechaHora()).append('\n');
+        }
+        if (resultado != null && resultado.getFechaHoraEvaluacion() != null) {
+            texto.append("Fecha y hora de correccion: ").append(resultado.getFechaHoraEvaluacion()).append('\n');
+        }
+        Long tiempo = tiempoSegundos;
+        if (tiempo == null && resultado != null) {
+            tiempo = resultado.getTiempoSegundos();
+        }
+        if (tiempo != null && tiempo > 0) {
+            texto.append("Tiempo empleado: ").append(formatearTiempo(tiempo)).append('\n');
+        }
+        return texto.toString().strip();
+    }
+
+    private static String formatearTiempo(long segundos) {
+        long minutos = segundos / 60;
+        long resto = segundos % 60;
+        return String.format("%02d:%02d", minutos, resto);
     }
 
     private String construirCuerpoCorreccion(ResultadoEvaluacion resultado) {
@@ -75,7 +108,8 @@ public class ServicioPdf {
                 }
             }
         }
-        texto.append("\nSolucion de referencia:\n").append(seguroNulo(resultado.getSolucionReferencia()));
+        texto.append("\nSolucion de referencia:\n")
+                .append(TextoPlano.sinMarkdown(seguroNulo(resultado.getSolucionReferencia())));
         return texto.toString();
     }
 

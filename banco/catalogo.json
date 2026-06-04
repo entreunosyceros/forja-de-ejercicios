@@ -1,0 +1,10 @@
+{
+  "actualizado" : "2026-06-04T11:04:28.329175993Z",
+  "ejercicios" : [ {
+    "id" : "banco-docker-01",
+    "modulo" : "banco_docker",
+    "titulo" : "Banco: contenedor nginx",
+    "ruta" : "aprobados/docker/ejemplo.json",
+    "origen" : "banco"
+  } ]
+}

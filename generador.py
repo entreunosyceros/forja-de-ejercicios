@@ -8,11 +8,8 @@ import sys
 import uuid
 from datetime import datetime, timezone
 
-# Modulos disponibles
-MODULOS = (
-    "redes", "sistemas", "bd", "docker", "git",
-    "poo", "bd_sql", "bd_modelo", "bd_transacciones", "bd_jdbc",
-)
+# MODULOS se completa al final del archivo (incluye docs_* si hay indice/)
+MODULOS: tuple[str, ...] = ()
 
 
 def _generar_identificador() -> str:
@@ -382,7 +379,7 @@ def generar_bd_transacciones() -> dict:
             "Escribe el bloque SQL con BEGIN/COMMIT/ROLLBACK (o START TRANSACTION) "
             "y las dos actualizaciones de saldo."
         ),
-        "parametros": {"origen": cuenta_origen, "destino": cuenta_destino, "importe": importe},
+        "parametros": {"cuenta_origen": cuenta_origen, "destino": cuenta_destino, "importe": importe},
         "criterios": [
             {"tipo": "regex", "patron": r"START\s+TRANSACTION|BEGIN", "peso": 2, "flags": "i"},
             {"tipo": "regex", "patron": r"UPDATE.*saldo|UPDATE", "peso": 3, "flags": "i"},
@@ -486,6 +483,13 @@ PISTAS_MODULO = {
     "bd_jdbc": "Nunca concatenes SQL: usa ? y PreparedStatement.",
 }
 
+import generador_docs  # noqa: E402
+import banco_loader  # noqa: E402
+
+generador_docs.registrar_modulos_documentacion(GENERADORES, PISTAS_MODULO)
+banco_loader.registrar_en_generadores(GENERADORES, PISTAS_MODULO)
+MODULOS = tuple(sorted(GENERADORES.keys()))
+
 
 def _enriquecer_criterios(escenario: dict) -> None:
     for criterio in escenario.get("criterios", []):
@@ -522,11 +526,22 @@ def _aplicar_nivel(escenario: dict, nivel: int) -> dict:
     return escenario
 
 
-def generar(modulo: str | None = None, nivel: int = 2) -> dict:
+def generar(
+    modulo: str | None = None,
+    nivel: int = 2,
+    capitulo: str | None = None,
+    seccion: str | None = None,
+) -> dict:
     if modulo and modulo not in GENERADORES:
         raise ValueError(f"Módulo desconocido: {modulo}. Válidos: {', '.join(MODULOS)}")
-    fn = GENERADORES[modulo] if modulo else random.choice(list(GENERADORES.values()))
-    escenario = fn()
+    if modulo and modulo.startswith("docs_"):
+        escenario = generador_docs.generar_ejercicio_documentacion(
+            modulo, nivel, capitulo=capitulo, seccion=seccion
+        )
+    elif modulo:
+        escenario = GENERADORES[modulo]()
+    else:
+        escenario = random.choice(list(GENERADORES.values()))()
     escenario = _aplicar_nivel(escenario, nivel)
     escenario["generado_en"] = datetime.now(timezone.utc).isoformat()
     return escenario
@@ -535,13 +550,20 @@ def generar(modulo: str | None = None, nivel: int = 2) -> dict:
 def principal() -> int:
     analizador = argparse.ArgumentParser(description="Generador de escenarios — Forja de ejercicios")
     analizador.add_argument("--modulo", "-m", choices=MODULOS, help="Módulo específico")
+    analizador.add_argument("--capitulo", "-c", help="Capítulo (módulos docs_* indexados)")
+    analizador.add_argument("--seccion", help="Sección dentro del capítulo (docs_*)")
     analizador.add_argument("--nivel", "-n", type=int, default=2, choices=[1, 2, 3],
                             help="Dificultad 1=fácil, 2=medio, 3=avanzado")
     analizador.add_argument("--salida", "-s", help="Archivo JSON de salida")
     analizador.add_argument("--formateado", action="store_true", help="JSON indentado")
     argumentos = analizador.parse_args()
 
-    escenario = generar(argumentos.modulo, argumentos.nivel)
+    escenario = generar(
+        argumentos.modulo,
+        argumentos.nivel,
+        capitulo=argumentos.capitulo,
+        seccion=argumentos.seccion,
+    )
     sangria = 2 if argumentos.formateado else None
     texto = json.dumps(escenario, ensure_ascii=False, indent=sangria)
 

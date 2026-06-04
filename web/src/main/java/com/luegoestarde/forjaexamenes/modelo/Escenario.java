@@ -16,6 +16,9 @@ public class Escenario {
     private String solucionReferencia;
     private String generadoEn;
     private Integer dificultad;
+    private String usuario;
+    private String fechaHora;
+    private String usuarioAcceso;
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
@@ -43,6 +46,15 @@ public class Escenario {
 
     public Integer getDificultad() { return dificultad; }
     public void setDificultad(Integer dificultad) { this.dificultad = dificultad; }
+
+    public String getUsuario() { return usuario; }
+    public void setUsuario(String usuario) { this.usuario = usuario; }
+
+    public String getFechaHora() { return fechaHora; }
+    public void setFechaHora(String fechaHora) { this.fechaHora = fechaHora; }
+
+    public String getUsuarioAcceso() { return usuarioAcceso; }
+    public void setUsuarioAcceso(String usuarioAcceso) { this.usuarioAcceso = usuarioAcceso; }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Criterio {

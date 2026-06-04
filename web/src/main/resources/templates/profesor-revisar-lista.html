@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{plantilla :: plantilla(~{::section})}">
+<section class="pagina-profesor-revisar">
+    <div class="card card-wide">
+        <h1>Revisar propuestas (sin JSON crudo)</h1>
+        <p class="hint">Tabla comparativa, casos de prueba automáticos y paquete de entrega por ejercicio.</p>
+
+        <p class="alerta-indexacion alerta-ok" th:if="${mensajePerfilOk}" th:text="${mensajePerfilOk}">OK</p>
+        <p class="alerta-indexacion alerta-error" th:if="${errorPerfil}" th:text="${errorPerfil}">Error</p>
+
+        <p class="hint hint-warn" th:if="${!geminiGuardarPendientes}">
+            Activa <code>forjaexamenes.gemini-guardar-pendientes=true</code> para acumular propuestas en
+            <code>banco/pendientes/</code>.
+        </p>
+
+        <div th:if="${#lists.isEmpty(pendientes)}">
+            <p>No hay propuestas pendientes de revisión.</p>
+        </div>
+
+        <table class="tabla-revision-profesor" th:if="${!#lists.isEmpty(pendientes)}">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Módulo</th>
+                <th>Título</th>
+                <th>Palabras clave</th>
+                <th>Acciones</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="p : ${pendientes}">
+                <td><code th:text="${p.id}">id</code></td>
+                <td th:text="${p.modulo}">mod</td>
+                <td th:text="${p.titulo}">titulo</td>
+                <td th:text="${p.palabrasClave}">claves</td>
+                <td class="acciones-revision">
+                    <a class="btn btn-primary btn-sm"
+                       th:href="@{/profesor/revisar/{id}(id=${p.id})}">Revisar</a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+        <div class="form-actions" style="margin-top:1.5rem">
+            <a class="btn btn-secondary" th:href="@{/profesor/banco}">Vista banco (rápida)</a>
+            <a class="btn btn-ghost" th:href="@{/perfil}">Perfil</a>
+        </div>
+    </div>
+</section>
+</html>

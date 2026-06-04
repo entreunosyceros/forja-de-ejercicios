@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"/>
+    <title>Cómo funciona — Forja de ejercicios</title>
+    <link rel="icon" type="image/png" th:href="@{/img/forja-de-examenes.png}"/>
+    <link rel="stylesheet" th:href="@{/css/aplicacion.css(v=5)}"/>
+</head>
+<body class="pagina-login pagina-ayuda">
+<header class="ayuda-cabecera">
+    <div class="container ayuda-cabecera-inner">
+        <a class="brand brand-compact" th:href="@{/login}">
+            <img class="brand-logo" th:src="@{/img/forja-de-examenes.png}" alt="" width="40" height="40"/>
+            <span class="brand-text">Forja de ejercicios</span>
+        </a>
+        <a class="btn btn-primary btn-sm" th:href="@{/login}">Entrar</a>
+    </div>
+</header>
+
+<main class="container ayuda-contenido">
+    <div class="card card-wide guia-card-standalone">
+        <h1>Cómo funciona el programa</h1>
+        <p class="hint">Guía para alumnos y profesores. No hace falta tener sesión iniciada para leerla.</p>
+        <div th:replace="~{fragments/guia-funcionamiento :: funcionamiento}"></div>
+        <div class="form-actions" style="margin-top: 2rem;">
+            <a class="btn btn-primary" th:href="@{/login}">Ir al login</a>
+        </div>
+    </div>
+</main>
+
+<footer class="site-footer ayuda-pie">
+    <div class="container">
+        <p>Forja de ejercicios · práctica en Docker · corrección automática</p>
+    </div>
+</footer>
+
+<script th:src="@{/js/tema.js}"></script>
+</body>
+</html>

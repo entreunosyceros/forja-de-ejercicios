@@ -46,21 +46,33 @@
     }
 
     async function otroEjercicio(modulo, sorpresa) {
+        const zonaActual = obtenerZona();
+        const capitulo = zonaActual ? zonaActual.getAttribute("data-capitulo") : "";
+        const seccion = zonaActual ? zonaActual.getAttribute("data-seccion") : "";
         const nivel = typeof Progreso !== "undefined" ? Progreso.calcularNivel(modulo) : 2;
         let url = "/ejercicio/fragment/nuevo?nivel=" + nivel;
         if (sorpresa) url += "&sorpresa=true";
         else if (modulo) url += "&modulo=" + encodeURIComponent(modulo);
+        if (capitulo) url += "&capitulo=" + encodeURIComponent(capitulo);
+        if (seccion) url += "&seccion=" + encodeURIComponent(seccion);
 
-        const html = await cargarFragmento(url);
-        const zona = obtenerZona();
-        if (!zona) {
-            window.location.href = sorpresa ? "/ejercicio/nuevo?sorpresa=true" : "/ejercicio/nuevo?modulo=" + modulo;
-            return;
+        const usaIa = typeof ForjaCarga !== "undefined" && ForjaCarga.esModuloGemini(modulo);
+        if (usaIa) ForjaCarga.mostrar();
+
+        try {
+            const html = await cargarFragmento(url);
+            const zona = obtenerZona();
+            if (!zona) {
+                window.location.href = sorpresa ? "/ejercicio/nuevo?sorpresa=true" : "/ejercicio/nuevo?modulo=" + modulo;
+                return;
+            }
+            zona.outerHTML = html;
+            enlazarEventos();
+            iniciarTemporizador();
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        } finally {
+            if (usaIa) ForjaCarga.ocultar();
         }
-        zona.outerHTML = html;
-        enlazarEventos();
-        iniciarTemporizador();
-        window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
     function extraerTexto(selector, raiz) {

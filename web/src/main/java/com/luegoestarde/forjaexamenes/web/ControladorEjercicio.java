@@ -6,10 +6,14 @@ import com.luegoestarde.forjaexamenes.modelo.Escenario;
 import com.luegoestarde.forjaexamenes.modelo.ResultadoEvaluacion;
 import com.luegoestarde.forjaexamenes.servicio.AlmacenSesionesEjercicios;
 import com.luegoestarde.forjaexamenes.servicio.ServicioEvaluador;
+import com.luegoestarde.forjaexamenes.servicio.ServicioDocumentacion;
+import com.luegoestarde.forjaexamenes.servicio.ServicioEstadisticasUsuario;
 import com.luegoestarde.forjaexamenes.servicio.ServicioGenerador;
+import com.luegoestarde.forjaexamenes.servicio.ServicioMetadatosEjercicio;
 import com.luegoestarde.forjaexamenes.servicio.ServicioPdf;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
@@ -40,18 +44,27 @@ public class ControladorEjercicio {
     private final ServicioGenerador servicioGenerador;
     private final ServicioEvaluador servicioEvaluador;
     private final ServicioPdf servicioPdf;
+    private final ServicioDocumentacion servicioDocumentacion;
     private final AlmacenSesionesEjercicios almacenSesiones;
+    private final ServicioMetadatosEjercicio metadatosEjercicio;
+    private final ServicioEstadisticasUsuario servicioEstadisticas;
     private final ObjectMapper mapeadorJson;
     private final Random aleatorio = new Random();
 
     public ControladorEjercicio(ServicioGenerador servicioGenerador,
                               ServicioEvaluador servicioEvaluador,
                               ServicioPdf servicioPdf,
-                              AlmacenSesionesEjercicios almacenSesiones) {
+                              ServicioDocumentacion servicioDocumentacion,
+                              AlmacenSesionesEjercicios almacenSesiones,
+                              ServicioMetadatosEjercicio metadatosEjercicio,
+                              ServicioEstadisticasUsuario servicioEstadisticas) {
         this.servicioGenerador = servicioGenerador;
         this.servicioEvaluador = servicioEvaluador;
         this.servicioPdf = servicioPdf;
+        this.servicioDocumentacion = servicioDocumentacion;
         this.almacenSesiones = almacenSesiones;
+        this.metadatosEjercicio = metadatosEjercicio;
+        this.servicioEstadisticas = servicioEstadisticas;
         this.mapeadorJson = new ObjectMapper();
         this.mapeadorJson.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
     }
@@ -60,10 +73,10 @@ public class ControladorEjercicio {
     public String nuevo(@RequestParam(required = false) String modulo,
                         @RequestParam(required = false) Boolean sorpresa,
                         @RequestParam(required = false) Integer nivel,
+                        @RequestParam(required = false) String capitulo,
+                        @RequestParam(required = false) String seccion,
                         Model modelo) throws Exception {
-        int nivelEfectivo = nivel != null ? nivel : 2;
-        Escenario escenario = crearEscenario(modulo, sorpresa, nivelEfectivo);
-        almacenSesiones.guardarEscenario(escenario);
+        Escenario escenario = crearYGuardarEscenario(modulo, sorpresa, nivel, capitulo, seccion);
         modelo.addAttribute("escenario", escenario);
         return "ejercicio";
     }
@@ -72,9 +85,10 @@ public class ControladorEjercicio {
     public String fragmentoNuevo(@RequestParam(required = false) String modulo,
                                  @RequestParam(required = false) Boolean sorpresa,
                                  @RequestParam(required = false) Integer nivel,
+                                 @RequestParam(required = false) String capitulo,
+                                 @RequestParam(required = false) String seccion,
                                  Model modelo) throws Exception {
-        Escenario escenario = crearEscenario(modulo, sorpresa, nivel);
-        almacenSesiones.guardarEscenario(escenario);
+        Escenario escenario = crearYGuardarEscenario(modulo, sorpresa, nivel, capitulo, seccion);
         modelo.addAttribute("escenario", escenario);
         return "fragments/ejercicio-contenido :: contenido";
     }
@@ -92,7 +106,7 @@ public class ControladorEjercicio {
                           @RequestParam String respuesta,
                           @RequestParam(required = false) Long tiempoSegundos,
                           RedirectAttributes atributosRedireccion) throws Exception {
-        ResultadoEvaluacion resultado = evaluarRespuesta(id, respuesta);
+        ResultadoEvaluacion resultado = evaluarRespuesta(id, respuesta, tiempoSegundos);
         atributosRedireccion.addFlashAttribute("resultado", resultado);
         if (tiempoSegundos != null) {
             atributosRedireccion.addFlashAttribute("tiempoSegundos", tiempoSegundos);
@@ -105,12 +119,14 @@ public class ControladorEjercicio {
                               @RequestParam String respuesta,
                               @RequestParam(required = false) Long tiempoSegundos,
                               Model modelo) throws Exception {
-        ResultadoEvaluacion resultado = evaluarRespuesta(id, respuesta);
+        ResultadoEvaluacion resultado = evaluarRespuesta(id, respuesta, tiempoSegundos);
         Escenario escenario = obtenerEscenario(id);
         modelo.addAttribute("escenario", escenario);
         modelo.addAttribute("resultado", resultado);
         if (tiempoSegundos != null) {
             modelo.addAttribute("tiempoSegundos", tiempoSegundos);
+        } else {
+            almacenSesiones.obtenerTiempoSegundos(id).ifPresent(t -> modelo.addAttribute("tiempoSegundos", t));
         }
         return "fragments/resultado-contenido :: contenido";
     }
@@ -126,6 +142,10 @@ public class ControladorEjercicio {
         modelo.addAttribute("resultado", resultado);
         if (tiempoSegundos != null) {
             modelo.addAttribute("tiempoSegundos", tiempoSegundos);
+        } else if (resultado.getTiempoSegundos() != null) {
+            modelo.addAttribute("tiempoSegundos", resultado.getTiempoSegundos());
+        } else {
+            almacenSesiones.obtenerTiempoSegundos(id).ifPresent(t -> modelo.addAttribute("tiempoSegundos", t));
         }
         return "resultado";
     }
@@ -134,7 +154,8 @@ public class ControladorEjercicio {
     public ResponseEntity<Resource> descargarPdf(@PathVariable String id) throws Exception {
         Escenario escenario = obtenerEscenario(id);
         ResultadoEvaluacion resultado = almacenSesiones.obtenerResultado(id).orElse(null);
-        Path rutaPdf = servicioPdf.generarPdf(escenario, resultado);
+        Long tiempo = almacenSesiones.obtenerTiempoSegundos(id).orElse(null);
+        Path rutaPdf = servicioPdf.generarPdf(escenario, resultado, tiempo);
         Resource recurso = new FileSystemResource(rutaPdf);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + rutaPdf.getFileName() + "\"")
@@ -158,15 +179,49 @@ public class ControladorEjercicio {
     @GetMapping("/api/modulos")
     @ResponseBody
     public List<String> listarModulos() {
-        return MODULOS_SORPRESA;
+        return modulosParaSorpresa();
     }
 
-    private Escenario crearEscenario(String modulo, Boolean sorpresa, Integer nivel) throws Exception {
+    @GetMapping("/api/modulos-documentacion")
+    @ResponseBody
+    public List<ServicioDocumentacion.ModuloDocumentacion> listarModulosDocumentacion() {
+        return servicioDocumentacion.listarModulosIndexados();
+    }
+
+    @GetMapping("/api/modulos-documentacion/{modulo}/secciones")
+    @ResponseBody
+    public List<ServicioDocumentacion.SeccionDocumentacion> listarSeccionesDocumentacion(
+            @PathVariable String modulo) {
+        return servicioDocumentacion.listarSecciones(modulo);
+    }
+
+    private List<String> modulosParaSorpresa() {
+        List<String> lista = new ArrayList<>(MODULOS_SORPRESA);
+        if (servicioDocumentacion.geminiConfigurado()) {
+            lista.addAll(servicioDocumentacion.listarIdsModulos());
+        }
+        return lista;
+    }
+
+    private Escenario crearYGuardarEscenario(String modulo, Boolean sorpresa, Integer nivel,
+                                             String capitulo, String seccion) throws Exception {
+        Escenario escenario = crearEscenario(modulo, sorpresa, nivel, capitulo, seccion);
+        metadatosEjercicio.marcarEscenario(
+                escenario,
+                metadatosEjercicio.loginActual(),
+                metadatosEjercicio.nombreVisibleActual());
+        almacenSesiones.guardarEscenario(escenario);
+        return escenario;
+    }
+
+    private Escenario crearEscenario(String modulo, Boolean sorpresa, Integer nivel,
+                                     String capitulo, String seccion) throws Exception {
         int nivelEfectivo = nivel != null ? nivel : 2;
         Optional<String> moduloOpt;
         if (Boolean.TRUE.equals(sorpresa) || modulo == null || modulo.isBlank()) {
             if (Boolean.TRUE.equals(sorpresa)) {
-                String elegido = MODULOS_SORPRESA.get(aleatorio.nextInt(MODULOS_SORPRESA.size()));
+                List<String> candidatos = modulosParaSorpresa();
+                String elegido = candidatos.get(aleatorio.nextInt(candidatos.size()));
                 moduloOpt = Optional.of(elegido);
             } else {
                 moduloOpt = Optional.empty();
@@ -174,18 +229,30 @@ public class ControladorEjercicio {
         } else {
             moduloOpt = Optional.of(modulo);
         }
-        return servicioGenerador.generar(moduloOpt, nivelEfectivo);
+        return servicioGenerador.generar(
+                moduloOpt,
+                nivelEfectivo,
+                Optional.ofNullable(capitulo),
+                Optional.ofNullable(seccion));
     }
 
-    private ResultadoEvaluacion evaluarRespuesta(String id, String respuesta) throws Exception {
+    private ResultadoEvaluacion evaluarRespuesta(String id, String respuesta, Long tiempoSegundos) throws Exception {
         Escenario escenario = obtenerEscenario(id);
+        String nombreVisible = metadatosEjercicio.nombreVisibleActual();
         ResultadoEvaluacion resultado = servicioEvaluador.evaluar(escenario, respuesta);
-        almacenSesiones.guardarResultado(id, resultado);
+        metadatosEjercicio.enriquecerResultado(resultado, escenario, nombreVisible, tiempoSegundos);
+        almacenSesiones.guardarResultado(id, resultado, tiempoSegundos);
+        servicioEstadisticas.registrar(
+                metadatosEjercicio.loginActual(),
+                escenario.getModulo(),
+                resultado.getNota(),
+                resultado.isAprobado(),
+                tiempoSegundos);
         return resultado;
     }
 
     private Escenario obtenerEscenario(String id) {
-        return almacenSesiones.obtenerEscenario(id)
+        return almacenSesiones.obtenerEscenario(id, metadatosEjercicio.loginActual())
                 .orElseThrow(() -> new IllegalArgumentException("Ejercicio no encontrado: " + id));
     }
 }

@@ -2,6 +2,7 @@ package com.luegoestarde.forjaexamenes.servicio;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.luegoestarde.forjaexamenes.configuracion.CargadorEnvFichero;
 import com.luegoestarde.forjaexamenes.configuracion.PropiedadesForjaExamenes;
 import com.luegoestarde.forjaexamenes.modelo.Escenario;
 import java.io.BufferedReader;
@@ -31,6 +32,14 @@ public class ServicioGenerador {
     }
 
     public Escenario generar(Optional<String> modulo, int nivel) throws Exception {
+        return generar(modulo, nivel, Optional.empty(), Optional.empty());
+    }
+
+    public Escenario generar(
+            Optional<String> modulo,
+            int nivel,
+            Optional<String> capitulo,
+            Optional<String> seccion) throws Exception {
         Path script = Path.of(propiedades.getScriptGenerador()).toAbsolutePath().normalize();
         if (!Files.exists(script)) {
             throw new IllegalStateException("No se encuentra generador.py en: " + script);
@@ -46,10 +55,19 @@ public class ServicioGenerador {
             comando.add("--modulo");
             comando.add(m);
         });
+        capitulo.filter(c -> !c.isBlank()).ifPresent(c -> {
+            comando.add("--capitulo");
+            comando.add(c);
+        });
+        seccion.filter(s -> !s.isBlank()).ifPresent(s -> {
+            comando.add("--seccion");
+            comando.add(s);
+        });
 
         ProcessBuilder constructorProceso = new ProcessBuilder(comando);
         constructorProceso.directory(script.getParent().toFile());
         constructorProceso.redirectErrorStream(true);
+        configurarEntornoGemini(constructorProceso);
         Process proceso = constructorProceso.start();
 
         StringBuilder salida = new StringBuilder();
@@ -63,9 +81,34 @@ public class ServicioGenerador {
 
         int codigo = proceso.waitFor();
         if (codigo != 0) {
-            throw new IllegalStateException("generador.py falló: " + salida);
+            throw new IllegalStateException(MensajesErrorGenerador.resumir(salida.toString()));
         }
 
         return mapeador.readValue(salida.toString().trim(), Escenario.class);
+    }
+
+    private void configurarEntornoGemini(ProcessBuilder constructorProceso) {
+        var entorno = constructorProceso.environment();
+        // Quitar claves heredadas del shell/IDE (suelen ser inválidas y bloquean la lectura de .env en Python)
+        entorno.remove("GEMINI_API_KEY");
+        entorno.remove("FORJAEXAMENES_GEMINI_API_KEY");
+        entorno.remove("FORJAEXAMENES_GEMINI_MODEL");
+
+        String raiz = Path.of(propiedades.getRaiz()).toAbsolutePath().normalize().toString();
+        String clave = CargadorEnvFichero.resolverGeminiApiKey(propiedades.getGeminiApiKey(), raiz);
+        if (!clave.isBlank()) {
+            entorno.put("GEMINI_API_KEY", clave);
+            entorno.put("FORJAEXAMENES_GEMINI_API_KEY", clave);
+        }
+        String modelo = CargadorEnvFichero.resolverGeminiModelo(propiedades.getGeminiModel(), raiz);
+        if (!modelo.isBlank()) {
+            entorno.put("FORJAEXAMENES_GEMINI_MODEL", modelo);
+        }
+        if (propiedades.isGeminiGuardarPendientes()) {
+            entorno.put("FORJAEXAMENES_GEMINI_GUARDAR_PENDIENTES", "true");
+        }
+        if (propiedades.isGeminiSoloAprobados()) {
+            entorno.put("FORJAEXAMENES_GEMINI_SOLO_APROBADOS", "true");
+        }
     }
 }

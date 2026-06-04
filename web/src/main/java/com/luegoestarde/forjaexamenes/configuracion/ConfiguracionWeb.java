@@ -8,7 +8,7 @@ import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
-@EnableConfigurationProperties(PropiedadesForjaExamenes.class)
+@EnableConfigurationProperties({PropiedadesForjaExamenes.class, PropiedadesLogin.class})
 public class ConfiguracionWeb implements WebMvcConfigurer {
 
     @Override

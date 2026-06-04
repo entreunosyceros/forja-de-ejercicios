@@ -2,10 +2,20 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
 <div th:fragment="contenido" id="zona-practica"
-     th:attr="data-modulo=${escenario.modulo},data-ejercicio-id=${escenario.id}">
+     th:with="origen=${@parametros.origenApuntes(escenario.parametros)}"
+     th:attr="data-modulo=${escenario.modulo},
+              data-ejercicio-id=${escenario.id},
+              data-capitulo=${origen != null ? origen['capitulo_slug'] : ''},
+              data-seccion=${origen != null ? origen['seccion_slug'] : ''}">
     <div class="exam-header">
         <span class="badge" th:text="${escenario.modulo}">modulo</span>
         <h1 th:text="${escenario.titulo}">Título</h1>
+        <p class="exam-meta" th:if="${escenario.usuario != null or escenario.fechaHora != null}">
+            <span th:if="${escenario.usuario != null}">Alumno: <strong th:text="${escenario.usuario}">alumno</strong></span>
+            <span th:if="${escenario.usuario != null and escenario.fechaHora != null}"> · </span>
+            <span th:if="${escenario.fechaHora != null}">Inicio: <strong th:text="${escenario.fechaHora}">01/01/2026 10:00</strong></span>
+            <span th:if="${resultado.fechaHoraEvaluacion != null}"> · Corregido: <strong th:text="${resultado.fechaHoraEvaluacion}">—</strong></span>
+        </p>
     </div>
 
     <p class="mensaje-motivacion card" id="mensaje-motivacion" hidden></p>
@@ -41,6 +51,35 @@
         </ul>
     </article>
 
+    <article class="card card-repaso" th:if="${!resultado.aprobado and origen != null}">
+        <h2>Repasa en tus apuntes</h2>
+        <p class="hint">Este ejercicio se generó solo a partir del material del profesor:</p>
+        <ul class="lista-origen-apuntes">
+            <li><strong>Apuntes:</strong> <span th:text="${origen['titulo_apuntes']}">—</span></li>
+            <li th:if="${origen['capitulo_titulo'] != null and !#strings.isEmpty(origen['capitulo_titulo'])}">
+                <strong>Capítulo:</strong> <span th:text="${origen['capitulo_titulo']}">—</span>
+            </li>
+            <li th:if="${origen['seccion'] != null and !#strings.isEmpty(origen['seccion'])}">
+                <strong>Sección:</strong> <span th:text="${origen['seccion']}">—</span>
+            </li>
+            <li th:if="${origen['pagina'] != null}">
+                <strong>Página:</strong> <span th:text="${origen['pagina']}">—</span>
+            </li>
+            <li th:if="${origen['archivo'] != null}">
+                <strong>Archivo:</strong> <code th:text="${origen['archivo']}">—</code>
+            </li>
+        </ul>
+        <p class="repaso-enlace-pdf" th:if="${origen['fuente'] != null}">
+            <a class="btn btn-primary"
+               th:href="@{/ejercicio/apuntes/ver(fuente=${origen['fuente']}, pagina=${origen['pagina']})}"
+               target="_blank" rel="noopener">
+                📄 Abrir apuntes en PDF
+                <span th:if="${origen['pagina'] != null}"> (página <span th:text="${origen['pagina']}">?</span>)</span>
+            </a>
+            <span class="hint">Se abre el material del profesor en la página del fragmento usado en este ejercicio.</span>
+        </p>
+    </article>
+
     <article class="card">
         <h2>Tu respuesta</h2>
         <pre class="respuesta-alumno" th:text="${resultado.respuestaAlumno}">...</pre>
@@ -48,7 +87,7 @@
 
     <details class="card collapsible" th:if="${modoProfesor}">
         <summary>Solución de referencia (profesor)</summary>
-        <pre th:text="${resultado.solucionReferencia}">...</pre>
+        <pre th:text="${@texto.plano(resultado.solucionReferencia)}">...</pre>
     </details>
 
     <div class="form-actions">

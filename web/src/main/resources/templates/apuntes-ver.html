@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{plantilla :: plantilla(~{::section})}">
+<section th:with="tituloPagina=${tituloPagina}">
+    <div class="card">
+        <h1 th:text="${tituloPagina}">Apuntes</h1>
+        <p class="hint" th:if="${pagina != null}">
+            Fragmento del ejercicio en la página <strong th:text="${pagina}">?</strong>.
+            Si el visor no salta solo, usa el enlace inferior.
+        </p>
+        <iframe class="visor-pdf-apuntes" title="Apuntes en PDF"
+                th:src="${pagina != null and pagina > 0}
+                    ? |@{/ejercicio/apuntes/archivo(fuente=${fuente})}#page=${pagina}|
+                    : @{/ejercicio/apuntes/archivo(fuente=${fuente})}"></iframe>
+        <div class="form-actions">
+            <a class="btn btn-primary"
+               th:href="${pagina != null and pagina > 0}
+                    ? |@{/ejercicio/apuntes/archivo(fuente=${fuente})}#page=${pagina}|
+                    : @{/ejercicio/apuntes/archivo(fuente=${fuente})}"
+               target="_blank" rel="noopener">Abrir PDF en pestaña nueva</a>
+            <a class="btn btn-ghost" href="javascript:history.back()">Volver al ejercicio</a>
+        </div>
+    </div>
+</section>
+</html>

@@ -1,0 +1,3 @@
+# Dependencias para ejercicios desde PDF + Gemini (pip install -r requirements-docs.txt)
+pypdf>=4.0.0
+google-genai>=1.0.0

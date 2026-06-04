@@ -6,7 +6,7 @@
     <meta name="color-scheme" content="light dark"/>
     <title th:text="${tituloPagina != null ? tituloPagina + ' — Forja de ejercicios' : 'Forja de ejercicios'}">Forja de ejercicios</title>
     <link rel="icon" type="image/png" th:href="@{/img/forja-de-examenes.png}"/>
-    <link rel="stylesheet" th:href="@{/css/aplicacion.css(v=2)}"/>
+    <link rel="stylesheet" th:href="@{/css/aplicacion.css(v=5)}"/>
 </head>
 <body>
 <header class="site-header">
@@ -21,6 +21,14 @@
             <a th:href="@{/}">Inicio</a>
             <a th:href="@{/ejercicio/nuevo}">Ejercicio aleatorio</a>
         </nav>
+        <div class="usuario-sesion" th:if="${nombreUsuario != null}">
+            <a class="badge badge-usuario" th:href="@{/perfil}"
+               th:title="|Perfil de ${nombreUsuario}|">Perfil</a>
+            <form class="form-logout" method="post" th:action="@{/logout}">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <button type="submit" class="btn btn-ghost btn-sm">Salir</button>
+            </form>
+        </div>
         <div class="conmutador-tema" role="group" aria-label="Tema de la interfaz">
             <button type="button" class="btn-tema" data-tema="claro" aria-pressed="false">Claro</button>
             <button type="button" class="btn-tema" data-tema="oscuro" aria-pressed="false">Oscuro</button>
@@ -38,9 +46,20 @@
     </div>
 </footer>
 
+<div id="overlay-carga-ia" class="overlay-carga-ia" hidden aria-live="polite" aria-busy="true">
+    <div class="overlay-carga-ia-panel" role="status">
+        <div class="overlay-carga-ia-spinner" aria-hidden="true"></div>
+        <p class="overlay-carga-ia-titulo">Generando con Gemini…</p>
+        <p class="overlay-carga-ia-sub">
+            La IA está creando tu ejercicio a partir de los apuntes. Puede tardar unos segundos.
+        </p>
+    </div>
+</div>
+
 <script th:src="@{/js/tema.js}"></script>
 <script th:src="@{/vendor/chart.umd.min.js}"></script>
 <script th:src="@{/js/progreso.js(v=1)}"></script>
-<script th:src="@{/js/practica.js(v=1)}"></script>
+<script th:src="@{/js/cargando.js(v=1)}"></script>
+<script th:src="@{/js/practica.js(v=2)}"></script>
 </body>
 </html>

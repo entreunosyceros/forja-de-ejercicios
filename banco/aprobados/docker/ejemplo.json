@@ -1,0 +1,34 @@
+{
+  "id": "banco-docker-01",
+  "modulo": "banco_docker",
+  "titulo": "Banco: contenedor nginx",
+  "enunciado": "Levanta un contenedor nginx publicando el puerto 8080 del host al 80 del contenedor.\n\nEscribe los comandos en el cuadro de respuesta.",
+  "criterios": [
+    {
+      "tipo": "contiene_todos",
+      "terminos": ["docker run"],
+      "peso": 3,
+      "esperado": "Usar docker run",
+      "pista": "Empieza con docker run"
+    },
+    {
+      "tipo": "contiene_alguno",
+      "terminos": ["-p 8080:80", "-p8080:80"],
+      "peso": 3,
+      "esperado": "Mapear puerto 8080:80",
+      "pista": "Usa -p para publicar puertos"
+    },
+    {
+      "tipo": "contiene_todos",
+      "terminos": ["nginx"],
+      "peso": 2,
+      "esperado": "Imagen nginx",
+      "pista": "La imagen suele ser nginx"
+    }
+  ],
+  "solucion_referencia": "docker run -d -p 8080:80 nginx",
+  "parametros": {
+    "generado_con": "banco",
+    "origen": "ejemplo_manual"
+  }
+}

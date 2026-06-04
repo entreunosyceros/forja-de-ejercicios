@@ -17,6 +17,10 @@ public class ResultadoEvaluacion {
     private List<DetalleCriterio> detalles;
     private String solucionReferencia;
     private String respuestaAlumno;
+    private String usuario;
+    private String fechaHoraInicio;
+    private String fechaHoraEvaluacion;
+    private Long tiempoSegundos;
 
     public String getExamenId() { return examenId; }
     public void setExamenId(String examenId) { this.examenId = examenId; }
@@ -50,6 +54,18 @@ public class ResultadoEvaluacion {
 
     public String getRespuestaAlumno() { return respuestaAlumno; }
     public void setRespuestaAlumno(String respuestaAlumno) { this.respuestaAlumno = respuestaAlumno; }
+
+    public String getUsuario() { return usuario; }
+    public void setUsuario(String usuario) { this.usuario = usuario; }
+
+    public String getFechaHoraInicio() { return fechaHoraInicio; }
+    public void setFechaHoraInicio(String fechaHoraInicio) { this.fechaHoraInicio = fechaHoraInicio; }
+
+    public String getFechaHoraEvaluacion() { return fechaHoraEvaluacion; }
+    public void setFechaHoraEvaluacion(String fechaHoraEvaluacion) { this.fechaHoraEvaluacion = fechaHoraEvaluacion; }
+
+    public Long getTiempoSegundos() { return tiempoSegundos; }
+    public void setTiempoSegundos(Long tiempoSegundos) { this.tiempoSegundos = tiempoSegundos; }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class DetalleCriterio {
