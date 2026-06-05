@@ -1,18 +1,23 @@
 package com.luegoestarde.forjaexamenes.servicio;
 
 import com.luegoestarde.forjaexamenes.configuracion.PropiedadesForjaExamenes;
+import com.luegoestarde.forjaexamenes.evento.RecursosActualizadosEvent;
+import com.luegoestarde.forjaexamenes.evento.RecursosActualizadosEvent.Tipo;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -27,11 +32,16 @@ public class ServicioIndexacionDocumentacion implements ApplicationRunner {
             Instant instante) {}
 
     private final PropiedadesForjaExamenes propiedades;
+    private final ApplicationEventPublisher eventos;
     private final AtomicReference<ResultadoIndexacion> ultimoResultado = new AtomicReference<>(
             new ResultadoIndexacion(false, "Aún no se ha indexado la documentación.", 0, null));
+    private final AtomicBoolean indexacionEnCurso = new AtomicBoolean(false);
 
-    public ServicioIndexacionDocumentacion(PropiedadesForjaExamenes propiedades) {
+    public ServicioIndexacionDocumentacion(
+            PropiedadesForjaExamenes propiedades,
+            ApplicationEventPublisher eventos) {
         this.propiedades = propiedades;
+        this.eventos = eventos;
     }
 
     @Override
@@ -62,6 +72,32 @@ public class ServicioIndexacionDocumentacion implements ApplicationRunner {
         return ultimoResultado.get();
     }
 
+    public boolean indexacionEnCurso() {
+        return indexacionEnCurso.get();
+    }
+
+    /**
+     * Lanza la indexación en segundo plano (no bloquea la petición HTTP ni la sesión).
+     *
+     * @return {@code true} si se ha encolado; {@code false} si ya había una en curso.
+     */
+    public boolean solicitarReindexacionAsincrona() {
+        if (!indexacionEnCurso.compareAndSet(false, true)) {
+            return false;
+        }
+        reindexarEnSegundoPlano();
+        return true;
+    }
+
+    @Async
+    void reindexarEnSegundoPlano() {
+        try {
+            reindexar();
+        } finally {
+            indexacionEnCurso.set(false);
+        }
+    }
+
     /**
      * Ejecuta indexador_docs.py (idempotente; seguro llamar varias veces).
      */
@@ -84,6 +120,7 @@ public class ServicioIndexacionDocumentacion implements ApplicationRunner {
                     0,
                     Instant.now());
             ultimoResultado.set(r);
+            eventos.publishEvent(new RecursosActualizadosEvent(this, Tipo.INDICE_DOCUMENTACION));
             return r;
         }
 
@@ -121,6 +158,7 @@ public class ServicioIndexacionDocumentacion implements ApplicationRunner {
                     : "Indexación terminada sin colecciones (revisa los PDFs).";
             ResultadoIndexacion r = new ResultadoIndexacion(true, mensaje, colecciones, ahora);
             ultimoResultado.set(r);
+            eventos.publishEvent(new RecursosActualizadosEvent(this, Tipo.INDICE_DOCUMENTACION));
             return r;
         } catch (Exception e) {
             ResultadoIndexacion r = new ResultadoIndexacion(

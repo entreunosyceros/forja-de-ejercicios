@@ -21,6 +21,7 @@ public class PropiedadesForjaExamenes {
     private boolean geminiGuardarPendientes = false;
     private boolean geminiSoloAprobados = false;
     private int subidaPdfMaxMb = 30;
+    private boolean limpiarPracticaAlNuevoEjercicio = true;
 
     public String getRaiz() { return raiz; }
     public void setRaiz(String raiz) { this.raiz = raiz; }
@@ -80,5 +81,13 @@ public class PropiedadesForjaExamenes {
 
     public long getSubidaPdfMaxBytes() {
         return (long) subidaPdfMaxMb * 1024 * 1024;
+    }
+
+    public boolean isLimpiarPracticaAlNuevoEjercicio() {
+        return limpiarPracticaAlNuevoEjercicio;
+    }
+
+    public void setLimpiarPracticaAlNuevoEjercicio(boolean limpiarPracticaAlNuevoEjercicio) {
+        this.limpiarPracticaAlNuevoEjercicio = limpiarPracticaAlNuevoEjercicio;
     }
 }

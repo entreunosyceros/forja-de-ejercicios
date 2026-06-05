@@ -27,4 +27,16 @@ class PruebaCargadorEnvFichero {
         String clave = CargadorEnvFichero.resolverGeminiApiKey("desde_propiedades", tempDir.toString());
         assertEquals("desde_propiedades", clave);
     }
+
+    @Test
+    void datosTienenPrioridadSobreEnv() throws Exception {
+        Path datos = tempDir.resolve("datos");
+        Files.createDirectories(datos);
+        Files.writeString(
+                datos.resolve("gemini.json"),
+                "{\"apiKey\":\"AIzaSyDesdeInterfaz\"}\n");
+        Files.writeString(tempDir.resolve(".env"), "GEMINI_API_KEY=desde_env\n");
+        String clave = CargadorEnvFichero.resolverGeminiApiKey("", tempDir.toString(), datos);
+        assertEquals("AIzaSyDesdeInterfaz", clave);
+    }
 }

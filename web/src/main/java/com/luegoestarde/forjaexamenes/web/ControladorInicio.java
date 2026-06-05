@@ -45,6 +45,7 @@ public class ControladorInicio {
         modelo.addAttribute("geminiConfigurado", servicioDocumentacion.geminiConfigurado());
         modelo.addAttribute("autoIndexarActivo", propiedades.isAutoIndexarDocumentacion());
         modelo.addAttribute("ultimaIndexacion", servicioIndexacion.obtenerUltimoResultado());
+        modelo.addAttribute("indexacionEnCurso", servicioIndexacion.indexacionEnCurso());
         modelo.addAttribute("modulosBanco", servicioBanco.listarParaPortada());
         modelo.addAttribute("temasDocumentacion", servicioSubida.listarTemasEnDisco());
         modelo.addAttribute("subidaPdfMaxMb", propiedades.getSubidaPdfMaxMb());

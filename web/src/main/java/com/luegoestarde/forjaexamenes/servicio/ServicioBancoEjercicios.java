@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.luegoestarde.forjaexamenes.configuracion.PropiedadesForjaExamenes;
+import com.luegoestarde.forjaexamenes.evento.RecursosActualizadosEvent;
+import com.luegoestarde.forjaexamenes.evento.RecursosActualizadosEvent.Tipo;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -15,6 +17,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 import jakarta.annotation.PostConstruct;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -32,10 +35,14 @@ public class ServicioBancoEjercicios {
             String creado) {}
 
     private final PropiedadesForjaExamenes propiedades;
+    private final ApplicationEventPublisher eventos;
     private final ObjectMapper mapeador = new ObjectMapper();
 
-    public ServicioBancoEjercicios(PropiedadesForjaExamenes propiedades) {
+    public ServicioBancoEjercicios(
+            PropiedadesForjaExamenes propiedades,
+            ApplicationEventPublisher eventos) {
         this.propiedades = propiedades;
+        this.eventos = eventos;
     }
 
     @PostConstruct
@@ -60,10 +67,8 @@ public class ServicioBancoEjercicios {
     }
 
     public List<EntradaCatalogo> listarParaPortada() throws IOException {
+        asegurarCatalogoActualizado();
         Path catalogo = directorioBanco().resolve("catalogo.json");
-        if (!Files.isRegularFile(catalogo)) {
-            reconstruirCatalogo();
-        }
         if (!Files.isRegularFile(catalogo)) {
             return List.of();
         }
@@ -140,6 +145,20 @@ public class ServicioBancoEjercicios {
         Files.deleteIfExists(carpetaPendientes().resolve(id + ".json"));
     }
 
+    /** Sincroniza si el CLI o el disco cambió sin pasar por la web. */
+    public void asegurarCatalogoActualizado() throws IOException {
+        Path catalogo = directorioBanco().resolve("catalogo.json");
+        long ultimoAprobado = ultimaModificacionEnAprobados();
+        if (!Files.isRegularFile(catalogo)) {
+            reconstruirCatalogo();
+            return;
+        }
+        long mtimeCatalogo = Files.getLastModifiedTime(catalogo).toMillis();
+        if (ultimoAprobado > mtimeCatalogo + 500L) {
+            reconstruirCatalogo();
+        }
+    }
+
     public void reconstruirCatalogo() throws IOException {
         Path banco = directorioBanco();
         Files.createDirectories(carpetaAprobados());
@@ -168,6 +187,27 @@ public class ServicioBancoEjercicios {
         catalogo.set("ejercicios", ejercicios);
         mapeador.writerWithDefaultPrettyPrinter()
                 .writeValue(banco.resolve("catalogo.json").toFile(), catalogo);
+        eventos.publishEvent(new RecursosActualizadosEvent(this, Tipo.CATALOGO_BANCO));
+    }
+
+    private long ultimaModificacionEnAprobados() throws IOException {
+        Path aprobados = carpetaAprobados();
+        if (!Files.isDirectory(aprobados)) {
+            return 0L;
+        }
+        try (Stream<Path> stream = Files.walk(aprobados)) {
+            return stream
+                    .filter(p -> p.toString().endsWith(".json"))
+                    .mapToLong(p -> {
+                        try {
+                            return Files.getLastModifiedTime(p).toMillis();
+                        } catch (IOException e) {
+                            return 0L;
+                        }
+                    })
+                    .max()
+                    .orElse(0L);
+        }
     }
 
     private PendienteBanco leerPendiente(Path ruta) throws IOException {

@@ -1,5 +1,7 @@
 package com.luegoestarde.forjaexamenes.configuracion;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -52,8 +54,17 @@ public final class CargadorEnvFichero {
     }
 
     public static String resolverGeminiApiKey(String desdePropiedades, String raizProyecto) {
+        return resolverGeminiApiKey(desdePropiedades, raizProyecto, null);
+    }
+
+    public static String resolverGeminiApiKey(
+            String desdePropiedades, String raizProyecto, Path directorioDatos) {
         if (desdePropiedades != null && !desdePropiedades.isBlank()) {
             return desdePropiedades.strip();
+        }
+        String desdeDatos = leerApiKeyDesdeDatos(directorioDatos);
+        if (!desdeDatos.isEmpty()) {
+            return desdeDatos;
         }
         Map<String, String> env = leerTodas(raizProyecto);
         String clave = env.getOrDefault("GEMINI_API_KEY", "").strip();
@@ -68,5 +79,21 @@ public final class CargadorEnvFichero {
             return desdePropiedades.strip();
         }
         return leer(raizProyecto, "FORJAEXAMENES_GEMINI_MODEL").orElse("").strip();
+    }
+
+    private static String leerApiKeyDesdeDatos(Path directorioDatos) {
+        if (directorioDatos == null) {
+            return "";
+        }
+        Path fichero = directorioDatos.toAbsolutePath().normalize().resolve("gemini.json");
+        if (!Files.isRegularFile(fichero)) {
+            return "";
+        }
+        try {
+            JsonNode raiz = new ObjectMapper().readTree(fichero.toFile());
+            return raiz.path("apiKey").asText("").strip();
+        } catch (IOException e) {
+            return "";
+        }
     }
 }

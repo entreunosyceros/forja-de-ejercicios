@@ -2,13 +2,32 @@
 <html lang="es" xmlns:th="http://www.thymeleaf.org"
       th:replace="~{plantilla :: plantilla(~{::section})}">
 <section class="pagina-profesor-revisar-detalle" th:with="comp=${revision['comparativa_propuesta']},
-         prop=${revision['propuesta_gemini']}, esc=${revision['escenario']}">
+         prop=${revision['propuesta_gemini']}, esc=${revision['escenario']},
+         resumen=${revision['resumen_pruebas']}">
     <div class="card card-wide">
         <h1>Revisión: <code th:text="${ejercicioId}">id</code></h1>
         <p class="hint">
             <span th:text="${revision['modulo']}">mod</span>
             · Creado: <span th:text="${revision['creado']}">—</span>
         </p>
+
+        <div class="resumen-pruebas-criterios card-inner" th:if="${resumen != null}">
+            <p class="resumen-pruebas-titulo">Resultado de las pruebas automáticas</p>
+            <div class="badges-pruebas">
+                <span class="badge badge-test badge-test-pass"
+                      th:text="'Referencia ' + ${resumen['referencia_ok']} + '/' + ${resumen['total_criterios']} + ' PASSED'">—</span>
+                <span class="badge badge-test badge-test-pass" th:if="${resumen['alternativa_total'] > 0}"
+                      th:text="'Sinónimos ' + ${resumen['alternativa_ok']} + '/' + ${resumen['alternativa_total']} + ' PASSED'">—</span>
+                <span class="badge badge-test badge-test-pass"
+                      th:text="'Insuficiente ' + ${resumen['insuficiente_ok']} + '/' + ${resumen['total_criterios']} + ' OK (debía fallar)'">—</span>
+            </div>
+            <p class="alerta-indexacion alerta-ok" th:if="${resumen['listo_para_aprobar'] == true}">
+                Listo para aprobar: todas las comprobaciones se comportan como se espera.
+            </p>
+            <p class="alerta-indexacion alerta-error" th:if="${resumen['listo_para_aprobar'] != true}">
+                Revisa los criterios marcados en FAILED antes de publicar.
+            </p>
+        </div>
 
         <p class="alerta-indexacion alerta-ok" th:if="${mensajePerfilOk}" th:text="${mensajePerfilOk}">OK</p>
         <p class="alerta-indexacion alerta-error" th:if="${errorPerfil}" th:text="${errorPerfil}">Error</p>
@@ -66,9 +85,9 @@
         <div class="card card-wide">
             <h2>Criterios y pruebas automáticas</h2>
             <p class="hint">
-                <strong>Ref. OK</strong> = con la solución de referencia debe cumplirse.
-                <strong>Alt.</strong> = variante con sinónimo (p. ej. <code>docker container run</code>).
-                <strong>Insuf.</strong> = respuesta incompleta; debe <em>fallar</em> (❌ esperado).
+                <span class="badge badge-test badge-test-pass">PASSED</span> cumple lo esperado.
+                <span class="badge badge-test badge-test-fail">FAILED</span> no cumple.
+                En «Insuficiente», <span class="badge badge-test badge-test-expected-fail">OK (debía fallar)</span> es lo correcto.
             </p>
             <div class="tabla-revision-wrap">
                 <table class="tabla-revision-criterios">
@@ -80,8 +99,8 @@
                         <th>Peso</th>
                         <th>Alias</th>
                         <th>Ref. OK</th>
-                        <th>Alt.</th>
-                        <th>Insuf.</th>
+                        <th>Alt. (sinónimo)</th>
+                        <th>Insuficiente</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -91,18 +110,28 @@
                         <td th:text="${fila['exigencia']}">—</td>
                         <td th:text="${fila['peso']}">1</td>
                         <td class="celda-alias" th:text="${fila['aliases'] != null and !#strings.isEmpty(fila['aliases']) ? fila['aliases'] : '—'}">—</td>
-                        <td th:classappend="${fila['prueba_referencia']['cumplido'] == true} ? ' celda-ok' : ' celda-fail'"
-                            th:text="${fila['prueba_referencia']['cumplido'] == true} ? '✅' : '❌'">?</td>
                         <td>
-                            <span th:if="${fila['prueba_alternativa']['aplica'] == true}">
-                                <span th:classappend="${fila['prueba_alternativa']['cumplido'] == true} ? ' celda-ok' : ' celda-fail'"
-                                      th:text="${fila['prueba_alternativa']['cumplido'] == true} ? '✅' : '❌'">?</span>
-                                <code class="prueba-respuesta" th:text="${fila['prueba_alternativa']['respuesta']}">...</code>
-                            </span>
-                            <span th:if="${fila['prueba_alternativa']['aplica'] != true}">—</span>
+                            <span th:if="${fila['prueba_referencia']['cumplido'] == true}"
+                                  class="badge badge-test badge-test-pass">PASSED</span>
+                            <span th:if="${fila['prueba_referencia']['cumplido'] != true}"
+                                  class="badge badge-test badge-test-fail">FAILED</span>
                         </td>
-                        <td th:classappend="${fila['prueba_insuficiente']['cumplido'] != true} ? ' celda-ok' : ' celda-fail'"
-                            th:text="${fila['prueba_insuficiente']['cumplido'] == true} ? '⚠️ cumple' : '❌ ok'">?</td>
+                        <td>
+                            <span th:if="${fila['prueba_alternativa']['aplica'] != true}">—</span>
+                            <div th:if="${fila['prueba_alternativa']['aplica'] == true}" class="celda-prueba-detalle">
+                                <span th:if="${fila['prueba_alternativa']['cumplido'] == true}"
+                                      class="badge badge-test badge-test-pass">PASSED</span>
+                                <span th:if="${fila['prueba_alternativa']['cumplido'] != true}"
+                                      class="badge badge-test badge-test-fail">FAILED</span>
+                                <code class="prueba-respuesta" th:text="${fila['prueba_alternativa']['respuesta']}">...</code>
+                            </div>
+                        </td>
+                        <td>
+                            <span th:if="${fila['prueba_insuficiente']['cumplido'] != true}"
+                                  class="badge badge-test badge-test-expected-fail">OK (debía fallar)</span>
+                            <span th:if="${fila['prueba_insuficiente']['cumplido'] == true}"
+                                  class="badge badge-test badge-test-fail">FAILED (no debía pasar)</span>
+                        </td>
                     </tr>
                     </tbody>
                 </table>

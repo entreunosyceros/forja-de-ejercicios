@@ -35,7 +35,12 @@ chmod +x arrancar-web.sh    # solo la primera vez
 
 Espera `Started AplicacionForjaExamenes` y abre **http://localhost:8080**.
 
-- **Login:** `alumno` / `practica` o `demo` / `demo`
+| Rol | Usuario | Contraseña |
+|-----|---------|------------|
+| Alumno | `alumno` | `practica` |
+| Alumno (demo) | `demo` | `demo` |
+| **Profesor** | `profesor` | `profesor` |
+
 - **Ayuda:** http://localhost:8080/como-funciona
 
 > El `pom.xml` está en **`web/`**. Usa `./arrancar-web.sh` o `cd web && mvn spring-boot:run`.
@@ -66,10 +71,12 @@ Estos ficheros se generan al usar la app y están en `.gitignore` (no deben subi
 | Ruta | Contenido |
 |------|-----------|
 | `datos/estadisticas/*.json` | Estadísticas por usuario (intentos, notas, racha…) |
-| `datos/usuarios.json` | Perfiles y contraseñas si se editan desde la web |
+| `datos/usuarios.json` | Perfiles, contraseñas y rol (`alumno` / `profesor`) |
+| `datos/gemini.json` | Clave API de Gemini guardada desde Perfil |
 | `datos-practica/` | Archivos del alumno en el contenedor de práctica |
 | `indice/*.json` | Índice de PDFs indexados |
 | `banco/pendientes/` | Propuestas Gemini pendientes de revisión |
+| `examenes/paquetes/` | Paquetes ZIP generados para el profesor |
 | `.env` | Clave de Gemini y secretos |
 
 Solo se versionan los `.gitkeep` de las carpetas vacías.
@@ -78,11 +85,20 @@ Solo se versionan los `.gitkeep` de las carpetas vacías.
 
 ## Qué hace la aplicación (resumen)
 
-1. El alumno elige un módulo en la portada (POO, SQL, Docker, apuntes PDF, banco verificado…).
+### Alumno
+
+1. Elige un módulo en la portada (POO, SQL, Docker, apuntes PDF, banco verificado…).
 2. La web ejecuta `generador.py` y muestra un enunciado (con nombre y fecha del alumno).
-3. El alumno escribe la respuesta; `evaluador.py` aplica criterios y calcula la nota (0–10, aprueba ≥ 5).
+3. Escribe la respuesta; `evaluador.py` aplica criterios y calcula la nota (0–10, aprueba ≥ 5).
 4. Opcional: contenedor Docker para practicar comandos reales.
-5. Estadísticas de uso y progreso local (historial, medallas) en la portada.
+5. En la portada: progreso local en el navegador (historial, medallas) y estadísticas de uso en el servidor.
+
+### Profesor
+
+1. Entra con la cuenta **profesor** (o cualquier login configurado con rol profesor).
+2. Revisa propuestas de la IA en **`/profesor/revisar`** sin leer JSON crudo: tabla comparativa, casos de prueba y descarga de paquete ZIP.
+3. Aprueba o rechaza ejercicios; los aprobados pasan a `banco/aprobados/` y aparecen en la portada.
+4. Puede subir PDFs desde la portada, ver la solución de referencia y descargar JSON/PDF de cada ejercicio.
 
 Los módulos clásicos (`poo`, `bd_sql`, `docker`, etc.) **no necesitan** Gemini.
 
@@ -95,26 +111,74 @@ Los módulos clásicos (`poo`, `bd_sql`, `docker`, etc.) **no necesitan** Gemini
 | Entrar | `/login` |
 | Cambiar nombre, usuario o contraseña | `/perfil` (enlace **Perfil** en la cabecera) |
 | Guía técnica (Gemini, PDF, nuevos módulos) | `/perfil` (sección inferior) o `/como-funciona` |
-| Revisar propuestas IA (profesor) | Entrar como `profesor` / `profesor` → `/profesor/revisar` |
-| Vista rápida del banco | `/profesor/banco` (misma cuenta profesor) |
+| **Revisar propuestas IA** (profesor) | `/profesor/revisar` → detalle en `/profesor/revisar/{id}` |
+| Vista rápida del banco (profesor) | `/profesor/banco` |
+| Descargar paquete de revisión (profesor) | `/profesor/revisar/{id}/paquete` (ZIP) |
 
-Usuarios por defecto: `alumno`, `demo`, `profesor` (ver `application.properties` o `FORJAEXAMENES_USUARIOS`). Los logins con rol profesor se configuran en `forjaexamenes.login.profesores` / `FORJAEXAMENES_PROFESORES`. Los datos viven en `datos/usuarios.json` (no se sube a Git).
+### Usuarios y roles
 
-### Revisión del banco (profesor)
+Usuarios por defecto en `application.properties` o `FORJAEXAMENES_USUARIOS`:
 
-1. Activa `forjaexamenes.gemini-guardar-pendientes=true` para acumular propuestas en `banco/pendientes/`.
-2. Entra con la cuenta **profesor** (`profesor` / `profesor` por defecto).
-3. Abre **Revisar propuestas** (`/profesor/revisar/{id}`): tabla comparativa Gemini vs criterios, pruebas automáticas y alias de comandos.
-4. Descarga el **paquete ZIP** o aprueba/rechaza desde la misma pantalla.
-
-CLI equivalente:
-
-```bash
-python3 herramientas/revision_profesor.py --id <id_pendiente>
-python3 herramientas/paquete_entrega.py <id_pendiente>
+```properties
+forjaexamenes.login.usuarios=alumno:practica,demo:demo,profesor:profesor
+forjaexamenes.login.profesores=profesor
 ```
 
-Los sinónimos de comandos (`docker run` ↔ `docker container run`, etc.) están en `vocabulario_claves.json` → sección `alias_comandos`.
+- Los logins listados en `forjaexamenes.login.profesores` (o `FORJAEXAMENES_PROFESORES`) tienen rol **PROFESOR** y acceden a `/profesor/**`.
+- Los demás son **ALUMNO**.
+- Los datos viven en `datos/usuarios.json`. Si el fichero ya existía, al arrancar se añaden usuarios nuevos definidos en propiedades (p. ej. `profesor`).
+
+`FORJAEXAMENES_MODO_PROFESOR=true` sigue siendo útil para **mostrar la solución** antes de enviar en cualquier cuenta; la **zona de revisión** (`/profesor/*`) requiere rol profesor.
+
+---
+
+## Revisión del banco (profesor)
+
+Flujo recomendado para validar ejercicios generados desde apuntes antes de publicarlos:
+
+1. Activa `forjaexamenes.gemini-guardar-pendientes=true` → cada ejercicio `docs_*` se guarda en `banco/pendientes/`.
+2. Entra como **profesor** / **profesor**.
+3. Abre **Perfil → Revisar propuestas** o ve a `/profesor/revisar`.
+4. Pulsa **Revisar** en un pendiente. Verás:
+   - **Comparativa** propuesta Gemini vs criterios del escenario (palabras clave, enunciado).
+   - **Tabla de criterios** con pruebas automáticas: solución de referencia (debe pasar), variante con sinónimo (p. ej. `docker container run`) e respuesta insuficiente (debe fallar).
+   - **Alias** aplicados a cada término (desde `vocabulario_claves.json`).
+5. **Aprobar y publicar**, **Rechazar** o **Descargar paquete ZIP** desde la misma pantalla.
+
+### Herramientas CLI (equivalente a la web)
+
+```bash
+# Datos de revisión en JSON (tabla + casos de prueba)
+python3 herramientas/revision_profesor.py --id <id_pendiente>
+
+# Carpeta con revision.html, revision.json, enunciado y solución
+python3 herramientas/paquete_entrega.py <id_pendiente>
+
+# Aprobar / rechazar / listar
+python3 herramientas/revisar_banco.py listar
+python3 herramientas/revisar_banco.py aprobar <id>
+python3 herramientas/revisar_banco.py rechazar <id>
+python3 herramientas/revisar_banco.py reindexar
+```
+
+---
+
+## Corrección elástica (alias de comandos)
+
+Los criterios `contiene_todos` y `contiene_alguno` aceptan **sinónimos técnicos** definidos en [vocabulario_claves.json](vocabulario_claves.json) → sección `alias_comandos`.
+
+| Canonical | También acepta (ejemplos) |
+|-----------|---------------------------|
+| `docker run` | `docker container run` |
+| `docker compose up` | `docker-compose up` |
+| `docker ps` | `docker container ls` |
+| `BEGIN` | `START TRANSACTION` |
+
+- El evaluador (`evaluador.py` + `alias_comandos.py`) expande cada término al corregir.
+- Al generar criterios desde apuntes (`modelo_ejercicio.py`), las variantes se incorporan como `contiene_alguno` cuando hay alias.
+- Para añadir sinónimos: edita `alias_comandos` en el JSON (frases completas, no palabras sueltas sueltas).
+
+Tipos de criterio soportados: `regex`, `contiene_todos`, `contiene_alguno`.
 
 ---
 
@@ -141,8 +205,13 @@ python3 evaluador.py -e escenario.json -r "respuesta del alumno"
 
 ```bash
 cd examenforge
-cp .env.example .env          # GEMINI_API_KEY real desde https://aistudio.google.com/apikey
 pip install -r requirements-docs.txt
+```
+
+**Clave Gemini:** en la web → **Perfil → Clave API de Gemini** (se guarda en `datos/gemini.json`), o manualmente en `.env`:
+
+```bash
+cp .env.example .env   # GEMINI_API_KEY desde https://aistudio.google.com/apikey
 ```
 
 Coloca PDFs en `documentacion/<tema>/` → módulo `docs_<tema>` (p. ej. `documentacion/docker/` → `docs_docker`).
@@ -160,10 +229,10 @@ Detalle de carpetas: **[documentacion/README.md](documentacion/README.md)**.
 | Tipo | Origen | Corrección |
 |------|--------|------------|
 | **A — plantilla** | `generador.py` | `regex` definidos en código |
-| **B — apuntes + IA** | PDF → Gemini → `modelo_ejercicio.py` | `contiene_todos` / `contiene_alguno` |
-| **Banco** | `banco/aprobados/*.json` | Tipos definidos en el JSON |
+| **B — apuntes + IA** | PDF → Gemini → `modelo_ejercicio.py` | `contiene_todos` / `contiene_alguno` + alias |
+| **Banco** | `banco/aprobados/*.json` | Tipos definidos en el JSON + alias |
 
-Gemini solo propone `tema`, `pregunta`, `palabras_clave` (y opcional `variantes`). El sistema valida con [vocabulario_claves.json](vocabulario_claves.json) y exige que cada clave aparezca en el fragmento del PDF.
+Gemini solo propone `tema`, `pregunta`, `palabras_clave` (y opcional `variantes`). El sistema valida con [vocabulario_claves.json](vocabulario_claves.json) (listas prohibidas/permitidas) y exige que cada clave aparezca en el fragmento del PDF.
 
 ### Calidad de `palabras_clave`
 
@@ -178,7 +247,7 @@ Gemini solo propone `tema`, `pregunta`, `palabras_clave` (y opcional `variantes`
 
 ```
 banco/aprobados/     → publicados (portada + generador)
-banco/pendientes/    → propuestas Gemini en espera
+banco/pendientes/    → propuestas Gemini en espera de revisión
 banco/catalogo.json  → índice (se regenera al arrancar)
 ```
 
@@ -186,16 +255,8 @@ banco/catalogo.json  → índice (se regenera al arrancar)
 |----------------------|--------|
 | `forjaexamenes.gemini-guardar-pendientes=true` | Guarda cada ejercicio `docs_*` en pendientes |
 | `forjaexamenes.gemini-solo-aprobados=true` | Solo ejercicios del banco (sin Gemini en vivo) |
-| `FORJAEXAMENES_MODO_PROFESOR=true` | `/profesor/banco` + solución visible |
-
-CLI del banco:
-
-```bash
-python3 herramientas/revisar_banco.py listar
-python3 herramientas/revisar_banco.py aprobar <id>
-python3 herramientas/revisar_banco.py rechazar <id>
-python3 herramientas/revisar_banco.py reindexar
-```
+| `forjaexamenes.modo-profesor` / `FORJAEXAMENES_MODO_PROFESOR` | Solución visible antes de enviar |
+| `forjaexamenes.login.profesores` / `FORJAEXAMENES_PROFESORES` | Logins con acceso a `/profesor/**` |
 
 ---
 
@@ -207,19 +268,25 @@ examenforge/
 ├── generador.py / evaluador.py
 ├── generador_gemini.py / generador_docs.py
 ├── modelo_ejercicio.py / banco_loader.py
-├── vocabulario_claves.json
-├── documentacion/          # PDFs de entrada
-├── indice/                 # JSON indexado
+├── alias_comandos.py
+├── vocabulario_claves.json      # prohibidas, permitidas, alias_comandos
+├── documentacion/               # PDFs de entrada
+├── indice/                      # JSON indexado
 ├── banco/
 │   ├── aprobados/
 │   ├── pendientes/
 │   └── catalogo.json
-├── herramientas/revisar_banco.py
-├── datos/                  # usuarios, estadísticas
-└── web/                    # Spring Boot
+├── herramientas/
+│   ├── revisar_banco.py
+│   ├── revision_profesor.py     # JSON de revisión para la web/CLI
+│   └── paquete_entrega.py       # carpeta + HTML para el profesor
+├── datos/                       # usuarios, estadísticas
+└── web/                         # Spring Boot
     └── src/main/resources/templates/
         ├── login.html
-        ├── como-funciona.html   # guía pública
+        ├── como-funciona.html
+        ├── profesor-revisar-lista.html
+        ├── profesor-revisar-detalle.html
         └── fragments/
 ```
 
@@ -230,11 +297,26 @@ examenforge/
 | Clave | Descripción |
 |-------|-------------|
 | `forjaexamenes.raiz` | Raíz del proyecto (por defecto `../` desde `web/`) |
-| `forjaexamenes.modo-profesor` | `FORJAEXAMENES_MODO_PROFESOR` |
-| `forjaexamenes.gemini-guardar-pendientes` | Cola de revisión |
+| `forjaexamenes.login.usuarios` | `FORJAEXAMENES_USUARIOS` — `usuario:clave` separados por coma |
+| `forjaexamenes.login.profesores` | `FORJAEXAMENES_PROFESORES` — logins con rol profesor |
+| `forjaexamenes.modo-profesor` | `FORJAEXAMENES_MODO_PROFESOR` — solución visible |
+| `forjaexamenes.gemini-guardar-pendientes` | Cola de revisión en `banco/pendientes/` |
 | `forjaexamenes.gemini-solo-aprobados` | Sin generación Gemini en vivo |
 | `forjaexamenes.subida-pdf-max-mb` | Máximo MB por PDF subido (default 30) |
-| `forjaexamenes.login.usuarios` | `FORJAEXAMENES_USUARIOS` |
+| `forjaexamenes.limpiar-practica-al-nuevo-ejercicio` | Vacía `datos-practica/` al empezar ejercicio shell |
+
+---
+
+## Sincronización y pulido
+
+| Comportamiento | Detalle |
+|----------------|---------|
+| **Catálogo del banco** | Al cargar la portada, si `banco/aprobados/` cambió (CLI o web), se regenera `catalogo.json` automáticamente. Tras aprobar, se publica un evento interno. |
+| **Índice de apuntes** | Caché en memoria invalidada por fecha de `indice/docs_*.json` y tras cada indexación. |
+| **Actualizar apuntes** | Indexación **en segundo plano** (`@Async`): no bloquea la sesión; la portada hace polling y se recarga al terminar. |
+| **Entorno Docker** | Botón «Limpiar entorno de práctica» en la portada; auto-limpieza de `datos-practica/` al iniciar ejercicios `docker`, `redes`, `sistemas`, `git` (`forjaexamenes.limpiar-practica-al-nuevo-ejercicio`, default `true`). |
+| **Revisión profesor** | Badges **PASSED** / **FAILED** y resumen «listo para aprobar» en `/profesor/revisar/{id}`. |
+| **PDFs problemáticos** | `indexador_docs.py` avisa si un PDF está corrupto o protegido con contraseña (se omite y continúa con el resto). |
 
 ---
 
@@ -246,8 +328,11 @@ examenforge/
 | Puerto 8080 ocupado | `fuser -k 8080/tcp` o cambiar `server.port` |
 | `API_KEY_INVALID` | Clave real en `.env`; reinicia; `unset GEMINI_API_KEY` en el shell si molesta |
 | Cuota Gemini `429` | `FORJAEXAMENES_GEMINI_MODEL=gemini-2.5-flash` en `.env` |
-| Error tras «Actualizar apuntes» | Reinicia la app (sesión solo por cookie) |
+| Indexación lenta | Es normal en PDFs grandes; espera el aviso «en segundo plano» en la portada |
 | `generador.py falló` | `python3 generador.py -m poo` desde `examenforge/` |
+| `403` en `/profesor/revisar` | Entra con cuenta profesor (`profesor` / `profesor`) |
+| `403` al enviar ejercicio | Recarga la página (token CSRF en el formulario) |
+| Sinónimo no aceptado | Añádelo en `vocabulario_claves.json` → `alias_comandos` |
 
 ---
 
@@ -256,6 +341,8 @@ examenforge/
 | Objetivo | Dónde |
 |----------|--------|
 | Texto de la guía pública | `templates/fragments/guia-funcionamiento.html` |
+| Vista de revisión profesor | `profesor-revisar-detalle.html`, `herramientas/revision_profesor.py` |
+| Nuevos sinónimos de comandos | `vocabulario_claves.json` → `alias_comandos` |
 | Botón en portada | `templates/inicio.html` |
 | Nuevo módulo plantilla | `generador.py` + `pruebas/pruebas_generador_evaluador.py` |
 | Nuevo tema PDF | `documentacion/<tema>/` + indexar |
@@ -269,6 +356,7 @@ examenforge/
 python3 pruebas/pruebas_generador_evaluador.py
 python3 pruebas/pruebas_modelo_ejercicio.py
 python3 pruebas/pruebas_evaluador_tipos.py
+python3 pruebas/pruebas_alias_comandos.py
 python3 pruebas/pruebas_banco_loader.py
 python3 pruebas/pruebas_indexador_docs.py
 cd web && mvn test

@@ -2,7 +2,7 @@
  * Pantalla de carga mientras Gemini genera ejercicios desde apuntes (módulos docs_*).
  */
 const ForjaCarga = (function () {
-    const TITULO_DEFECTO = "Generando con Gemini…";
+    const TITULO_DEFECTO = "Generando ejercicios...";
     const SUB_DEFECTO =
         "La IA está creando tu ejercicio a partir de los apuntes. Puede tardar unos segundos.";
 

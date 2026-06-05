@@ -8,6 +8,7 @@ import com.luegoestarde.forjaexamenes.servicio.AlmacenSesionesEjercicios;
 import com.luegoestarde.forjaexamenes.servicio.ServicioEvaluador;
 import com.luegoestarde.forjaexamenes.servicio.ServicioDocumentacion;
 import com.luegoestarde.forjaexamenes.servicio.ServicioEstadisticasUsuario;
+import com.luegoestarde.forjaexamenes.servicio.ServicioEntornoPractica;
 import com.luegoestarde.forjaexamenes.servicio.ServicioGenerador;
 import com.luegoestarde.forjaexamenes.servicio.ServicioMetadatosEjercicio;
 import com.luegoestarde.forjaexamenes.servicio.ServicioPdf;
@@ -48,6 +49,7 @@ public class ControladorEjercicio {
     private final AlmacenSesionesEjercicios almacenSesiones;
     private final ServicioMetadatosEjercicio metadatosEjercicio;
     private final ServicioEstadisticasUsuario servicioEstadisticas;
+    private final ServicioEntornoPractica servicioEntornoPractica;
     private final ObjectMapper mapeadorJson;
     private final Random aleatorio = new Random();
 
@@ -57,7 +59,8 @@ public class ControladorEjercicio {
                               ServicioDocumentacion servicioDocumentacion,
                               AlmacenSesionesEjercicios almacenSesiones,
                               ServicioMetadatosEjercicio metadatosEjercicio,
-                              ServicioEstadisticasUsuario servicioEstadisticas) {
+                              ServicioEstadisticasUsuario servicioEstadisticas,
+                              ServicioEntornoPractica servicioEntornoPractica) {
         this.servicioGenerador = servicioGenerador;
         this.servicioEvaluador = servicioEvaluador;
         this.servicioPdf = servicioPdf;
@@ -65,6 +68,7 @@ public class ControladorEjercicio {
         this.almacenSesiones = almacenSesiones;
         this.metadatosEjercicio = metadatosEjercicio;
         this.servicioEstadisticas = servicioEstadisticas;
+        this.servicioEntornoPractica = servicioEntornoPractica;
         this.mapeadorJson = new ObjectMapper();
         this.mapeadorJson.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
     }
@@ -206,6 +210,9 @@ public class ControladorEjercicio {
     private Escenario crearYGuardarEscenario(String modulo, Boolean sorpresa, Integer nivel,
                                              String capitulo, String seccion) throws Exception {
         Escenario escenario = crearEscenario(modulo, sorpresa, nivel, capitulo, seccion);
+        if (servicioEntornoPractica.debeLimpiarAlNuevoEjercicio(escenario.getModulo())) {
+            servicioEntornoPractica.limpiar();
+        }
         metadatosEjercicio.marcarEscenario(
                 escenario,
                 metadatosEjercicio.loginActual(),

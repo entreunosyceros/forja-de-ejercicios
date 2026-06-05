@@ -23,20 +23,20 @@
         <ol class="guia-pasos">
             <li>Entra en <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio → API keys</a> e inicia sesión con tu cuenta Google.</li>
             <li>Pulsa <strong>Create API key</strong> y copia la clave (suele empezar por <code>AIza…</code>).</li>
-            <li>En la carpeta del proyecto, crea o edita el fichero <code>examenforge/.env</code>:</li>
+            <li><strong>Desde la web (recomendado):</strong> <a th:href="@{/perfil}">Perfil</a> → sección <em>Clave API de Gemini</em>, pega la clave y guarda (pide tu contraseña de acceso).</li>
+            <li><strong>O manualmente:</strong> crea o edita <code>examenforge/.env</code>:</li>
         </ol>
         <pre class="code-block">cp .env.example .env
-# Edita .env y pega tu clave REAL (sin comillas):
 GEMINI_API_KEY=AIzaSy_tu_clave_aqui
 FORJAEXAMENES_GEMINI_MODEL=gemini-2.5-flash</pre>
-        <p class="hint">No subas <code>.env</code> a GitHub. Usa <code>.env.example</code> solo como plantilla.</p>
-        <ol class="guia-pasos" start="4">
+        <p class="hint">La clave de la web se guarda en <code>datos/gemini.json</code> (local, no en GitHub).</p>
+        <ol class="guia-pasos" start="5">
             <li>Instala dependencias Python (solo la primera vez):</li>
         </ol>
         <pre class="code-block">cd examenforge
 pip install -r requirements-docs.txt</pre>
-        <ol class="guia-pasos" start="5">
-            <li><strong>Reinicia la aplicación</strong> (<code>./arrancar-web.sh</code>). En la portada debe desaparecer el aviso de clave pendiente.</li>
+        <ol class="guia-pasos" start="7">
+            <li>Si usaste <code>.env</code>, reinicia la app. Si guardaste desde <strong>Perfil</strong>, basta volver a la portada.</li>
         </ol>
         <details class="guia-detalle">
             <summary>Si aparece error de cuota (<code>429</code>)</summary>

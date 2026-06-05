@@ -58,7 +58,21 @@ def extraer_texto_pdf(ruta_pdf: Path) -> list[tuple[int, str]]:
         raise RuntimeError(
             "Falta pypdf. Instala: pip install -r requirements-docs.txt"
         ) from exc
-    lector = PdfReader(str(ruta_pdf))
+    try:
+        lector = PdfReader(str(ruta_pdf))
+    except Exception as error:
+        mensaje = str(error).lower()
+        if "encrypted" in mensaje or "password" in mensaje:
+            raise RuntimeError(
+                f"PDF protegido con contraseña: {ruta_pdf.name}. "
+                "Exporta una copia sin protección."
+            ) from error
+        raise RuntimeError(f"PDF corrupto o ilegible: {ruta_pdf.name} ({error})") from error
+    if getattr(lector, "is_encrypted", False):
+        raise RuntimeError(
+            f"PDF protegido con contraseña: {ruta_pdf.name}. "
+            "Exporta una copia sin protección."
+        )
     paginas: list[tuple[int, str]] = []
     for numero, pagina in enumerate(lector.pages, start=1):
         bruto = pagina.extract_text() or ""

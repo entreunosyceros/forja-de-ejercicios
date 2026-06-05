@@ -102,6 +102,20 @@ def construir_revision(eid: str) -> dict[str, Any]:
         filas.append(fila)
 
     ev_ref = evaluador.evaluar(escenario, solucion) if solucion else None
+
+    ref_ok = sum(1 for f in filas if f["prueba_referencia"]["cumplido"])
+    alt_ok = sum(
+        1 for f in filas
+        if f["prueba_alternativa"]["aplica"] and f["prueba_alternativa"]["cumplido"]
+    )
+    alt_total = sum(1 for f in filas if f["prueba_alternativa"]["aplica"])
+    insuf_ok = sum(1 for f in filas if not f["prueba_insuficiente"]["cumplido"])
+    listo = (
+        len(filas) > 0
+        and ref_ok == len(filas)
+        and insuf_ok == len(filas)
+        and (alt_total == 0 or alt_ok == alt_total)
+    )
     palabras_prop = propuesta.get("palabras_clave") or []
     palabras_esc = []
     for c in escenario.get("criterios") or []:
@@ -134,6 +148,14 @@ def construir_revision(eid: str) -> dict[str, Any]:
         },
         "filas_criterios": filas,
         "evaluacion_referencia": ev_ref,
+        "resumen_pruebas": {
+            "total_criterios": len(filas),
+            "referencia_ok": ref_ok,
+            "alternativa_ok": alt_ok,
+            "alternativa_total": alt_total,
+            "insuficiente_ok": insuf_ok,
+            "listo_para_aprobar": listo,
+        },
     }
 
 

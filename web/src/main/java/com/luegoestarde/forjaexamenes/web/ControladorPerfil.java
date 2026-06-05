@@ -1,7 +1,7 @@
 package com.luegoestarde.forjaexamenes.web;
 
+import com.luegoestarde.forjaexamenes.servicio.ServicioConfiguracionGemini;
 import com.luegoestarde.forjaexamenes.servicio.ServicioCuentasUsuarios;
-import com.luegoestarde.forjaexamenes.servicio.ServicioDocumentacion;
 import com.luegoestarde.forjaexamenes.servicio.ServicioMetadatosEjercicio;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -19,15 +19,15 @@ public class ControladorPerfil {
 
     private final ServicioCuentasUsuarios cuentasUsuarios;
     private final ServicioMetadatosEjercicio metadatosEjercicio;
-    private final ServicioDocumentacion servicioDocumentacion;
+    private final ServicioConfiguracionGemini configuracionGemini;
 
     public ControladorPerfil(
             ServicioCuentasUsuarios cuentasUsuarios,
             ServicioMetadatosEjercicio metadatosEjercicio,
-            ServicioDocumentacion servicioDocumentacion) {
+            ServicioConfiguracionGemini configuracionGemini) {
         this.cuentasUsuarios = cuentasUsuarios;
         this.metadatosEjercicio = metadatosEjercicio;
-        this.servicioDocumentacion = servicioDocumentacion;
+        this.configuracionGemini = configuracionGemini;
     }
 
     @GetMapping("/perfil")
@@ -37,8 +37,45 @@ public class ControladorPerfil {
         modelo.addAttribute("tituloPagina", "Mi perfil");
         modelo.addAttribute("usuarioAcceso", login);
         modelo.addAttribute("nombreVisible", cuenta.getNombreVisible());
-        modelo.addAttribute("geminiConfigurado", servicioDocumentacion.geminiConfigurado());
+        var estadoGemini = configuracionGemini.obtenerEstado();
+        modelo.addAttribute("geminiConfigurado", estadoGemini.configurado());
+        modelo.addAttribute("geminiMascara", estadoGemini.mascara());
+        modelo.addAttribute("geminiModelo", estadoGemini.modelo());
         return "perfil";
+    }
+
+    @PostMapping("/perfil/gemini")
+    public String guardarGemini(
+            @RequestParam(required = false) String geminiApiKey,
+            @RequestParam(required = false) String geminiModelo,
+            @RequestParam String contrasenaActual,
+            RedirectAttributes atributos) {
+        String login = metadatosEjercicio.loginActual();
+        try {
+            configuracionGemini.guardarDesdeInterfaz(login, contrasenaActual, geminiApiKey, geminiModelo);
+            atributos.addFlashAttribute("mensajePerfilOk", "Clave de Gemini guardada correctamente.");
+        } catch (IllegalArgumentException ex) {
+            atributos.addFlashAttribute("errorPerfil", ex.getMessage());
+        } catch (Exception ex) {
+            atributos.addFlashAttribute("errorPerfil", "No se pudo guardar la clave: " + ex.getMessage());
+        }
+        return "redirect:/perfil";
+    }
+
+    @PostMapping("/perfil/gemini/quitar")
+    public String quitarGemini(
+            @RequestParam String contrasenaActual,
+            RedirectAttributes atributos) {
+        String login = metadatosEjercicio.loginActual();
+        try {
+            configuracionGemini.quitarDesdeInterfaz(login, contrasenaActual);
+            atributos.addFlashAttribute("mensajePerfilOk", "Clave de Gemini eliminada de este equipo.");
+        } catch (IllegalArgumentException ex) {
+            atributos.addFlashAttribute("errorPerfil", ex.getMessage());
+        } catch (Exception ex) {
+            atributos.addFlashAttribute("errorPerfil", "No se pudo quitar la clave: " + ex.getMessage());
+        }
+        return "redirect:/perfil";
     }
 
     @PostMapping("/perfil")

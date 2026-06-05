@@ -46,6 +46,48 @@
             </form>
         </div>
 
+        <div class="card perfil-gemini-card">
+            <h2>Clave API de Gemini</h2>
+            <p class="hint">Solo necesaria para ejercicios desde <strong>apuntes PDF</strong> (<code>docs_*</code>).
+                Se guarda en este equipo (<code>datos/gemini.json</code>), no en GitHub.</p>
+
+            <p class="guia-estado" th:if="${geminiConfigurado}">
+                Clave configurada: <code th:text="${geminiMascara}">AIza••••</code>
+                · Modelo: <code th:text="${geminiModelo}">gemini-2.5-flash</code>
+            </p>
+            <p class="guia-estado guia-estado-warn" th:if="${!geminiConfigurado}">
+                Aún no hay clave. Consíguela en
+                <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a>
+                y pégala aquí.
+            </p>
+
+            <form class="form-perfil form-gemini" method="post" th:action="@{/perfil/gemini}">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+                <label for="geminiApiKey">Clave API <span class="muted" th:if="${geminiConfigurado}">(dejar vacío para no cambiar)</span></label>
+                <input type="password" id="geminiApiKey" name="geminiApiKey" autocomplete="off"
+                       placeholder="AIzaSy…" th:required="${!geminiConfigurado}"/>
+
+                <label for="geminiModelo">Modelo</label>
+                <input type="text" id="geminiModelo" name="geminiModelo"
+                       th:value="${geminiModelo}" placeholder="gemini-2.5-flash"/>
+
+                <label for="contrasenaActualGemini">Tu contraseña actual (confirmación)</label>
+                <input type="password" id="contrasenaActualGemini" name="contrasenaActual" required
+                       autocomplete="current-password"/>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Guardar clave Gemini</button>
+                    <button type="submit" class="btn btn-ghost" th:if="${geminiConfigurado}"
+                            th:formaction="@{/perfil/gemini/quitar}"
+                            formmethod="post"
+                            onclick="return confirm('¿Quitar la clave Gemini guardada en este equipo?');">
+                        Quitar clave
+                    </button>
+                </div>
+            </form>
+        </div>
+
         <div class="card guia-card">
             <h2 class="guia-titulo">Guía de uso</h2>
             <p class="hint">Gemini, apuntes PDF y nuevos módulos. Guía general (también sin sesión):

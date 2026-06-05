@@ -19,10 +19,14 @@ import org.springframework.stereotype.Service;
 public class ServicioGenerador {
 
     private final PropiedadesForjaExamenes propiedades;
+    private final ServicioConfiguracionGemini configuracionGemini;
     private final ObjectMapper mapeador;
 
-    public ServicioGenerador(PropiedadesForjaExamenes propiedades) {
+    public ServicioGenerador(
+            PropiedadesForjaExamenes propiedades,
+            ServicioConfiguracionGemini configuracionGemini) {
         this.propiedades = propiedades;
+        this.configuracionGemini = configuracionGemini;
         this.mapeador = new ObjectMapper();
         this.mapeador.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
     }
@@ -94,13 +98,17 @@ public class ServicioGenerador {
         entorno.remove("FORJAEXAMENES_GEMINI_API_KEY");
         entorno.remove("FORJAEXAMENES_GEMINI_MODEL");
 
-        String raiz = Path.of(propiedades.getRaiz()).toAbsolutePath().normalize().toString();
-        String clave = CargadorEnvFichero.resolverGeminiApiKey(propiedades.getGeminiApiKey(), raiz);
+        String clave = configuracionGemini.resolverApiKey();
         if (!clave.isBlank()) {
             entorno.put("GEMINI_API_KEY", clave);
             entorno.put("FORJAEXAMENES_GEMINI_API_KEY", clave);
         }
-        String modelo = CargadorEnvFichero.resolverGeminiModelo(propiedades.getGeminiModel(), raiz);
+        String modelo = configuracionGemini.resolverModelo();
+        if (modelo.isBlank()) {
+            modelo = CargadorEnvFichero.resolverGeminiModelo(
+                    propiedades.getGeminiModel(),
+                    Path.of(propiedades.getRaiz()).toAbsolutePath().normalize().toString());
+        }
         if (!modelo.isBlank()) {
             entorno.put("FORJAEXAMENES_GEMINI_MODEL", modelo);
         }

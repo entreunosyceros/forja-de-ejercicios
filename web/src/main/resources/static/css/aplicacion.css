@@ -1283,3 +1283,60 @@ body.carga-ia-activa {
     margin-top: 0.25rem;
     word-break: break-all;
 }
+
+.resumen-pruebas-criterios {
+    margin: 1rem 0;
+    padding: 0.85rem 1rem;
+    border-radius: var(--radius);
+    background: var(--surface-2, rgba(0, 0, 0, 0.04));
+}
+
+.resumen-pruebas-titulo {
+    margin: 0 0 0.5rem;
+    font-weight: 600;
+}
+
+.badges-pruebas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.badge-test {
+    display: inline-block;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+}
+
+.badge-test-pass {
+    background: rgba(10, 122, 62, 0.15);
+    color: #0a7a3e;
+    border: 1px solid rgba(10, 122, 62, 0.35);
+}
+
+.badge-test-fail {
+    background: rgba(180, 35, 24, 0.12);
+    color: #b42318;
+    border: 1px solid rgba(180, 35, 24, 0.35);
+}
+
+.badge-test-expected-fail {
+    background: rgba(80, 80, 80, 0.1);
+    color: var(--text-muted, #555);
+    border: 1px solid var(--border);
+}
+
+.celda-prueba-detalle {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+#panel-indexacion-curso[hidden] {
+    display: none !important;
+}

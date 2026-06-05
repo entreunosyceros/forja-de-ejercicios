@@ -76,6 +76,10 @@ public class ServicioCuentasUsuarios implements UserDetailsService {
         return Optional.ofNullable(usuarios.get(usuarioAcceso));
     }
 
+    public boolean verificarContrasena(String contrasenaPlana, String hashAlmacenado) {
+        return codificador.matches(contrasenaPlana, hashAlmacenado);
+    }
+
     public String nombreVisible(String usuarioAcceso) {
         UsuarioAlmacenado cuenta = usuarios.get(usuarioAcceso);
         if (cuenta == null) {
