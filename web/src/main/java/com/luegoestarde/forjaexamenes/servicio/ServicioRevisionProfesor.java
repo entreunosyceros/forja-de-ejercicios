@@ -2,6 +2,7 @@ package com.luegoestarde.forjaexamenes.servicio;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.luegoestarde.forjaexamenes.configuracion.InterpretePython;
 import com.luegoestarde.forjaexamenes.configuracion.PropiedadesForjaExamenes;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -32,7 +33,7 @@ public class ServicioRevisionProfesor {
             throw new IllegalStateException("No se encuentra revision_profesor.py");
         }
         List<String> comando = List.of(
-                "python3",
+                InterpretePython.resolver(propiedades),
                 script.toString(),
                 "--id",
                 ejercicioId);
@@ -51,7 +52,7 @@ public class ServicioRevisionProfesor {
             throw new IllegalStateException("No se encuentra paquete_entrega.py");
         }
         List<String> comando = List.of(
-                "python3",
+                InterpretePython.resolver(propiedades),
                 script.toString(),
                 ejercicioId,
                 "--salida",

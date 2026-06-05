@@ -2,6 +2,7 @@ package com.luegoestarde.forjaexamenes.servicio;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.luegoestarde.forjaexamenes.configuracion.InterpretePython;
 import com.luegoestarde.forjaexamenes.configuracion.PropiedadesForjaExamenes;
 import com.luegoestarde.forjaexamenes.modelo.Escenario;
 import com.luegoestarde.forjaexamenes.modelo.ResultadoEvaluacion;
@@ -35,7 +36,7 @@ public class ServicioEvaluador {
             mapeador.writerWithDefaultPrettyPrinter().writeValue(archivoEscenario.toFile(), escenario);
 
             List<String> comando = new ArrayList<>();
-            comando.add("python3");
+            comando.add(InterpretePython.resolver(propiedades));
             comando.add(script.toString());
             comando.add("--escenario");
             comando.add(archivoEscenario.toString());

@@ -8,7 +8,46 @@ Genera ejercicios prácticos al azar, permite practicar en Docker y corrige la r
 
 ---
 
-## Arranque rápido
+## Instalación guiada (recomendado)
+
+Scripts que comprueban requisitos, compilan la web, instalan dependencias Python y te guían por **Gemini** y **Docker** (ambos opcionales).
+
+### Linux / macOS
+
+```bash
+cd examenforge
+chmod +x install.sh iniciar-forja.sh
+./install.sh
+```
+
+### Windows (PowerShell)
+
+```powershell
+cd examenforge
+Set-ExecutionPolicy -Scope Process Bypass
+.\install.ps1
+```
+
+El instalador:
+
+1. Comprueba JDK 21, Maven y Python.
+2. Crea carpetas locales (`datos/`, `indice/`, `banco/`, …).
+3. Ofrece instalar `requirements-docs.txt` (PDF + Gemini).
+4. Compila el JAR con Maven.
+5. **Gemini (opcional):** enlace a [Google AI Studio](https://aistudio.google.com/apikey) y guardado en `datos/gemini.json`, o «configurar después» en **Perfil**.
+6. **Docker (opcional):** detecta si está instalado y ofrece `docker compose up -d --build practica`.
+7. Muestra un resumen y puede arrancar la app al terminar.
+
+**Arrancar tras instalar:**
+
+| Sistema | Comando |
+|---------|---------|
+| Linux / macOS | `./iniciar-forja.sh` |
+| Windows | `.\iniciar-forja.bat` |
+
+---
+
+## Arranque rápido (manual)
 
 ### Requisitos
 
@@ -264,6 +303,8 @@ banco/catalogo.json  → índice (se regenera al arrancar)
 
 ```
 examenforge/
+├── install.sh / install.ps1     # Instalación guiada
+├── iniciar-forja.sh / .bat      # Arranque tras instalar
 ├── arrancar-web.sh
 ├── generador.py / evaluador.py
 ├── generador_gemini.py / generador_docs.py
@@ -297,6 +338,7 @@ examenforge/
 | Clave | Descripción |
 |-------|-------------|
 | `forjaexamenes.raiz` | Raíz del proyecto (por defecto `../` desde `web/`) |
+| `forjaexamenes.python-interprete` | `FORJAEXAMENES_PYTHON_INTERPRETE` — `python3` o `python` (el instalador lo fija en `.env`) |
 | `forjaexamenes.login.usuarios` | `FORJAEXAMENES_USUARIOS` — `usuario:clave` separados por coma |
 | `forjaexamenes.login.profesores` | `FORJAEXAMENES_PROFESORES` — logins con rol profesor |
 | `forjaexamenes.modo-profesor` | `FORJAEXAMENES_MODO_PROFESOR` — solución visible |

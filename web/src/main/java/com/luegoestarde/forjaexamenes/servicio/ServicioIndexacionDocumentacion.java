@@ -1,5 +1,6 @@
 package com.luegoestarde.forjaexamenes.servicio;
 
+import com.luegoestarde.forjaexamenes.configuracion.InterpretePython;
 import com.luegoestarde.forjaexamenes.configuracion.PropiedadesForjaExamenes;
 import com.luegoestarde.forjaexamenes.evento.RecursosActualizadosEvent;
 import com.luegoestarde.forjaexamenes.evento.RecursosActualizadosEvent.Tipo;
@@ -125,7 +126,9 @@ public class ServicioIndexacionDocumentacion implements ApplicationRunner {
         }
 
         try {
-            ProcessBuilder pb = new ProcessBuilder("python3", script.toString());
+            ProcessBuilder pb = new ProcessBuilder(
+                    InterpretePython.resolver(propiedades),
+                    script.toString());
             pb.directory(script.getParent().toFile());
             pb.redirectErrorStream(true);
             Process proceso = pb.start();

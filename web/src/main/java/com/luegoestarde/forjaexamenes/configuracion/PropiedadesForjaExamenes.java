@@ -22,6 +22,7 @@ public class PropiedadesForjaExamenes {
     private boolean geminiSoloAprobados = false;
     private int subidaPdfMaxMb = 30;
     private boolean limpiarPracticaAlNuevoEjercicio = true;
+    private String pythonInterprete = "";
 
     public String getRaiz() { return raiz; }
     public void setRaiz(String raiz) { this.raiz = raiz; }
@@ -89,5 +90,13 @@ public class PropiedadesForjaExamenes {
 
     public void setLimpiarPracticaAlNuevoEjercicio(boolean limpiarPracticaAlNuevoEjercicio) {
         this.limpiarPracticaAlNuevoEjercicio = limpiarPracticaAlNuevoEjercicio;
+    }
+
+    public String getPythonInterprete() {
+        return pythonInterprete;
+    }
+
+    public void setPythonInterprete(String pythonInterprete) {
+        this.pythonInterprete = pythonInterprete;
     }
 }
