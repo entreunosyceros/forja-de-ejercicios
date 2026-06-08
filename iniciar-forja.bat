@@ -1,5 +1,5 @@
 @echo off
-setlocal
+setlocal EnableExtensions
 set "RAIZ=%~dp0"
 set "RAIZ=%RAIZ:~0,-1%"
 set "FORJAEXAMENES_RAIZ=%RAIZ%"
@@ -7,13 +7,30 @@ set "FORJAEXAMENES_RAIZ=%RAIZ%"
 set "JAR=%RAIZ%\web\target\forjaexamenes-web-1.0.0.jar"
 
 if exist "%JAR%" (
-    echo → Arrancando Forja de ejercicios ^(JAR^)…
-    echo   http://localhost:8080
-    echo   Detener: Ctrl+C
+    echo [*] Arrancando Forja de ejercicios (JAR)...
+    echo     http://localhost:8080
+    echo     Detener: Ctrl+C
     java -jar "%JAR%"
     exit /b %ERRORLEVEL%
 )
 
-echo → No hay JAR compilado; usando Maven ^(ejecuta install.ps1 para compilar^).
+set "MVN="
+where mvn >nul 2>&1
+if not errorlevel 1 set "MVN=mvn"
+
+if not defined MVN (
+    for /d %%D in ("%RAIZ%\tools\apache-maven-*") do (
+        if exist "%%D\bin\mvn.cmd" set "MVN=%%D\bin\mvn.cmd"
+    )
+)
+
+if not defined MVN (
+    echo [X] No hay JAR compilado ni Maven en el PATH.
+    echo     Ejecuta install.ps1 para compilar e instalar Maven.
+    exit /b 1
+)
+
+echo [*] No hay JAR; arrancando con Maven (spring-boot:run)...
 cd /d "%RAIZ%\web"
-mvn spring-boot:run
+"%MVN%" spring-boot:run
+exit /b %ERRORLEVEL%

@@ -34,7 +34,7 @@ Set-ExecutionPolicy -Scope Process Bypass
 .\install.ps1
 ```
 
-El script comprueba **JDK 21**, **Maven** y **Python 3.10+**. Si faltan, ofrece instalarlos con **winget**; si no puede, muestra una lista de lo que debes instalar manualmente antes de continuar. Opcional: Docker Desktop, `pip install -r requirements-docs.txt` y clave Gemini.
+El script comprueba **JDK 21**, **Maven** y **Python 3.10+**. Si faltan, intenta instalarlos (JDK/Python con **winget**; **Maven** se descarga desde Apache en `tools/apache-maven-3.9.16/` porque winget suele fallar). Si no puede, muestra qué debes instalar manualmente. Opcional: Docker Desktop, `pip install -r requirements-docs.txt` y clave Gemini.
 
 > Si PowerShell muestra *«Falta `}` en la línea 8»*, suele deberse a una copia antigua del script con caracteres especiales (`✓`, `═`). Actualiza el repositorio y usa la versión actual (solo ASCII, compatible con Windows PowerShell 5.1).
 

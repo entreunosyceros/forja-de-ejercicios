@@ -5,8 +5,8 @@
 #   Set-ExecutionPolicy -Scope Process Bypass
 #   .\install.ps1
 #
-# Requisitos que el script intenta instalar solo (con winget):
-#   - JDK 21, Maven 3.8+, Python 3.10+
+# Requisitos que el script intenta instalar automaticamente:
+#   - JDK 21 (winget), Maven 3.9+ (descarga Apache / choco / winget), Python 3.10+ (winget)
 # Opcionales: Docker Desktop, dependencias pip, clave Gemini
 
 $ErrorActionPreference = "Continue"
@@ -79,6 +79,124 @@ function Get-ToolPath {
 
 function Test-WingetAvailable {
     return ($null -ne (Get-ToolPath "winget"))
+}
+
+function Add-ToUserPath {
+    param([string]$Directory)
+    if (-not $Directory -or -not (Test-Path -LiteralPath $Directory)) {
+        return
+    }
+    $userPath = [System.Environment]::GetEnvironmentVariable("Path", "User")
+    if (-not $userPath) { $userPath = "" }
+    if ($userPath -notlike "*$Directory*") {
+        [System.Environment]::SetEnvironmentVariable("Path", "$userPath;$Directory", "User")
+    }
+    if ($env:Path -notlike "*$Directory*") {
+        $env:Path = "$env:Path;$Directory"
+    }
+}
+
+function Resolve-MavenExecutable {
+    $mvn = Get-ToolPath "mvn"
+    if ($mvn) {
+        return $mvn
+    }
+    $toolsDir = Join-Path $Raiz "tools"
+    if (Test-Path -LiteralPath $toolsDir) {
+        $found = Get-ChildItem -Path $toolsDir -Filter "mvn.cmd" -Recurse -ErrorAction SilentlyContinue |
+            Select-Object -First 1
+        if ($found) {
+            return $found.FullName
+        }
+    }
+    return $null
+}
+
+function Install-MavenFromZip {
+    $version = "3.9.16"
+    $folderName = "apache-maven-$version"
+    $toolsDir = Join-Path $Raiz "tools"
+    $targetDir = Join-Path $toolsDir $folderName
+    $mvnCmd = Join-Path $targetDir "bin\mvn.cmd"
+    $binDir = Join-Path $targetDir "bin"
+
+    if (Test-Path -LiteralPath $mvnCmd) {
+        Add-ToUserPath $binDir
+        return $mvnCmd
+    }
+
+    New-Item -ItemType Directory -Force -Path $toolsDir | Out-Null
+    $zipName = "$folderName-bin.zip"
+    $zipFile = Join-Path $env:TEMP $zipName
+    $urls = @(
+        "https://dlcdn.apache.org/maven/maven-3/$version/binaries/$zipName",
+        "https://archive.apache.org/dist/maven/maven-3/$version/binaries/$zipName"
+    )
+
+    $downloaded = $false
+    foreach ($url in $urls) {
+        Write-Info "Descargando Maven $version..."
+        Write-Host "  $url"
+        try {
+            [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+            Invoke-WebRequest -Uri $url -OutFile $zipFile -UseBasicParsing
+            $downloaded = $true
+            break
+        } catch {
+            Write-Warn "No se pudo descargar desde este espejo."
+        }
+    }
+    if (-not $downloaded) {
+        return $null
+    }
+
+    try {
+        if (Test-Path -LiteralPath $targetDir) {
+            Remove-Item -LiteralPath $targetDir -Recurse -Force
+        }
+        Expand-Archive -LiteralPath $zipFile -DestinationPath $toolsDir -Force
+    } catch {
+        Write-Warn "No se pudo extraer Maven: $($_.Exception.Message)"
+        return $null
+    } finally {
+        Remove-Item -LiteralPath $zipFile -Force -ErrorAction SilentlyContinue
+    }
+
+    if (Test-Path -LiteralPath $mvnCmd) {
+        Add-ToUserPath $binDir
+        Write-Ok "Maven instalado en tools\$folderName"
+        return $mvnCmd
+    }
+    return $null
+}
+
+function Install-MavenViaChoco {
+    $choco = Get-ToolPath "choco"
+    if (-not $choco) {
+        return $null
+    }
+    Write-Info "Instalando Maven con Chocolatey..."
+    $result = Invoke-Native -FilePath $choco -ArgumentList @("install", "maven", "-y", "--no-progress")
+    if ($result.ExitCode -eq 0) {
+        Refresh-SessionPath
+        return (Resolve-MavenExecutable)
+    }
+    Write-Warn "Chocolatey no pudo instalar Maven."
+    return $null
+}
+
+function Install-MavenViaWinget {
+    # winget a veces no tiene Apache Maven o falla en modo silencioso
+    $ids = @("Apache.Maven", "Apache.maven")
+    foreach ($id in $ids) {
+        if (Install-WingetPackage -PackageId $id -DisplayName "Apache Maven ($id)") {
+            $mvn = Resolve-MavenExecutable
+            if ($mvn) {
+                return $mvn
+            }
+        }
+    }
+    return $null
 }
 
 function Install-WingetPackage {
@@ -169,28 +287,42 @@ function Ensure-Java {
 
 function Ensure-Maven {
     param([System.Collections.ArrayList]$ManualSteps)
-    $mvnPath = Get-ToolPath "mvn"
+
+    $mvnPath = Resolve-MavenExecutable
     if ($mvnPath) {
         $info = Invoke-Native -FilePath $mvnPath -ArgumentList @("-version")
         Write-Ok "Maven: $($info.Output.Split([char]10)[0])"
-        return $true
+        return $mvnPath
     }
-    if (Preguntar-Si "Instalar Maven automaticamente con winget?") {
-        Install-WingetPackage -PackageId "Apache.Maven" -DisplayName "Apache Maven" | Out-Null
-        Refresh-SessionPath
+
+    if (Preguntar-Si "Instalar Maven automaticamente?") {
+        Write-Info "Maven: descarga directa desde Apache (metodo mas fiable en Windows)..."
+        $mvnPath = Install-MavenFromZip
+        if (-not $mvnPath) {
+            Write-Info "Maven: probando winget..."
+            $mvnPath = Install-MavenViaWinget
+        }
+        if (-not $mvnPath) {
+            Write-Info "Maven: probando Chocolatey..."
+            $mvnPath = Install-MavenViaChoco
+        }
+        if ($mvnPath) {
+            $info = Invoke-Native -FilePath $mvnPath -ArgumentList @("-version")
+            Write-Ok "Maven listo: $($info.Output.Split([char]10)[0])"
+            return $mvnPath
+        }
+        Write-Warn "La instalacion automatica de Maven no termino correctamente."
     }
-    $mvnPath = Get-ToolPath "mvn"
-    if ($mvnPath) {
-        Write-Ok "Maven listo."
-        return $true
-    }
+
     [void]$ManualSteps.Add(@"
 [OBLIGATORIO] Apache Maven 3.8+
-  - Descarga: https://maven.apache.org/download.cgi
-  - O: winget install Apache.Maven
-  - Anade Maven al PATH (MAVEN_HOME / bin).
+  Opcion A (recomendada): vuelve a ejecutar install.ps1 y acepta instalar Maven.
+           Se descargara en examenforge\tools\apache-maven-3.9.16\
+  Opcion B: choco install maven
+  Opcion C: https://maven.apache.org/download.cgi
+           Descomprime y anade la carpeta bin al PATH del usuario.
 "@)
-    return $false
+    return $null
 }
 
 function Ensure-Python {
@@ -309,16 +441,15 @@ $manualOptional = New-Object System.Collections.ArrayList
 Write-Info "Comprobando e instalando requisitos obligatorios..."
 
 $javaOk = Ensure-Java -ManualSteps $manualRequired
-$mavenOk = Ensure-Maven -ManualSteps $manualRequired
+$mvnPath = Ensure-Maven -ManualSteps $manualRequired
 $pythonExe = Ensure-Python -ManualSteps $manualRequired
 
-if (-not $javaOk -or -not $mavenOk -or -not $pythonExe) {
+if (-not $javaOk -or -not $mvnPath -or -not $pythonExe) {
     Show-ManualChecklist -Steps $manualRequired -OptionalSteps @()
     exit 1
 }
 
 Actualizar-Env "FORJAEXAMENES_PYTHON_INTERPRETE" $pythonExe
-$mvnPath = Get-ToolPath "mvn"
 
 # Carpetas locales
 Write-Info "Preparando carpetas de datos..."
