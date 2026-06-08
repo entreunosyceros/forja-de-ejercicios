@@ -127,6 +127,39 @@
             </table>
         </div>
 
+        <div class="profesor-historial-intentos" th:if="${!#lists.isEmpty(entrega.historialIntentos)}">
+            <h2>Historial de ejercicios (ejercicio + respuesta + nota)</h2>
+            <div class="stats-modulos-scroll">
+                <table class="tabla-revision-profesor">
+                    <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Módulo</th>
+                        <th>Título</th>
+                        <th>Nota</th>
+                        <th>Resultado</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="h : ${entrega.historialIntentos}">
+                        <td th:text="${h.fecha}">—</td>
+                        <td><code th:text="${h.modulo}">mod</code></td>
+                        <td th:text="${h.titulo}">—</td>
+                        <td th:text="${#numbers.formatDecimal(h.nota, 1, 1)}">0</td>
+                        <td th:text="${h.aprobado} ? 'Aprobado' : 'Suspenso'">—</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <details class="card collapsible" th:each="h : ${entrega.historialIntentos}">
+                <summary th:text="|${h.fecha} — ${h.titulo}|">Detalle</summary>
+                <h4>Enunciado</h4>
+                <pre class="code-block code-block-compact" th:text="${h.enunciado}">—</pre>
+                <h4>Respuesta</h4>
+                <pre class="code-block code-block-compact" th:text="${h.respuesta}">—</pre>
+            </details>
+        </div>
+
         <div class="profesor-progreso-local" th:if="${progresoLocal != null and !progresoLocal.isNull()}">
             <h2>Progreso local del navegador (incluido en la entrega)</h2>
             <p class="hint">Datos que el alumno tenía en su navegador al exportar: historial reciente, ranking y medallas.</p>

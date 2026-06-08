@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{plantilla :: plantilla(~{::section})}">
+<section class="pagina-profesor-resultado-detalle">
+    <div class="card card-wide">
+        <h1 th:text="${tituloPagina}">Intento</h1>
+        <p class="hint">
+            <strong th:text="${detalle.alumno}">Alumno</strong>
+            · <code th:text="${detalle.login}">login</code>
+            · <span th:text="${detalle.intento.fecha}">fecha</span>
+            · <code th:text="${detalle.intento.modulo}">mod</code>
+            · Nota: <span th:text="${#numbers.formatDecimal(detalle.intento.nota, 1, 1)}">0</span>
+            · <span th:text="${detalle.intento.aprobado} ? 'Aprobado' : 'Suspenso'">—</span>
+        </p>
+
+        <h2 th:text="${detalle.intento.titulo}">Título</h2>
+
+        <h3>Enunciado</h3>
+        <pre class="code-block" th:text="${detalle.intento.enunciado}">—</pre>
+
+        <h3>Respuesta del alumno</h3>
+        <pre class="code-block" th:text="${detalle.intento.respuesta}">—</pre>
+
+        <div class="form-actions" style="margin-top:1.5rem">
+            <a class="btn btn-secondary" th:href="@{/profesor/resultados}">Volver a resultados</a>
+        </div>
+    </div>
+</section>
+</html>

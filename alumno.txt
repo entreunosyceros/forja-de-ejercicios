@@ -47,8 +47,10 @@ QUÉ PUEDES HACER COMO ALUMNO
 
 6. ENTREGAR TU PROGRESO AL PROFESOR
    - «Descargar entrega para el profesor» → fichero .json.
+   - Incluye estadísticas, historial de ejercicios (enunciado, respuesta, nota)
+     y progreso local del navegador.
    - Déjalo en la carpeta compartida para que el profesor lo importe en
-     Seguimiento de alumnos.
+     Seguimiento de alumnos o lo consulte en Resultados (CSV).
 
 7. TU PERFIL (/perfil)
    - Nombre, contraseña, clave Gemini, dificultad IA.
@@ -60,13 +62,5 @@ QUÉ NO PUEDES HACER COMO ALUMNO
   - No ves la solución antes de enviar (salvo modo profesor en el servidor).
   - No recibes automáticamente los ejercicios del profesor: debes IMPORTARLOS.
 
-
-PRUEBA RÁPIDA (checklist)
--------------------------
-  [ ] Entrar con demo / demo
-  [ ] Importar banco-forja.json del profesor (carpeta compartida)
-  [ ] Comprobar que aparecen botones «Ejercicios del banco»
-  [ ] Hacer un ejercicio y ver la corrección
-  [ ] Descargar entrega para el profesor (.json)
 
 ================================================================================

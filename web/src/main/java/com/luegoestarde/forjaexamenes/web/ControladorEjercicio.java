@@ -11,6 +11,7 @@ import com.luegoestarde.forjaexamenes.servicio.ServicioDocumentacion;
 import com.luegoestarde.forjaexamenes.servicio.ServicioEstadisticasUsuario;
 import com.luegoestarde.forjaexamenes.servicio.ServicioEntornoPractica;
 import com.luegoestarde.forjaexamenes.servicio.ServicioGenerador;
+import com.luegoestarde.forjaexamenes.servicio.ServicioHistorialIntentos;
 import com.luegoestarde.forjaexamenes.servicio.ServicioMetadatosEjercicio;
 import com.luegoestarde.forjaexamenes.servicio.ServicioPdf;
 import com.luegoestarde.forjaexamenes.servicio.ServicioBancoPortable;
@@ -61,6 +62,7 @@ public class ControladorEjercicio {
     private final ServicioCuentasUsuarios cuentasUsuarios;
     private final ServicioPrecargaEjercicios servicioPrecarga;
     private final ServicioBancoPortable servicioBancoPortable;
+    private final ServicioHistorialIntentos servicioHistorial;
     private final ObjectMapper mapeadorJson;
     private final Random aleatorio = new Random();
 
@@ -74,7 +76,8 @@ public class ControladorEjercicio {
                               ServicioEntornoPractica servicioEntornoPractica,
                               ServicioCuentasUsuarios cuentasUsuarios,
                               ServicioPrecargaEjercicios servicioPrecarga,
-                              ServicioBancoPortable servicioBancoPortable) {
+                              ServicioBancoPortable servicioBancoPortable,
+                              ServicioHistorialIntentos servicioHistorial) {
         this.servicioGenerador = servicioGenerador;
         this.servicioEvaluador = servicioEvaluador;
         this.servicioPdf = servicioPdf;
@@ -86,6 +89,7 @@ public class ControladorEjercicio {
         this.cuentasUsuarios = cuentasUsuarios;
         this.servicioPrecarga = servicioPrecarga;
         this.servicioBancoPortable = servicioBancoPortable;
+        this.servicioHistorial = servicioHistorial;
         this.mapeadorJson = new ObjectMapper();
         this.mapeadorJson.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
     }
@@ -309,14 +313,22 @@ public class ControladorEjercicio {
         ResultadoEvaluacion resultado = servicioEvaluador.evaluar(escenario, respuesta);
         metadatosEjercicio.enriquecerResultado(resultado, escenario, nombreVisible, tiempoSegundos);
         almacenSesiones.guardarResultado(id, resultado, tiempoSegundos);
+        String login = metadatosEjercicio.loginActual();
         servicioEstadisticas.registrar(
-                metadatosEjercicio.loginActual(),
+                login,
                 escenario.getModulo(),
                 resultado.getNota(),
                 resultado.isAprobado(),
                 tiempoSegundos,
                 escenario.getTitulo(),
                 escenario.getId());
+        servicioHistorial.registrar(
+                login,
+                nombreVisible,
+                escenario,
+                resultado,
+                respuesta,
+                tiempoSegundos);
         return resultado;
     }
 

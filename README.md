@@ -218,9 +218,44 @@ La app **no envía ficheros**; el intercambio es mediante una **carpeta comparti
 | 3 | Profesor | **Perfil → Seguimiento de alumnos** o `/profesor/alumnos` → elegir fichero y **nombre personalizado** del alumno |
 | 4 | Profesor | Tabla comparativa y gráficas de la clase; «Detalle» para ver cada módulo |
 
-El fichero incluye estadísticas del **servidor** y progreso **local** del navegador (historial, ranking, medallas).
+El fichero incluye estadísticas del **servidor**, el **historial de ejercicios** (enunciado, respuesta y nota de cada intento) y progreso **local** del navegador (ranking, medallas).
 
 Si varios alumnos practican en el **mismo equipo**, el profesor también puede verlos en «Alumnos en este servidor» sin importar ficheros.
+
+---
+
+## Historial de ejercicios y exportar resultados (profesor)
+
+Cada vez que un alumno envía una respuesta y se corrige, el servidor guarda en disco un registro con **ejercicio, respuesta y nota** (`datos/historial/<login>.json`). Así el profesor puede revisarlos después, aunque el alumno no haya exportado su entrega.
+
+Ruta: **`/profesor/resultados`** (requiere rol profesor).
+
+| Bloque | Origen | Contenido |
+|--------|--------|-----------|
+| **Resultados en este servidor** | `datos/historial/*.json` | Intentos de alumnos que practican en la misma instalación |
+| **Resultados de entregas importadas** | Campo `historialIntentos` de cada entrega | Mismo detalle cuando el alumno exportó su `.json` y el profesor lo importó |
+
+En cada fila: alumno, fecha, módulo, título, nota, tiempo y enlace **Ver** (enunciado y respuesta completos).
+
+### Exportar CSV (Excel)
+
+Desde `/profesor/resultados` puedes descargar:
+
+| Botón | Fichero | Columnas |
+|-------|---------|----------|
+| **Exportar CSV (servidor)** | `resultados-servidor.csv` | Alumno, Login, Fecha, Módulo, Título, Nota, Aprobado, Tiempo |
+| **Exportar CSV (importados)** | `resultados-importados.csv` | Igual, solo entregas importadas |
+
+Formato: UTF-8 con BOM, separador `;` (abre bien en Excel en español).
+
+### API (resultados)
+
+| Método | Ruta | Efecto |
+|--------|------|--------|
+| `GET` | `/profesor/resultados` | Lista resultados (servidor + importados) |
+| `GET` | `/profesor/resultados/exportar.csv` | CSV de alumnos en este servidor |
+| `GET` | `/profesor/resultados/importados/exportar.csv` | CSV de entregas importadas |
+| `GET` | `/profesor/resultados/{login}/{intentoId}` | Detalle: enunciado + respuesta del intento |
 
 ---
 
@@ -280,6 +315,10 @@ Tras importar varias entregas:
 | `GET` | `/profesor/banco/exportar.json` | Profesor | Descarga paquete `forja-banco-ejercicios` con todo el banco aprobado |
 | `GET` | `/ejercicio/{id}/exportar-banco.json` | Profesor | Un ejercicio probado, listo para importar en otro equipo |
 | `POST` | `/banco/importar` | Todos | Importa paquete o ejercicio suelto a `banco/aprobados/` |
+| `GET` | `/profesor/resultados` | Profesor | Historial de intentos (servidor + importados) |
+| `GET` | `/profesor/resultados/exportar.csv` | Profesor | CSV de resultados en este servidor |
+| `GET` | `/profesor/resultados/importados/exportar.csv` | Profesor | CSV de entregas importadas |
+| `GET` | `/profesor/resultados/{login}/{intentoId}` | Profesor | Detalle de un intento (enunciado + respuesta) |
 
 Formato entrega alumno: `forja-entrega-alumno`. Formato banco: `forja-banco-ejercicios`.
 
@@ -293,6 +332,7 @@ Formato entrega alumno: `forja-entrega-alumno`. Formato banco: `forja-banco-ejer
 | Cambiar nombre, usuario o contraseña | `/perfil` (enlace **Perfil** en la cabecera) |
 | Guía técnica (Gemini, PDF, nuevos módulos) | `/perfil` (sección inferior) o `/como-funciona` |
 | **Seguimiento de alumnos** (profesor) | `/profesor/alumnos` → importar entrega o ver alumnos del servidor |
+| **Resultados y CSV** (profesor) | `/profesor/resultados` → revisar intentos y exportar CSV |
 | Descargar entrega para el profesor (alumno) | Portada → «Descargar entrega para el profesor» |
 | Importar banco del profesor (alumno) | Portada → «Ejercicios del banco» → «Importar al banco local» |
 | Exportar banco completo (profesor) | `/profesor/banco` → «Descargar banco completo» |
@@ -553,6 +593,7 @@ examenforge/
 | **Entrega al profesor** | Alumno: «Descargar entrega para el profesor» → `GET /entrega/exportar.json` + progreso local en el navegador. Profesor: importar en `/profesor/alumnos` con nombre personalizado. |
 | **Banco portable** | Profesor exporta `banco-forja.json`; alumno importa en portada → `banco/aprobados/` + `catalogo.json`. |
 | **Seguimiento clase** | Tabla comparativa, notas por módulo y gráficas en `/profesor/alumnos` tras importar entregas. |
+| **Historial de intentos** | Tras cada corrección: `datos/historial/<login>.json` (enunciado, respuesta, nota). Panel y CSV en `/profesor/resultados`. |
 | **Revisión profesor** | Badges **PASSED** / **FAILED** y resumen «listo para aprobar» en `/profesor/revisar/{id}`. |
 | **PDFs problemáticos** | `indexador_docs.py` avisa si un PDF está corrupto o protegido con contraseña (se omite y continúa con el resto). |
 

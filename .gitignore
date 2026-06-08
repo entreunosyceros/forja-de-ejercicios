@@ -29,6 +29,8 @@ datos/usuarios.json
 datos/gemini.json
 datos/estadisticas/*
 !datos/estadisticas/.gitkeep
+datos/historial/*
+!datos/historial/.gitkeep
 !datos/.gitkeep
 datos-practica/*
 !datos-practica/.gitkeep

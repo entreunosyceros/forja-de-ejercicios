@@ -10,6 +10,7 @@ ACCESO
   Contraseña: profesor
 
   Seguimiento alumnos: http://localhost:8080/profesor/alumnos
+  Resultados / CSV:     http://localhost:8080/profesor/resultados
   Revisión banco IA:    http://localhost:8080/profesor/revisar
 
 IMPORTANTE: la app del profesor y la de cada alumno son instalaciones
@@ -45,15 +46,24 @@ C) SEGUIMIENTO DE ALUMNOS  (/profesor/alumnos)
    - Importar entregas .json de alumnos (nombre personalizado por alumno).
    - Tabla comparativa y gráficas de avance de la clase.
    - Detalle por módulo/categoría.
+   - Historial de ejercicios (enunciado + respuesta + nota) en cada entrega.
    - «Alumnos en este servidor» si comparten el mismo PC (caso raro en clase).
 
 
-D) REVISIÓN DEL BANCO IA  (/profesor/revisar)
+D) RESULTADOS Y EXPORTAR CSV  (/profesor/resultados)
+   - Cada corrección del alumno se guarda en disco (ejercicio, respuesta, nota).
+   - Lista de intentos: alumnos en este servidor + entregas importadas.
+   - Ver detalle de cada intento (enunciado y respuesta completos).
+   - Descargar CSV para Excel: Alumno, Fecha, Módulo, Nota, Tiempo, etc.
+     (servidor e importados por separado).
+
+
+E) REVISIÓN DEL BANCO IA  (/profesor/revisar)
    - Validar ejercicios generados desde apuntes antes de exportarlos.
    - Aprobar / rechazar / descargar paquete ZIP.
 
 
-E) APUNTES, PERFIL Y EXPORTACIONES
+F) APUNTES, PERFIL Y EXPORTACIONES
    - Subir PDFs, reindexar, clave Gemini, dificultad IA.
    - JSON/PDF de ejercicios individuales.
 
@@ -63,7 +73,8 @@ FLUJO TÍPICO (instalaciones separadas)
   1. Profesor: prueba ejercicios → aprueba en su app → exporta banco-forja.json.
   2. Carpeta compartida: banco-forja.json + (opcional) entregas de alumnos.
   3. Alumno: importa banco → practica → exporta su entrega .json.
-  4. Profesor: importa entregas → consulta tabla y gráficas.
+  4. Profesor: importa entregas → consulta tabla, gráficas y /profesor/resultados.
+  5. (Opcional) Exporta CSV desde Resultados para hoja de cálculo.
 
 
 PRUEBA RÁPIDA (checklist)
@@ -74,12 +85,14 @@ PRUEBA RÁPIDA (checklist)
   [ ] Descargar banco completo (banco-forja.json)
   [ ] En otra sesión o como alumno: importar ese JSON en la portada
   [ ] Importar entrega de un alumno en /profesor/alumnos
+  [ ] Revisar intentos en /profesor/resultados y descargar CSV
 
 
 DATOS EN DISCO (tu equipo)
 --------------------------
   banco/aprobados/           — ejercicios verificados (tuyos)
   datos/entregas/<profesor>/ — entregas de alumnos importadas
+  datos/historial/           — intentos por alumno (enunciado, respuesta, nota)
   banco/pendientes/          — propuestas IA por revisar
 
 ================================================================================

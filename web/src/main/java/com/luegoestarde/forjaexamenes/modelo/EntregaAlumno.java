@@ -2,6 +2,8 @@ package com.luegoestarde.forjaexamenes.modelo;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.JsonNode;
+import java.util.ArrayList;
+import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class EntregaAlumno {
@@ -15,6 +17,8 @@ public class EntregaAlumno {
     private AlumnoInfo alumno = new AlumnoInfo();
     private EstadisticasUsuario estadisticasServidor = new EstadisticasUsuario();
     private JsonNode progresoLocal;
+    /** Historial completo de intentos (ejercicio, respuesta, nota) para revisión del profesor. */
+    private List<IntentoHistorial> historialIntentos = new ArrayList<>();
     private String idImportacion = "";
     private String importadoPor = "";
     private String importadoEn = "";
@@ -40,6 +44,11 @@ public class EntregaAlumno {
 
     public JsonNode getProgresoLocal() { return progresoLocal; }
     public void setProgresoLocal(JsonNode progresoLocal) { this.progresoLocal = progresoLocal; }
+
+    public List<IntentoHistorial> getHistorialIntentos() { return historialIntentos; }
+    public void setHistorialIntentos(List<IntentoHistorial> historialIntentos) {
+        this.historialIntentos = historialIntentos != null ? historialIntentos : new ArrayList<>();
+    }
 
     public String getIdImportacion() { return idImportacion; }
     public void setIdImportacion(String idImportacion) { this.idImportacion = idImportacion; }

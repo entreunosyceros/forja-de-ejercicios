@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{plantilla :: plantilla(~{::section})}">
+<section class="pagina-profesor-resultados">
+    <div class="card card-wide">
+        <h1>Resultados de alumnos</h1>
+        <p class="hint">
+            Cada corrección guarda en disco el ejercicio, la respuesta y la nota
+            (<code>datos/historial/</code>). Exporta a CSV (abre en Excel) o revisa el detalle de cada intento.
+        </p>
+
+        <div class="profesor-resultados-seccion">
+            <div class="panel-estadisticas-cabecera">
+                <h2>En este servidor</h2>
+                <a class="btn btn-secondary btn-sm" th:if="${!#lists.isEmpty(filasServidor)}"
+                   th:href="@{/profesor/resultados/exportar.csv}">Exportar CSV</a>
+            </div>
+            <p class="hint" th:if="${#lists.isEmpty(filasServidor)}">
+                Aún no hay intentos guardados de alumnos en este equipo.
+            </p>
+            <div class="stats-modulos-scroll" th:if="${!#lists.isEmpty(filasServidor)}">
+                <table class="stats-modulos-table tabla-resultados">
+                    <thead>
+                    <tr>
+                        <th>Alumno</th>
+                        <th>Fecha</th>
+                        <th>Módulo</th>
+                        <th>Título</th>
+                        <th>Nota</th>
+                        <th>Tiempo</th>
+                        <th></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="f : ${filasServidor}">
+                        <td th:text="${f.alumno}">Alumno</td>
+                        <td th:text="${f.fecha}">—</td>
+                        <td><code th:text="${f.modulo}">mod</code></td>
+                        <td th:text="${f.titulo}">—</td>
+                        <td th:text="${#numbers.formatDecimal(f.nota, 1, 1)}">0</td>
+                        <td th:text="${f.tiempoSegundos > 0 ? T(com.luegoestarde.forjaexamenes.servicio.ServicioEstadisticasUsuario).formatearTiempo(f.tiempoSegundos) : '—'}">—</td>
+                        <td>
+                            <a class="btn btn-ghost btn-sm"
+                               th:href="@{/profesor/resultados/{login}/{id}(login=${f.login},id=${f.intentoId})}">Ver</a>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="profesor-resultados-seccion">
+            <div class="panel-estadisticas-cabecera">
+                <h2>Desde entregas importadas</h2>
+                <a class="btn btn-secondary btn-sm" th:if="${!#lists.isEmpty(filasImportadas)}"
+                   th:href="@{/profesor/resultados/importados/exportar.csv}">Exportar CSV</a>
+            </div>
+            <p class="hint" th:if="${#lists.isEmpty(filasImportadas)}">
+                Importa entregas de alumnos en <a th:href="@{/profesor/alumnos}">Seguimiento de alumnos</a>
+                (incluyen historial si el alumno exportó tras practicar).
+            </p>
+            <div class="stats-modulos-scroll" th:if="${!#lists.isEmpty(filasImportadas)}">
+                <table class="stats-modulos-table tabla-resultados">
+                    <thead>
+                    <tr>
+                        <th>Alumno</th>
+                        <th>Fecha</th>
+                        <th>Módulo</th>
+                        <th>Título</th>
+                        <th>Nota</th>
+                        <th>Tiempo</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="f : ${filasImportadas}">
+                        <td th:text="${f.alumno}">Alumno</td>
+                        <td th:text="${f.fecha}">—</td>
+                        <td><code th:text="${f.modulo}">mod</code></td>
+                        <td th:text="${f.titulo}">—</td>
+                        <td th:text="${#numbers.formatDecimal(f.nota, 1, 1)}">0</td>
+                        <td th:text="${f.tiempoSegundos > 0 ? T(com.luegoestarde.forjaexamenes.servicio.ServicioEstadisticasUsuario).formatearTiempo(f.tiempoSegundos) : '—'}">—</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="form-actions" style="margin-top:1.5rem">
+            <a class="btn btn-secondary" th:href="@{/profesor/alumnos}">Seguimiento de alumnos</a>
+            <a class="btn btn-ghost" th:href="@{/}">Portada</a>
+        </div>
+    </div>
+</section>
+</html>

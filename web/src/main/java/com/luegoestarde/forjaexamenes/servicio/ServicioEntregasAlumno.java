@@ -66,13 +66,16 @@ public class ServicioEntregasAlumno {
 
     private final PropiedadesForjaExamenes propiedades;
     private final ServicioEstadisticasUsuario servicioEstadisticas;
+    private final ServicioHistorialIntentos servicioHistorial;
     private final ObjectMapper mapeador = new ObjectMapper();
 
     public ServicioEntregasAlumno(
             PropiedadesForjaExamenes propiedades,
-            ServicioEstadisticasUsuario servicioEstadisticas) {
+            ServicioEstadisticasUsuario servicioEstadisticas,
+            ServicioHistorialIntentos servicioHistorial) {
         this.propiedades = propiedades;
         this.servicioEstadisticas = servicioEstadisticas;
+        this.servicioHistorial = servicioHistorial;
     }
 
     public EntregaAlumno construirExportacion(String login, String nombreVisible) {
@@ -83,6 +86,7 @@ public class ServicioEntregasAlumno {
         alumno.setNombreVisible(nombreVisible != null ? nombreVisible : login);
         entrega.setAlumno(alumno);
         entrega.setEstadisticasServidor(servicioEstadisticas.obtener(login));
+        entrega.setHistorialIntentos(servicioHistorial.listarIntentos(login));
         return entrega;
     }
 

@@ -27,7 +27,8 @@ class PruebaServicioEntregasAlumno {
         PropiedadesForjaExamenes props = new PropiedadesForjaExamenes();
         props.setDirectorioDatos(tempDir.toString());
         servicioEstadisticas = new ServicioEstadisticasUsuario(props);
-        servicioEntregas = new ServicioEntregasAlumno(props, servicioEstadisticas);
+        ServicioHistorialIntentos servicioHistorial = new ServicioHistorialIntentos(props);
+        servicioEntregas = new ServicioEntregasAlumno(props, servicioEstadisticas, servicioHistorial);
         servicioEstadisticas.registrar("alumno", "docker", 8.0, true, 60L, "Contenedor", "ex1");
     }
 

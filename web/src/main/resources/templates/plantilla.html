@@ -25,6 +25,7 @@
                 <a class="nav-link" th:href="@{/ejercicio/nuevo}">Nuevo ejercicio</a>
                 <a class="nav-link" th:href="@{/como-funciona}">Ayuda</a>
                 <a class="nav-link" th:if="${esProfesor}" th:href="@{/profesor/alumnos}">Alumnos</a>
+                <a class="nav-link" th:if="${esProfesor}" th:href="@{/profesor/resultados}">Resultados</a>
             </nav>
             <div class="header-util">
                 <div class="usuario-sesion" th:if="${nombreUsuario != null}">
