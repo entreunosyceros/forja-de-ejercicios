@@ -1,7 +1,9 @@
 package com.luegoestarde.forjaexamenes.modelo;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -16,6 +18,8 @@ public class EstadisticasUsuario {
     private long tiempoTotalSegundos;
     private String ultimaActividad = "";
     private Map<String, EstadisticasModulo> porModulo = new LinkedHashMap<>();
+    /** Últimos intentos (máx. 5) para sincronizar el panel local de la portada. */
+    private List<IntentoReciente> ultimosIntentos = new ArrayList<>();
 
     public int getTotalIntentos() { return totalIntentos; }
     public void setTotalIntentos(int totalIntentos) { this.totalIntentos = totalIntentos; }
@@ -44,6 +48,37 @@ public class EstadisticasUsuario {
     public Map<String, EstadisticasModulo> getPorModulo() { return porModulo; }
     public void setPorModulo(Map<String, EstadisticasModulo> porModulo) {
         this.porModulo = porModulo != null ? porModulo : new LinkedHashMap<>();
+    }
+
+    public List<IntentoReciente> getUltimosIntentos() { return ultimosIntentos; }
+    public void setUltimosIntentos(List<IntentoReciente> ultimosIntentos) {
+        this.ultimosIntentos = ultimosIntentos != null ? ultimosIntentos : new ArrayList<>();
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class IntentoReciente {
+        private String modulo;
+        private String titulo;
+        private double nota;
+        private boolean aprobado;
+        private long tiempoSegundos;
+        private String fecha;
+        private String ejercicioId;
+
+        public String getModulo() { return modulo; }
+        public void setModulo(String modulo) { this.modulo = modulo; }
+        public String getTitulo() { return titulo; }
+        public void setTitulo(String titulo) { this.titulo = titulo; }
+        public double getNota() { return nota; }
+        public void setNota(double nota) { this.nota = nota; }
+        public boolean isAprobado() { return aprobado; }
+        public void setAprobado(boolean aprobado) { this.aprobado = aprobado; }
+        public long getTiempoSegundos() { return tiempoSegundos; }
+        public void setTiempoSegundos(long tiempoSegundos) { this.tiempoSegundos = tiempoSegundos; }
+        public String getFecha() { return fecha; }
+        public void setFecha(String fecha) { this.fecha = fecha; }
+        public String getEjercicioId() { return ejercicioId; }
+        public void setEjercicioId(String ejercicioId) { this.ejercicioId = ejercicioId; }
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)

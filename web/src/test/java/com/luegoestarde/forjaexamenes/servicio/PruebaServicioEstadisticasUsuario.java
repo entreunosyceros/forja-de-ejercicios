@@ -52,6 +52,16 @@ class PruebaServicioEstadisticasUsuario {
     }
 
     @Test
+    void registrarGuardaUltimosIntentos() throws Exception {
+        servicio.registrar("alumno", "docs_forense", 8.0, true, 90L, "Ejercicio forense", "abc123");
+        var intentos = servicio.obtener("alumno").getUltimosIntentos();
+        assertEquals(1, intentos.size());
+        assertEquals("docs_forense", intentos.get(0).getModulo());
+        assertEquals("Ejercicio forense", intentos.get(0).getTitulo());
+        assertEquals("abc123", intentos.get(0).getEjercicioId());
+    }
+
+    @Test
     void limpiarEliminaFicheroYDejaEstadisticasVacias() throws Exception {
         servicio.registrar("alumno", "poo", 7.0, true, 30L);
         assertTrue(servicio.limpiar("alumno"));

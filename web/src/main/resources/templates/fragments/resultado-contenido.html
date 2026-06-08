@@ -5,6 +5,10 @@
      th:with="origen=${@parametros.origenApuntes(escenario.parametros)}"
      th:attr="data-modulo=${escenario.modulo},
               data-ejercicio-id=${escenario.id},
+              data-nota=${resultado.nota},
+              data-aprobado=${resultado.aprobado},
+              data-titulo=${escenario.titulo},
+              data-tiempo-segundos=${tiempoSegundos != null ? tiempoSegundos : 0},
               data-capitulo=${origen != null ? origen['capitulo_slug'] : ''},
               data-seccion=${origen != null ? origen['seccion_slug'] : ''}">
     <div class="exam-header">

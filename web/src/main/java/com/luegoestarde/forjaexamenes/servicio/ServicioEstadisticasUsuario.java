@@ -4,12 +4,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.luegoestarde.forjaexamenes.configuracion.PropiedadesForjaExamenes;
 import com.luegoestarde.forjaexamenes.modelo.EstadisticasUsuario;
 import com.luegoestarde.forjaexamenes.modelo.EstadisticasUsuario.EstadisticasModulo;
+import com.luegoestarde.forjaexamenes.modelo.EstadisticasUsuario.IntentoReciente;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -53,9 +56,22 @@ public class ServicioEstadisticasUsuario {
         return true;
     }
 
+    private static final int MAX_ULTIMOS_INTENTOS = 5;
+
     public synchronized void registrar(
             String login, String modulo, double nota, boolean aprobado, Long tiempoSegundos)
             throws IOException {
+        registrar(login, modulo, nota, aprobado, tiempoSegundos, null, null);
+    }
+
+    public synchronized void registrar(
+            String login,
+            String modulo,
+            double nota,
+            boolean aprobado,
+            Long tiempoSegundos,
+            String titulo,
+            String ejercicioId) throws IOException {
         if (login == null || login.isBlank() || modulo == null || modulo.isBlank()) {
             return;
         }
@@ -92,7 +108,38 @@ public class ServicioEstadisticasUsuario {
             pm.setAprobados(pm.getAprobados() + 1);
         }
 
+        registrarIntentoReciente(stats, modulo, titulo, nota, aprobado, tiempoSegundos, ejercicioId);
         guardar(login, stats);
+    }
+
+    private static void registrarIntentoReciente(
+            EstadisticasUsuario stats,
+            String modulo,
+            String titulo,
+            double nota,
+            boolean aprobado,
+            Long tiempoSegundos,
+            String ejercicioId) {
+        var intento = new IntentoReciente();
+        intento.setModulo(modulo);
+        intento.setTitulo(titulo != null && !titulo.isBlank() ? titulo.strip() : modulo);
+        intento.setNota(nota);
+        intento.setAprobado(aprobado);
+        intento.setTiempoSegundos(tiempoSegundos != null ? tiempoSegundos : 0L);
+        intento.setFecha(Instant.now().toString());
+        intento.setEjercicioId(ejercicioId);
+
+        var lista = stats.getUltimosIntentos() != null
+                ? new ArrayList<>(stats.getUltimosIntentos())
+                : new ArrayList<IntentoReciente>();
+        if (ejercicioId != null && !ejercicioId.isBlank()) {
+            lista.removeIf(i -> ejercicioId.equals(i.getEjercicioId()));
+        }
+        lista.add(0, intento);
+        if (lista.size() > MAX_ULTIMOS_INTENTOS) {
+            lista = new ArrayList<>(lista.subList(0, MAX_ULTIMOS_INTENTOS));
+        }
+        stats.setUltimosIntentos(lista);
     }
 
     public static String formatearTiempo(long segundos) {

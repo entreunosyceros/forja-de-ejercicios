@@ -84,26 +84,11 @@
     }
 
     function registrarDesdeResultado(zona) {
-        if (typeof Progreso === "undefined") return;
-        const card = zona.querySelector(".score-card");
-        if (!card) return;
-        const nota = parseFloat(card.getAttribute("data-nota") || "0");
-        const aprobado = card.getAttribute("data-aprobado") === "true";
-        const modulo = zona.getAttribute("data-modulo");
-        const titulo = extraerTexto("h1", zona);
-        const enunciado = extraerTexto(".enunciado", zona) || titulo;
-        const tiempo = parseInt(document.getElementById("input-tiempo-segundos")?.value || "0", 10);
-        const res = Progreso.registrarResultado({
-            modulo,
-            titulo,
-            enunciado,
-            nota,
-            aprobado,
-            tiempoSegundos: tiempo,
-            ejercicioId: zona.getAttribute("data-ejercicio-id"),
-        });
+        if (typeof Progreso === "undefined" || !zona) return;
+        const res = Progreso.registrarDesdeZona(zona);
+        if (!res) return;
         const msgEl = document.getElementById("mensaje-motivacion");
-        if (msgEl) {
+        if (msgEl && res.mensaje) {
             msgEl.textContent = res.mensaje;
             msgEl.hidden = false;
             msgEl.classList.add("card");
@@ -125,6 +110,9 @@
             headers: { "X-Requested-With": "XMLHttpRequest" },
         });
         if (!resp.ok) throw new Error("Error al evaluar: " + resp.status);
+        if (typeof Progreso !== "undefined") {
+            Progreso.registrarDesdeCabecera(resp);
+        }
         const html = await resp.text();
         const zona = obtenerZona();
         if (zona) {

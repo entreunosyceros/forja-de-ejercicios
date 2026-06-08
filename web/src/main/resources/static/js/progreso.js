@@ -12,7 +12,35 @@ const Progreso = (function () {
     const CLAVE_HISTORIAL = () => clave("historial");
     const CLAVE_STATS = () => clave("stats");
     const CLAVE_MEDALLAS = () => clave("medallas");
+    const CLAVE_LEGACY = (nombre) => `${PREFIJO}-${nombre}`;
     const MAX_HISTORIAL = 5;
+
+    function loginDesdeDom() {
+        return document.body?.dataset?.loginUsuario
+            || document.querySelector('meta[name="forja-login-usuario"]')?.content
+            || document.querySelector(".pagina-inicio")?.dataset?.loginUsuario
+            || "";
+    }
+
+    /** Login de sesión; sin sufijo el progreso se guardaba en otra clave que la portada no leía. */
+    function asegurarSufijoUsuario() {
+        const login = loginDesdeDom();
+        if (login) sufijoUsuario = login;
+    }
+
+    /** Migra datos guardados sin sufijo de usuario (ejercicio/resultado antes del fix). */
+    function leerJsonMigrando(claveActual, nombreBase, defecto, tieneDatos) {
+        asegurarSufijoUsuario();
+        const actual = leerJson(claveActual, null);
+        if (actual !== null && tieneDatos(actual)) return actual;
+        if (!sufijoUsuario) return defecto;
+        const legacy = leerJson(CLAVE_LEGACY(nombreBase), null);
+        if (legacy !== null && tieneDatos(legacy)) {
+            guardarJson(claveActual, legacy);
+            return legacy;
+        }
+        return defecto;
+    }
 
     const MODULOS_BD = ["bd", "bd_sql", "bd_modelo", "bd_transacciones", "bd_jdbc"];
     const MODULOS_SISTEMAS = ["redes", "sistemas", "docker"];
@@ -37,17 +65,44 @@ const Progreso = (function () {
     }
 
     function guardarJson(clave, valor) {
-        localStorage.setItem(clave, JSON.stringify(valor));
+        try {
+            localStorage.setItem(clave, JSON.stringify(valor));
+        } catch (e) {
+            console.warn("Forja: no se pudo guardar progreso local", e);
+        }
+    }
+
+    function yaRegistrado(ejercicioId) {
+        if (!ejercicioId) return false;
+        try {
+            return sessionStorage.getItem(`forja-reg-${ejercicioId}`) === "1";
+        } catch (e) {
+            return false;
+        }
+    }
+
+    function marcarRegistrado(ejercicioId) {
+        if (!ejercicioId) return;
+        try {
+            sessionStorage.setItem(`forja-reg-${ejercicioId}`, "1");
+        } catch (e) {
+            /* ignorar */
+        }
     }
 
     function obtenerStats() {
-        return leerJson(CLAVE_STATS(), {
-            porModulo: {},
-            totalAprobados: 0,
-            rachaActual: 0,
-            modulosAprobados: {},
-            modulosDistintos: 0,
-        });
+        return leerJsonMigrando(
+            CLAVE_STATS(),
+            "stats",
+            {
+                porModulo: {},
+                totalAprobados: 0,
+                rachaActual: 0,
+                modulosAprobados: {},
+                modulosDistintos: 0,
+            },
+            (s) => Object.keys(s.porModulo || {}).length > 0 || (s.totalAprobados || 0) > 0
+        );
     }
 
     function calcularNivel(modulo) {
@@ -59,22 +114,32 @@ const Progreso = (function () {
     }
 
     function registrarResultado(datos) {
+        asegurarSufijoUsuario();
         const { modulo, titulo, enunciado, nota, aprobado, tiempoSegundos, ejercicioId } = datos;
+        if (!modulo) return null;
+        if (yaRegistrado(ejercicioId)) {
+            return { entrada: null, stats: obtenerStats(), mensaje: "" };
+        }
+
         const entrada = {
             modulo,
-            titulo,
-            enunciado: (enunciado || "").slice(0, 200),
-            nota,
-            aprobado,
+            titulo: titulo || modulo,
+            enunciado: (enunciado || titulo || "").slice(0, 200),
+            nota: Number.isFinite(nota) ? nota : 0,
+            aprobado: !!aprobado,
             tiempoSegundos: tiempoSegundos || 0,
             ejercicioId,
             fecha: new Date().toISOString(),
         };
 
-        let historial = leerJson(CLAVE_HISTORIAL(), []);
+        let historial = obtenerHistorial();
+        if (ejercicioId) {
+            historial = historial.filter((h) => h.ejercicioId !== ejercicioId);
+        }
         historial.unshift(entrada);
         historial = historial.slice(0, MAX_HISTORIAL);
         guardarJson(CLAVE_HISTORIAL(), historial);
+        marcarRegistrado(ejercicioId);
 
         const stats = obtenerStats();
         if (!stats.porModulo[modulo]) {
@@ -137,11 +202,21 @@ const Progreso = (function () {
     }
 
     function obtenerHistorial() {
-        return leerJson(CLAVE_HISTORIAL(), []);
+        return leerJsonMigrando(
+            CLAVE_HISTORIAL(),
+            "historial",
+            [],
+            (h) => Array.isArray(h) && h.length > 0
+        );
     }
 
     function obtenerMedallas() {
-        return leerJson(CLAVE_MEDALLAS(), []);
+        return leerJsonMigrando(
+            CLAVE_MEDALLAS(),
+            "medallas",
+            [],
+            (m) => Array.isArray(m) && m.length > 0
+        );
     }
 
     function rankingLocal() {
@@ -167,13 +242,36 @@ const Progreso = (function () {
         };
     }
 
+    function historialParaMostrar() {
+        return obtenerHistorial();
+    }
+
+    function limpiarProgresoLocal() {
+        asegurarSufijoUsuario();
+        try {
+            localStorage.removeItem(CLAVE_HISTORIAL());
+            localStorage.removeItem(CLAVE_STATS());
+            localStorage.removeItem(CLAVE_MEDALLAS());
+            localStorage.removeItem(CLAVE_LEGACY("historial"));
+            localStorage.removeItem(CLAVE_LEGACY("stats"));
+            localStorage.removeItem(CLAVE_LEGACY("medallas"));
+            Object.keys(sessionStorage).forEach((k) => {
+                if (k.startsWith("forja-reg-")) sessionStorage.removeItem(k);
+            });
+        } catch (e) {
+            console.warn("Forja: no se pudo limpiar el progreso local", e);
+        }
+        renderizarPanelInicio();
+    }
+
     function renderizarPanelInicio() {
+        asegurarSufijoUsuario();
         const histUl = document.getElementById("lista-historial");
         const rankUl = document.getElementById("lista-ranking");
         const medDiv = document.getElementById("lista-medallas");
         if (!histUl) return;
 
-        const historial = obtenerHistorial();
+        const historial = historialParaMostrar();
         histUl.innerHTML = historial.length
             ? historial.map((h) =>
                 `<li><strong>${h.modulo}</strong> — ${h.nota}/10 ${h.aprobado ? "✓" : "✗"}<br><small>${h.titulo}</small></li>`
@@ -197,7 +295,27 @@ const Progreso = (function () {
             }).join("");
         }
 
+        actualizarFiltroGraficoModulos();
         dibujarGrafico(document.getElementById("grafico-progreso"), null);
+    }
+
+    function actualizarFiltroGraficoModulos() {
+        const sel = document.getElementById("filtro-grafico-modulo");
+        if (!sel) return;
+        const conocidos = new Set(
+            Array.from(sel.options).map((o) => o.value).filter(Boolean)
+        );
+        const modulos = new Set();
+        obtenerHistorial().forEach((h) => { if (h.modulo) modulos.add(h.modulo); });
+        Object.keys(obtenerStats().porModulo || {}).forEach((m) => modulos.add(m));
+        modulos.forEach((mod) => {
+            if (conocidos.has(mod)) return;
+            const opt = document.createElement("option");
+            opt.value = mod;
+            opt.textContent = mod;
+            sel.appendChild(opt);
+            conocidos.add(mod);
+        });
     }
 
     let chartInstancia = null;
@@ -228,10 +346,7 @@ const Progreso = (function () {
     }
 
     document.addEventListener("DOMContentLoaded", function () {
-        const pagina = document.querySelector(".pagina-inicio");
-        if (pagina && pagina.dataset.loginUsuario) {
-            sufijoUsuario = pagina.dataset.loginUsuario;
-        }
+        asegurarSufijoUsuario();
         renderizarPanelInicio();
         const sel = document.getElementById("filtro-grafico-modulo");
         if (sel) {
@@ -239,15 +354,65 @@ const Progreso = (function () {
                 dibujarGrafico(document.getElementById("grafico-progreso"), sel.value || null);
             });
         }
+        const btnLimpiar = document.getElementById("btn-limpiar-progreso-local");
+        if (btnLimpiar) {
+            btnLimpiar.addEventListener("click", function () {
+                if (confirm("¿Borrar el progreso local de este navegador (historial, ranking y medallas)? No afecta a las estadísticas del servidor.")) {
+                    limpiarProgresoLocal();
+                }
+            });
+        }
     });
+
+    function registrarDesdeCabecera(respuestaFetch) {
+        if (!respuestaFetch || typeof respuestaFetch.headers?.get !== "function") return false;
+        const b64 = respuestaFetch.headers.get("X-Forja-Progreso");
+        if (!b64) return false;
+        try {
+            const datos = JSON.parse(atob(b64));
+            registrarResultado(datos);
+            return true;
+        } catch (e) {
+            console.warn("Forja: cabecera de progreso no válida", e);
+            return false;
+        }
+    }
+
+    function registrarDesdeZona(zona) {
+        if (!zona) return null;
+        const card = zona.querySelector(".score-card");
+        if (!card && !zona.dataset.nota) return null;
+        const nota = parseFloat(zona.dataset.nota || card?.dataset?.nota || "0");
+        const aprobado = (zona.dataset.aprobado || card?.dataset?.aprobado) === "true";
+        const titulo = zona.dataset.titulo
+            || (zona.querySelector("h1")?.textContent || "").trim();
+        const tiempo = parseInt(
+            zona.dataset.tiempoSegundos
+                || document.getElementById("input-tiempo-segundos")?.value
+                || "0",
+            10
+        );
+        return registrarResultado({
+            modulo: zona.dataset.modulo,
+            titulo,
+            enunciado: titulo,
+            nota,
+            aprobado,
+            tiempoSegundos: tiempo,
+            ejercicioId: zona.dataset.ejercicioId,
+        });
+    }
 
     return {
         calcularNivel,
         registrarResultado,
+        registrarDesdeCabecera,
+        registrarDesdeZona,
         obtenerHistorial,
         obtenerMedallas,
         rankingLocal,
         renderizarPanelInicio,
+        limpiarProgresoLocal,
         mensajeMotivacion,
     };
 })();

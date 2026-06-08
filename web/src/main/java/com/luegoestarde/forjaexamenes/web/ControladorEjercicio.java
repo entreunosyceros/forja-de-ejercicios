@@ -14,10 +14,15 @@ import com.luegoestarde.forjaexamenes.servicio.ServicioGenerador;
 import com.luegoestarde.forjaexamenes.servicio.ServicioMetadatosEjercicio;
 import com.luegoestarde.forjaexamenes.servicio.ServicioPdf;
 import com.luegoestarde.forjaexamenes.servicio.ServicioPrecargaEjercicios;
+import jakarta.servlet.http.HttpServletResponse;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Base64;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import org.springframework.core.io.FileSystemResource;
@@ -130,16 +135,21 @@ public class ControladorEjercicio {
     public String evaluarAjax(@PathVariable String id,
                               @RequestParam String respuesta,
                               @RequestParam(required = false) Long tiempoSegundos,
+                              HttpServletResponse respuestaHttp,
                               Model modelo) throws Exception {
         ResultadoEvaluacion resultado = evaluarRespuesta(id, respuesta, tiempoSegundos);
         Escenario escenario = obtenerEscenario(id);
         modelo.addAttribute("escenario", escenario);
         modelo.addAttribute("resultado", resultado);
+        long tiempoEfectivo = tiempoSegundos != null
+                ? tiempoSegundos
+                : almacenSesiones.obtenerTiempoSegundos(id).orElse(0L);
         if (tiempoSegundos != null) {
             modelo.addAttribute("tiempoSegundos", tiempoSegundos);
-        } else {
-            almacenSesiones.obtenerTiempoSegundos(id).ifPresent(t -> modelo.addAttribute("tiempoSegundos", t));
+        } else if (tiempoEfectivo > 0) {
+            modelo.addAttribute("tiempoSegundos", tiempoEfectivo);
         }
+        adjuntarCabeceraProgresoLocal(respuestaHttp, escenario, resultado, id, tiempoEfectivo);
         return "fragments/resultado-contenido :: contenido";
     }
 
@@ -288,8 +298,29 @@ public class ControladorEjercicio {
                 escenario.getModulo(),
                 resultado.getNota(),
                 resultado.isAprobado(),
-                tiempoSegundos);
+                tiempoSegundos,
+                escenario.getTitulo(),
+                escenario.getId());
         return resultado;
+    }
+
+    private void adjuntarCabeceraProgresoLocal(
+            HttpServletResponse respuestaHttp,
+            Escenario escenario,
+            ResultadoEvaluacion resultado,
+            String ejercicioId,
+            long tiempoSegundos) throws Exception {
+        Map<String, Object> datos = new LinkedHashMap<>();
+        datos.put("modulo", escenario.getModulo());
+        datos.put("titulo", escenario.getTitulo());
+        datos.put("enunciado", escenario.getEnunciado());
+        datos.put("nota", resultado.getNota());
+        datos.put("aprobado", resultado.isAprobado());
+        datos.put("tiempoSegundos", tiempoSegundos);
+        datos.put("ejercicioId", ejercicioId);
+        String json = mapeadorJson.writeValueAsString(datos);
+        String b64 = Base64.getEncoder().encodeToString(json.getBytes(StandardCharsets.UTF_8));
+        respuestaHttp.setHeader("X-Forja-Progreso", b64);
     }
 
     private Escenario obtenerEscenario(String id) {

@@ -109,7 +109,7 @@ Estos ficheros se generan al usar la app y están en `.gitignore` (no deben subi
 
 | Ruta | Contenido |
 |------|-----------|
-| `datos/estadisticas/*.json` | Estadísticas por usuario (intentos, notas, racha…) |
+| `datos/estadisticas/*.json` | Estadísticas por usuario en el **servidor** (totales acumulados). Se borran con «Limpiar estadísticas» en la portada |
 | `datos/usuarios.json` | Perfiles, contraseñas y rol (`alumno` / `profesor`) |
 | `datos/gemini.json` | Clave API de Gemini guardada desde Perfil |
 | `datos-practica/` | Archivos del alumno en el contenedor de práctica |
@@ -130,7 +130,7 @@ Solo se versionan los `.gitkeep` de las carpetas vacías.
 2. La web ejecuta `generador.py` y muestra un enunciado (con nombre y fecha del alumno).
 3. Escribe la respuesta; `evaluador.py` aplica criterios y calcula la nota (0–10, aprueba ≥ 5).
 4. Opcional: contenedor Docker para practicar comandos reales.
-5. En la portada: progreso local en el navegador (historial, medallas) y estadísticas de uso en el servidor.
+5. En la portada: dos bloques de seguimiento distintos (ver [Progreso y estadísticas](#progreso-y-estadísticas-portada)).
 
 ### Profesor
 
@@ -140,6 +140,32 @@ Solo se versionan los `.gitkeep` de las carpetas vacías.
 4. Puede subir PDFs desde la portada, ver la solución de referencia y descargar JSON/PDF de cada ejercicio.
 
 Los módulos clásicos (`poo`, `bd_sql`, `docker`, etc.) **no necesitan** Gemini.
+
+---
+
+## Progreso y estadísticas (portada)
+
+En la **portada** (`/`) hay dos paneles que **no comparten datos**: uno vive en el navegador y otro en el servidor.
+
+| Panel | Dónde se guarda | Qué muestra | Cómo vaciarlo |
+|-------|-----------------|-------------|---------------|
+| **Tu progreso (local, sin red)** | `localStorage` del navegador (por usuario de sesión) | Últimos **5** ejercicios, gráfico, ranking por módulo y medallas | Botón **«Limpiar progreso local»** (solo este navegador) |
+| **Tus estadísticas de uso (servidor)** | `datos/estadisticas/<usuario>.json` en el equipo | Totales acumulados: intentos, aprobados, nota media, tiempo, desglose por módulo | Botón **«Limpiar estadísticas»** (pide confirmación) |
+
+### Detalles importantes
+
+- **Local:** si cambias de navegador o borras datos del sitio, el progreso local desaparece; el del servidor no.
+- **Servidor:** cuenta todos los ejercicios que has **corregido** (enviado la respuesta), desde que usas la app en ese equipo.
+- Limpiar uno **no** borra el otro: puedes resetear medallas en el navegador y conservar el historial del servidor, o al revés.
+- Tras limpiar estadísticas del servidor, el fichero `datos/estadisticas/<usuario>.json` se elimina; al hacer el siguiente ejercicio se vuelve a crear.
+
+### API (servidor)
+
+| Método | Ruta | Efecto |
+|--------|------|--------|
+| `POST` | `/estadisticas/limpiar` | Borra las estadísticas de uso del usuario con sesión iniciada y redirige a la portada |
+
+Requiere estar logueado y token CSRF (el formulario de la portada lo incluye).
 
 ---
 
@@ -153,6 +179,8 @@ Los módulos clásicos (`poo`, `bd_sql`, `docker`, etc.) **no necesitan** Gemini
 | **Revisar propuestas IA** (profesor) | `/profesor/revisar` → detalle en `/profesor/revisar/{id}` |
 | Vista rápida del banco (profesor) | `/profesor/banco` |
 | Descargar paquete de revisión (profesor) | `/profesor/revisar/{id}/paquete` (ZIP) |
+| Limpiar progreso local (navegador) | Portada → **Tu progreso (local, sin red)** → «Limpiar progreso local» |
+| Limpiar estadísticas de uso (servidor) | Portada → **Tus estadísticas de uso (servidor)** → «Limpiar estadísticas» |
 
 ### Usuarios y roles
 
@@ -387,6 +415,8 @@ examenforge/
 | **Índice de apuntes** | Caché en memoria invalidada por fecha de `indice/docs_*.json` y tras cada indexación. |
 | **Actualizar apuntes** | Indexación **en segundo plano** (`@Async`): no bloquea la sesión; la portada hace polling y se recarga al terminar. |
 | **Entorno Docker** | Botón «Limpiar entorno de práctica» en la portada; auto-limpieza de `datos-practica/` al iniciar ejercicios `docker`, `redes`, `sistemas`, `git` (`forjaexamenes.limpiar-practica-al-nuevo-ejercicio`, default `true`). |
+| **Progreso local** | Últimos 5 ejercicios en `localStorage` (`progreso.js`). Botón «Limpiar progreso local» en la portada. |
+| **Estadísticas de uso** | Totales en `datos/estadisticas/<usuario>.json`. Botón «Limpiar estadísticas» → `POST /estadisticas/limpiar`. |
 | **Revisión profesor** | Badges **PASSED** / **FAILED** y resumen «listo para aprobar» en `/profesor/revisar/{id}`. |
 | **PDFs problemáticos** | `indexador_docs.py` avisa si un PDF está corrupto o protegido con contraseña (se omite y continúa con el resto). |
 
@@ -405,6 +435,8 @@ examenforge/
 | `403` en `/profesor/revisar` | Entra con cuenta profesor (`profesor` / `profesor`) |
 | `403` al enviar ejercicio | Recarga la página (token CSRF en el formulario) |
 | Sinónimo no aceptado | Añádelo en `vocabulario_claves.json` → `alias_comandos` |
+| El panel local muestra datos viejos o de otro sitio | «Limpiar progreso local»; no confundir con «Limpiar estadísticas» del servidor |
+| Quiero empezar de cero en totales e historial del servidor | «Limpiar estadísticas» en la portada (no afecta al progreso del navegador) |
 
 ---
 

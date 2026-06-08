@@ -1,5 +1,6 @@
 package com.luegoestarde.forjaexamenes.web;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.luegoestarde.forjaexamenes.configuracion.PropiedadesForjaExamenes;
 import com.luegoestarde.forjaexamenes.servicio.ServicioBancoEjercicios;
 import com.luegoestarde.forjaexamenes.servicio.ServicioDocumentacion;
@@ -21,6 +22,7 @@ public class ControladorInicio {
     private final ServicioBancoEjercicios servicioBanco;
     private final ServicioSubidaDocumentacion servicioSubida;
     private final PropiedadesForjaExamenes propiedades;
+    private final ObjectMapper mapeadorJson = new ObjectMapper();
 
     public ControladorInicio(ServicioDocumentacion servicioDocumentacion,
                              ServicioIndexacionDocumentacion servicioIndexacion,
@@ -55,6 +57,8 @@ public class ControladorInicio {
             modelo.addAttribute("estadisticas", stats);
             modelo.addAttribute("tiempoPracticado",
                     ServicioEstadisticasUsuario.formatearTiempo(stats.getTiempoTotalSegundos()));
+            modelo.addAttribute("historialServidorJson",
+                    mapeadorJson.writeValueAsString(stats.getUltimosIntentos()));
         }
         return "inicio";
     }
