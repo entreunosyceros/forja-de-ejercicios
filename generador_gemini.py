@@ -121,6 +121,20 @@ def _validar_escenario(datos: dict[str, Any], modulo: str) -> dict[str, Any]:
     }
 
 
+def _instrucciones_nivel(nivel: int) -> str:
+    if nivel <= 1:
+        return (
+            "Para nivel 1: pregunta concreta y acotada, enunciado breve, "
+            "2-3 palabras_clave esenciales del fragmento, sin requisitos ocultos."
+        )
+    if nivel >= 3:
+        return (
+            "Para nivel 3: ejercicio más completo (varios pasos o conceptos del fragmento), "
+            "4-6 palabras_clave técnicas, sin simplificar el enunciado."
+        )
+    return "Para nivel 2: equilibrio entre claridad y exigencia técnica."
+
+
 def _construir_prompt(fragmento: dict, nivel: int, titulo_coleccion: str) -> str:
     nivel = max(1, min(3, nivel))
     pagina = fragmento.get("pagina", "")
@@ -138,6 +152,7 @@ Sección: {fragmento.get("seccion", "")}
 Página(s): {rango_pag}
 Archivo: {fragmento.get("archivo", fragmento.get("fuente", ""))}
 Nivel de dificultad pedido: {nivel} (1=fácil y guiado, 2=intermedio, 3=exigente)
+{_instrucciones_nivel(nivel)}
 
 --- FRAGMENTO (no uses conocimiento fuera de este texto) ---
 {fragmento.get("texto", "")}
@@ -170,6 +185,34 @@ Reglas:
 """
 
 
+def _timeout_ms() -> int:
+    """Timeout (ms) de la llamada a Gemini; lo fija Java vía entorno. 0 = sin límite."""
+    valor = os.environ.get("FORJAEXAMENES_GEMINI_TIMEOUT_MS", "60000").strip()
+    try:
+        return max(0, int(valor))
+    except ValueError:
+        return 60000
+
+
+def _crear_cliente():
+    try:
+        from google import genai
+    except ImportError as exc:
+        raise RuntimeError(
+            "Falta google-genai. Instala: pip install -r requirements-docs.txt"
+        ) from exc
+
+    api_key = _obtener_api_key()
+    timeout_ms = _timeout_ms()
+    if timeout_ms > 0:
+        try:
+            return genai.Client(api_key=api_key, http_options={"timeout": timeout_ms})
+        except Exception:
+            # Versiones antiguas del SDK no aceptan http_options; sin timeout entonces.
+            pass
+    return genai.Client(api_key=api_key)
+
+
 def generar_desde_fragmento(
     fragmento: dict,
     modulo: str,
@@ -178,13 +221,18 @@ def generar_desde_fragmento(
     modelo: str | None = None,
 ) -> dict:
     texto_fragmento = fragmento.get("texto", "") or ""
+    modelo_efectivo = modelo or MODELO_POR_DEFECTO
+    # El cliente y el prompt se construyen una sola vez y se reutilizan en los reintentos.
+    cliente = _crear_cliente()
+    prompt = _construir_prompt(fragmento, nivel, titulo_coleccion)
     ultimo_error: Exception | None = None
     max_intentos = 3
 
     for intento in range(max_intentos):
         try:
             return _generar_desde_fragmento_intento(
-                fragmento, modulo, titulo_coleccion, nivel, modelo, texto_fragmento
+                cliente, modelo_efectivo, prompt, fragmento, modulo,
+                titulo_coleccion, texto_fragmento,
             )
         except ValueError as exc:
             ultimo_error = exc
@@ -194,24 +242,14 @@ def generar_desde_fragmento(
 
 
 def _generar_desde_fragmento_intento(
+    cliente,
+    modelo_efectivo: str,
+    prompt: str,
     fragmento: dict,
     modulo: str,
     titulo_coleccion: str,
-    nivel: int,
-    modelo: str | None,
     texto_fragmento: str,
 ) -> dict:
-    try:
-        from google import genai
-    except ImportError as exc:
-        raise RuntimeError(
-            "Falta google-genai. Instala: pip install -r requirements-docs.txt"
-        ) from exc
-
-    modelo_efectivo = modelo or MODELO_POR_DEFECTO
-    cliente = genai.Client(api_key=_obtener_api_key())
-    prompt = _construir_prompt(fragmento, nivel, titulo_coleccion)
-
     try:
         respuesta = cliente.models.generate_content(
             model=modelo_efectivo,

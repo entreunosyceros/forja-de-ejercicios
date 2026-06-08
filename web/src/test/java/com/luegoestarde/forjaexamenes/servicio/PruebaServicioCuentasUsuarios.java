@@ -49,4 +49,13 @@ class PruebaServicioCuentasUsuarios {
         assertThrows(IllegalArgumentException.class, () -> servicio.actualizarPerfil(
                 "alumno", "alumno", "María", "mala", null, null));
     }
+
+    @Test
+    void nivelGeminiPorDefectoYActualizable() throws Exception {
+        assertEquals(2, servicio.obtenerNivelGemini("alumno"));
+        servicio.actualizarNivelGemini("alumno", 3);
+        assertEquals(3, servicio.obtenerNivelGemini("alumno"));
+        servicio.actualizarNivelGemini("alumno", 9);
+        assertEquals(3, servicio.obtenerNivelGemini("alumno"));
+    }
 }

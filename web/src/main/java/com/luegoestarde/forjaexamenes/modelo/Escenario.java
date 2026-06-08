@@ -62,6 +62,7 @@ public class Escenario {
         private String pista;
         private String tipo;
         private String patron;
+        private List<String> terminos;
         private int peso;
         private String banderas;
 
@@ -69,6 +70,8 @@ public class Escenario {
         public void setTipo(String tipo) { this.tipo = tipo; }
         public String getPatron() { return patron; }
         public void setPatron(String patron) { this.patron = patron; }
+        public List<String> getTerminos() { return terminos; }
+        public void setTerminos(List<String> terminos) { this.terminos = terminos; }
         public int getPeso() { return peso; }
         public void setPeso(int peso) { this.peso = peso; }
         public String getBanderas() { return banderas; }

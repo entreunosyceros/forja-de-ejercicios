@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<form th:fragment="formulario"
+      class="form-nivel-gemini"
+      method="post"
+      th:action="@{/perfil/nivel-gemini}">
+    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+    <label class="label-nivel-gemini" for="nivel-gemini-select">Dificultad de ejercicios con IA (PDF)</label>
+    <p class="hint">Afecta a los módulos <code>docs_*</code>: la IA adapta el enunciado y los criterios.</p>
+
+    <div class="nivel-gemini-opciones">
+        <label class="nivel-gemini-opcion">
+            <input type="radio" name="nivelGemini" value="1" th:checked="${nivelGemini == 1}"/>
+            <span class="nivel-gemini-etiqueta">
+                <strong>1 — Fácil</strong>
+                <span class="hint">Guiado, menos exigente</span>
+            </span>
+        </label>
+        <label class="nivel-gemini-opcion">
+            <input type="radio" name="nivelGemini" value="2" th:checked="${nivelGemini == 2}"/>
+            <span class="nivel-gemini-etiqueta">
+                <strong>2 — Intermedio</strong>
+                <span class="hint">Equilibrado (por defecto)</span>
+            </span>
+        </label>
+        <label class="nivel-gemini-opcion">
+            <input type="radio" name="nivelGemini" value="3" th:checked="${nivelGemini == 3}"/>
+            <span class="nivel-gemini-etiqueta">
+                <strong>3 — Exigente</strong>
+                <span class="hint">Más detalle y sin ayudas extra</span>
+            </span>
+        </label>
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-secondary btn-sm">Guardar nivel</button>
+    </div>
+</form>
+</body>
+</html>

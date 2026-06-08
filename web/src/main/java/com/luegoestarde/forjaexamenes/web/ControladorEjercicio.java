@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.luegoestarde.forjaexamenes.modelo.Escenario;
 import com.luegoestarde.forjaexamenes.modelo.ResultadoEvaluacion;
 import com.luegoestarde.forjaexamenes.servicio.AlmacenSesionesEjercicios;
+import com.luegoestarde.forjaexamenes.servicio.ServicioCuentasUsuarios;
 import com.luegoestarde.forjaexamenes.servicio.ServicioEvaluador;
 import com.luegoestarde.forjaexamenes.servicio.ServicioDocumentacion;
 import com.luegoestarde.forjaexamenes.servicio.ServicioEstadisticasUsuario;
@@ -12,6 +13,7 @@ import com.luegoestarde.forjaexamenes.servicio.ServicioEntornoPractica;
 import com.luegoestarde.forjaexamenes.servicio.ServicioGenerador;
 import com.luegoestarde.forjaexamenes.servicio.ServicioMetadatosEjercicio;
 import com.luegoestarde.forjaexamenes.servicio.ServicioPdf;
+import com.luegoestarde.forjaexamenes.servicio.ServicioPrecargaEjercicios;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -50,6 +52,8 @@ public class ControladorEjercicio {
     private final ServicioMetadatosEjercicio metadatosEjercicio;
     private final ServicioEstadisticasUsuario servicioEstadisticas;
     private final ServicioEntornoPractica servicioEntornoPractica;
+    private final ServicioCuentasUsuarios cuentasUsuarios;
+    private final ServicioPrecargaEjercicios servicioPrecarga;
     private final ObjectMapper mapeadorJson;
     private final Random aleatorio = new Random();
 
@@ -60,7 +64,9 @@ public class ControladorEjercicio {
                               AlmacenSesionesEjercicios almacenSesiones,
                               ServicioMetadatosEjercicio metadatosEjercicio,
                               ServicioEstadisticasUsuario servicioEstadisticas,
-                              ServicioEntornoPractica servicioEntornoPractica) {
+                              ServicioEntornoPractica servicioEntornoPractica,
+                              ServicioCuentasUsuarios cuentasUsuarios,
+                              ServicioPrecargaEjercicios servicioPrecarga) {
         this.servicioGenerador = servicioGenerador;
         this.servicioEvaluador = servicioEvaluador;
         this.servicioPdf = servicioPdf;
@@ -69,6 +75,8 @@ public class ControladorEjercicio {
         this.metadatosEjercicio = metadatosEjercicio;
         this.servicioEstadisticas = servicioEstadisticas;
         this.servicioEntornoPractica = servicioEntornoPractica;
+        this.cuentasUsuarios = cuentasUsuarios;
+        this.servicioPrecarga = servicioPrecarga;
         this.mapeadorJson = new ObjectMapper();
         this.mapeadorJson.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
     }
@@ -223,7 +231,6 @@ public class ControladorEjercicio {
 
     private Escenario crearEscenario(String modulo, Boolean sorpresa, Integer nivel,
                                      String capitulo, String seccion) throws Exception {
-        int nivelEfectivo = nivel != null ? nivel : 2;
         Optional<String> moduloOpt;
         if (Boolean.TRUE.equals(sorpresa) || modulo == null || modulo.isBlank()) {
             if (Boolean.TRUE.equals(sorpresa)) {
@@ -236,11 +243,38 @@ public class ControladorEjercicio {
         } else {
             moduloOpt = Optional.of(modulo);
         }
+        int nivelEfectivo = resolverNivelEfectivo(moduloOpt, nivel);
+
+        String mod = moduloOpt.orElse("");
+        boolean sinFiltro = (capitulo == null || capitulo.isBlank())
+                && (seccion == null || seccion.isBlank());
+        if (mod.startsWith("docs_") && sinFiltro) {
+            Optional<Escenario> precargado = servicioPrecarga.tomar(mod, nivelEfectivo);
+            if (precargado.isPresent()) {
+                return precargado.get();
+            }
+        }
+
         return servicioGenerador.generar(
                 moduloOpt,
                 nivelEfectivo,
                 Optional.ofNullable(capitulo),
                 Optional.ofNullable(seccion));
+    }
+
+    private int resolverNivelEfectivo(Optional<String> moduloOpt, Integer nivelParam) {
+        String mod = moduloOpt.orElse("");
+        if (mod.startsWith("docs_")) {
+            String login = metadatosEjercicio.loginActual();
+            if (login != null && !login.isBlank()) {
+                return cuentasUsuarios.obtenerNivelGemini(login);
+            }
+            return 2;
+        }
+        if (nivelParam != null) {
+            return Math.max(1, Math.min(3, nivelParam));
+        }
+        return 2;
     }
 
     private ResultadoEvaluacion evaluarRespuesta(String id, String respuesta, Long tiempoSegundos) throws Exception {

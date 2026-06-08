@@ -71,6 +71,7 @@ public class ResultadoEvaluacion {
     public static class DetalleCriterio {
         private boolean cumplido;
         private String patron;
+        private List<String> terminos;
         private String tipo;
         private int peso;
         private String descripcion;
@@ -86,6 +87,8 @@ public class ResultadoEvaluacion {
 
         public String getPatron() { return patron; }
         public void setPatron(String patron) { this.patron = patron; }
+        public List<String> getTerminos() { return terminos; }
+        public void setTerminos(List<String> terminos) { this.terminos = terminos; }
         public String getTipo() { return tipo; }
         public void setTipo(String tipo) { this.tipo = tipo; }
         public int getPeso() { return peso; }

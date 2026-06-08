@@ -25,6 +25,8 @@ class PruebaServicioConfiguracionGemini {
         props.setRaiz(tempDir.toString());
         Path datosDir = tempDir.resolve("datos");
         Files.createDirectories(datosDir);
+        // En producción directorio-datos se cablea a raiz/datos; aquí hay que fijarlo igual.
+        props.setDirectorioDatos(datosDir.toString());
 
         ConfiguracionGeminiAlmacenada cfg = new ConfiguracionGeminiAlmacenada();
         cfg.setApiKey("AIzaSyClaveDePrueba123456789");

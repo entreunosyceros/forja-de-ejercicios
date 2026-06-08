@@ -9,6 +9,8 @@ public class UsuarioAlmacenado {
     private String nombreVisible = "";
     /** {@code alumno} o {@code profesor} */
     private String rol = "alumno";
+    /** Nivel 1–3 para ejercicios generados con IA desde PDF (docs_*). */
+    private Integer nivelGemini = 2;
 
     public UsuarioAlmacenado() {}
 
@@ -48,5 +50,13 @@ public class UsuarioAlmacenado {
 
     public boolean esProfesor() {
         return "profesor".equalsIgnoreCase(rol);
+    }
+
+    public Integer getNivelGemini() {
+        return nivelGemini;
+    }
+
+    public void setNivelGemini(Integer nivelGemini) {
+        this.nivelGemini = nivelGemini;
     }
 }

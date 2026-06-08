@@ -80,6 +80,30 @@ public class ServicioCuentasUsuarios implements UserDetailsService {
         return codificador.matches(contrasenaPlana, hashAlmacenado);
     }
 
+    public int obtenerNivelGemini(String usuarioAcceso) {
+        if (usuarioAcceso == null || usuarioAcceso.isBlank()) {
+            return 2;
+        }
+        UsuarioAlmacenado cuenta = usuarios.get(usuarioAcceso);
+        if (cuenta == null || cuenta.getNivelGemini() == null) {
+            return 2;
+        }
+        return Math.max(1, Math.min(3, cuenta.getNivelGemini()));
+    }
+
+    public synchronized void actualizarNivelGemini(String usuarioAcceso, int nivel) throws IOException {
+        if (usuarioAcceso == null || usuarioAcceso.isBlank()) {
+            throw new IllegalArgumentException("No hay sesión activa.");
+        }
+        UsuarioAlmacenado cuenta = usuarios.get(usuarioAcceso);
+        if (cuenta == null) {
+            throw new IllegalArgumentException("No se encontró tu cuenta.");
+        }
+        int nivelValido = Math.max(1, Math.min(3, nivel));
+        cuenta.setNivelGemini(nivelValido);
+        guardarEnFichero(ficheroUsuarios());
+    }
+
     public String nombreVisible(String usuarioAcceso) {
         UsuarioAlmacenado cuenta = usuarios.get(usuarioAcceso);
         if (cuenta == null) {
@@ -140,7 +164,9 @@ public class ServicioCuentasUsuarios implements UserDetailsService {
 
         UsuarioAlmacenado actualizado = new UsuarioAlmacenado(
                 cambiarContrasena ? codificador.encode(contrasenaNueva) : cuenta.getPasswordHash(),
-                nombre);
+                nombre,
+                cuenta.getRol());
+        actualizado.setNivelGemini(cuenta.getNivelGemini());
 
         boolean loginCambiado = !loginNuevo.equals(usuarioAccesoActual);
         if (loginCambiado) {

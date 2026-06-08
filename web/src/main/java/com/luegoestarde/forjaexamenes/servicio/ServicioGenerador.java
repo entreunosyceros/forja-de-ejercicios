@@ -6,9 +6,6 @@ import com.luegoestarde.forjaexamenes.configuracion.CargadorEnvFichero;
 import com.luegoestarde.forjaexamenes.configuracion.InterpretePython;
 import com.luegoestarde.forjaexamenes.configuracion.PropiedadesForjaExamenes;
 import com.luegoestarde.forjaexamenes.modelo.Escenario;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -73,23 +70,14 @@ public class ServicioGenerador {
         constructorProceso.directory(script.getParent().toFile());
         constructorProceso.redirectErrorStream(true);
         configurarEntornoGemini(constructorProceso);
-        Process proceso = constructorProceso.start();
 
-        StringBuilder salida = new StringBuilder();
-        try (BufferedReader lector = new BufferedReader(
-                new InputStreamReader(proceso.getInputStream(), StandardCharsets.UTF_8))) {
-            String linea;
-            while ((linea = lector.readLine()) != null) {
-                salida.append(linea).append('\n');
-            }
+        EjecutorProcesoPython.Resultado resultado = EjecutorProcesoPython.ejecutar(
+                constructorProceso, propiedades.getTimeoutGeneradorSegundos());
+        if (resultado.codigo() != 0) {
+            throw new IllegalStateException(MensajesErrorGenerador.resumir(resultado.salida()));
         }
 
-        int codigo = proceso.waitFor();
-        if (codigo != 0) {
-            throw new IllegalStateException(MensajesErrorGenerador.resumir(salida.toString()));
-        }
-
-        return mapeador.readValue(salida.toString().trim(), Escenario.class);
+        return mapeador.readValue(resultado.salida().trim(), Escenario.class);
     }
 
     private void configurarEntornoGemini(ProcessBuilder constructorProceso) {
@@ -118,6 +106,10 @@ public class ServicioGenerador {
         }
         if (propiedades.isGeminiSoloAprobados()) {
             entorno.put("FORJAEXAMENES_GEMINI_SOLO_APROBADOS", "true");
+        }
+        if (propiedades.getGeminiTimeoutMs() > 0) {
+            entorno.put("FORJAEXAMENES_GEMINI_TIMEOUT_MS",
+                    String.valueOf(propiedades.getGeminiTimeoutMs()));
         }
     }
 }

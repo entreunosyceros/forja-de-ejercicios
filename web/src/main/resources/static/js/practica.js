@@ -49,14 +49,17 @@
         const zonaActual = obtenerZona();
         const capitulo = zonaActual ? zonaActual.getAttribute("data-capitulo") : "";
         const seccion = zonaActual ? zonaActual.getAttribute("data-seccion") : "";
-        const nivel = typeof Progreso !== "undefined" ? Progreso.calcularNivel(modulo) : 2;
-        let url = "/ejercicio/fragment/nuevo?nivel=" + nivel;
+        const usaIa = typeof ForjaCarga !== "undefined" && ForjaCarga.esModuloGemini(modulo);
+        let nivel = 2;
+        if (!usaIa && typeof Progreso !== "undefined") {
+            nivel = Progreso.calcularNivel(modulo);
+        }
+        let url = usaIa ? "/ejercicio/fragment/nuevo?" : "/ejercicio/fragment/nuevo?nivel=" + nivel;
         if (sorpresa) url += "&sorpresa=true";
         else if (modulo) url += "&modulo=" + encodeURIComponent(modulo);
         if (capitulo) url += "&capitulo=" + encodeURIComponent(capitulo);
         if (seccion) url += "&seccion=" + encodeURIComponent(seccion);
 
-        const usaIa = typeof ForjaCarga !== "undefined" && ForjaCarga.esModuloGemini(modulo);
         if (usaIa) ForjaCarga.mostrar();
 
         try {

@@ -6,8 +6,6 @@ import com.luegoestarde.forjaexamenes.configuracion.InterpretePython;
 import com.luegoestarde.forjaexamenes.configuracion.PropiedadesForjaExamenes;
 import com.luegoestarde.forjaexamenes.modelo.Escenario;
 import com.luegoestarde.forjaexamenes.modelo.ResultadoEvaluacion;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -30,38 +28,33 @@ public class ServicioEvaluador {
     public ResultadoEvaluacion evaluar(Escenario escenario, String respuesta) throws Exception {
         Path script = Path.of(propiedades.getScriptEvaluador()).toAbsolutePath().normalize();
         Path archivoEscenario = Files.createTempFile("escenario-", ".json");
+        Path archivoRespuesta = Files.createTempFile("respuesta-", ".txt");
         Path archivoResultado = Files.createTempFile("resultado-", ".json");
 
         try {
             mapeador.writerWithDefaultPrettyPrinter().writeValue(archivoEscenario.toFile(), escenario);
+            // La respuesta va por archivo (no como argumento) para no chocar con el
+            // límite de longitud de la línea de comandos ni problemas de escapado.
+            Files.writeString(archivoRespuesta, respuesta == null ? "" : respuesta, StandardCharsets.UTF_8);
 
             List<String> comando = new ArrayList<>();
             comando.add(InterpretePython.resolver(propiedades));
             comando.add(script.toString());
             comando.add("--escenario");
             comando.add(archivoEscenario.toString());
-            comando.add("--respuesta");
-            comando.add(respuesta);
+            comando.add("--archivo-respuesta");
+            comando.add(archivoRespuesta.toString());
             comando.add("--salida");
             comando.add(archivoResultado.toString());
 
             ProcessBuilder constructorProceso = new ProcessBuilder(comando);
             constructorProceso.directory(script.getParent().toFile());
             constructorProceso.redirectErrorStream(true);
-            Process proceso = constructorProceso.start();
 
-            StringBuilder salida = new StringBuilder();
-            try (BufferedReader lector = new BufferedReader(
-                    new InputStreamReader(proceso.getInputStream(), StandardCharsets.UTF_8))) {
-                String linea;
-                while ((linea = lector.readLine()) != null) {
-                    salida.append(linea).append('\n');
-                }
-            }
-
-            int codigo = proceso.waitFor();
-            if (codigo != 0) {
-                throw new IllegalStateException("evaluador.py falló: " + salida);
+            EjecutorProcesoPython.Resultado res = EjecutorProcesoPython.ejecutar(
+                    constructorProceso, propiedades.getTimeoutEvaluadorSegundos());
+            if (res.codigo() != 0) {
+                throw new IllegalStateException("evaluador.py falló: " + res.salida());
             }
 
             ResultadoEvaluacion resultado = mapeador.readValue(archivoResultado.toFile(), ResultadoEvaluacion.class);
@@ -69,6 +62,7 @@ public class ServicioEvaluador {
             return resultado;
         } finally {
             Files.deleteIfExists(archivoEscenario);
+            Files.deleteIfExists(archivoRespuesta);
             Files.deleteIfExists(archivoResultado);
         }
     }

@@ -41,6 +41,18 @@ public class ServicioEstadisticasUsuario {
         }
     }
 
+    public synchronized boolean limpiar(String login) throws IOException {
+        if (login == null || login.isBlank()) {
+            return false;
+        }
+        Path fichero = ficheroEstadisticas(login);
+        if (!Files.isRegularFile(fichero)) {
+            return false;
+        }
+        Files.deleteIfExists(fichero);
+        return true;
+    }
+
     public synchronized void registrar(
             String login, String modulo, double nota, boolean aprobado, Long tiempoSegundos)
             throws IOException {

@@ -273,6 +273,32 @@ Detalle de carpetas: **[documentacion/README.md](documentacion/README.md)**.
 
 Gemini solo propone `tema`, `pregunta`, `palabras_clave` (y opcional `variantes`). El sistema valida con [vocabulario_claves.json](vocabulario_claves.json) (listas prohibidas/permitidas) y exige que cada clave aparezca en el fragmento del PDF.
 
+### Dónde se construye y envía el prompt a la IA
+
+El **único fichero** que habla con la API de Gemini es [`generador_gemini.py`](generador_gemini.py). La corrección (`evaluador.py`) **no** usa IA.
+
+| Paso | Fichero | Función / detalle |
+|------|---------|-------------------|
+| 1. Elegir fragmento PDF | [`generador_docs.py`](generador_docs.py) | `generar_ejercicio_documentacion()` — lee `indice/docs_*.json` y elige un trozo de apuntes |
+| 2. **Construir el prompt** | [`generador_gemini.py`](generador_gemini.py) | `_construir_prompt()` — metadatos del fragmento, nivel (1–3), reglas y esquema JSON esperado |
+| 3. **Llamar a Gemini** | [`generador_gemini.py`](generador_gemini.py) | `_generar_desde_fragmento_intento()` → `cliente.models.generate_content(model=…, contents=prompt, …)` |
+| 4. Validar y convertir en ejercicio | [`modelo_ejercicio.py`](modelo_ejercicio.py) | `validar_propuesta_gemini()` + `construir_escenario_desde_propuesta()` — criterios verificables |
+| 5. Orquestación CLI | [`generador.py`](generador.py) | Si el módulo empieza por `docs_`, delega en `generador_docs` |
+| 6. Orquestación web | `web/.../ServicioGenerador.java` | Ejecuta `generador.py` como subproceso; inyecta clave y modelo vía entorno |
+
+**Flujo resumido:**
+
+```
+Portada / ejercicio docs_*  →  ServicioGenerador (Java)
+  →  generador.py  →  generador_docs.py  →  generador_gemini.py
+       (_construir_prompt + generate_content)  →  modelo_ejercicio.py  →  evaluador.py
+```
+
+- **Nivel de dificultad (1–3):** lo fija el alumno en **Perfil** (`datos/usuarios.json`); Java lo pasa a Python con `--nivel`. El prompt incluye instrucciones distintas según el nivel (`_instrucciones_nivel()` en `generador_gemini.py`).
+- **Modelo y clave API:** `datos/gemini.json` o `.env`; Java las pasa al subproceso (`FORJAEXAMENES_GEMINI_MODEL`, `GEMINI_API_KEY`).
+- **Para cambiar qué se le pide a la IA** (tono, reglas, formato JSON): edita `_construir_prompt()` en `generador_gemini.py`. La temperatura y `response_mime_type: application/json` están en `_generar_desde_fragmento_intento()`.
+- **Pre-generación:** si está activa (`forjaexamenes.precarga-ejercicios-activa`), `ServicioPrecargaEjercicios` genera ejercicios `docs_*` en segundo plano para servirlos al instante; el prompt es el mismo.
+
 ### Calidad de `palabras_clave`
 
 | Regla | Detalle |
@@ -344,6 +370,10 @@ examenforge/
 | `forjaexamenes.modo-profesor` | `FORJAEXAMENES_MODO_PROFESOR` — solución visible |
 | `forjaexamenes.gemini-guardar-pendientes` | Cola de revisión en `banco/pendientes/` |
 | `forjaexamenes.gemini-solo-aprobados` | Sin generación Gemini en vivo |
+| `forjaexamenes.gemini-timeout-ms` | Timeout (ms) de la llamada HTTP a Gemini (default 60000) |
+| `forjaexamenes.precarga-ejercicios-activa` | Pre-genera ejercicios `docs_*` en segundo plano |
+| `forjaexamenes.precarga-por-clave` | Cuántos ejercicios listos por módulo+nivel (default 1) |
+| `forjaexamenes.timeout-generador-segundos` | Tiempo máximo del subproceso `generador.py` (default 120) |
 | `forjaexamenes.subida-pdf-max-mb` | Máximo MB por PDF subido (default 30) |
 | `forjaexamenes.limpiar-practica-al-nuevo-ejercicio` | Vacía `datos-practica/` al empezar ejercicio shell |
 
@@ -382,6 +412,8 @@ examenforge/
 
 | Objetivo | Dónde |
 |----------|--------|
+| **Prompt enviado a Gemini** (enunciado, reglas, JSON) | `generador_gemini.py` → `_construir_prompt()` |
+| Parámetros de la llamada API (modelo, temperatura, timeout) | `generador_gemini.py` → `_generar_desde_fragmento_intento()`; timeout también en `application.properties` (`forjaexamenes.gemini-timeout-ms`) |
 | Texto de la guía pública | `templates/fragments/guia-funcionamiento.html` |
 | Vista de revisión profesor | `profesor-revisar-detalle.html`, `herramientas/revision_profesor.py` |
 | Nuevos sinónimos de comandos | `vocabulario_claves.json` → `alias_comandos` |

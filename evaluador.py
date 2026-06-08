@@ -48,6 +48,17 @@ def evaluar_criterio_regex(respuesta: str, criterio: dict) -> dict:
 
 def evaluar_criterio_contiene_todos(respuesta: str, criterio: dict) -> dict:
     terminos = criterio.get("terminos") or []
+    if not terminos:
+        return {
+            "cumplido": False,
+            "tipo": "contiene_todos",
+            "terminos": terminos,
+            "peso": criterio.get("peso", 1),
+            "esperado": criterio.get("esperado", "Criterio mal configurado"),
+            "descripcion": criterio.get("descripcion", "Sin términos"),
+            "error": "contiene_todos sin terminos",
+            "pista": criterio.get("pista", "Revisa la configuración del ejercicio"),
+        }
     faltan = [t for t in terminos if not _contiene_termino(respuesta, t)]
     cumplido = len(faltan) == 0
     esperado = criterio.get(
@@ -77,6 +88,17 @@ def evaluar_criterio_contiene_todos(respuesta: str, criterio: dict) -> dict:
 
 def evaluar_criterio_contiene_alguno(respuesta: str, criterio: dict) -> dict:
     terminos = criterio.get("terminos") or []
+    if not terminos:
+        return {
+            "cumplido": False,
+            "tipo": "contiene_alguno",
+            "terminos": terminos,
+            "peso": criterio.get("peso", 1),
+            "esperado": criterio.get("esperado", "Criterio mal configurado"),
+            "descripcion": criterio.get("descripcion", "Sin términos"),
+            "error": "contiene_alguno sin terminos",
+            "pista": criterio.get("pista", "Revisa la configuración del ejercicio"),
+        }
     cumplido = any(_contiene_termino(respuesta, t) for t in terminos)
     esperado = criterio.get(
         "esperado",

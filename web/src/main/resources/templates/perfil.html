@@ -3,6 +3,7 @@
       th:replace="~{plantilla :: plantilla(~{::section})}">
 <section class="pagina-perfil">
     <div class="perfil-layout">
+        <div class="perfil-columna-izq">
         <div class="card perfil-card">
             <h1>Mi perfil</h1>
             <p class="hint">Cambia tu nombre (aparece en ejercicios y PDF) y tu contraseña de acceso.</p>
@@ -45,7 +46,9 @@
                 </div>
             </form>
         </div>
+        </div>
 
+        <div class="perfil-columna-der">
         <div class="card perfil-gemini-card">
             <h2>Clave API de Gemini</h2>
             <p class="hint">Solo necesaria para ejercicios desde <strong>apuntes PDF</strong> (<code>docs_*</code>).
@@ -88,9 +91,18 @@
             </form>
         </div>
 
-        <div class="card guia-card">
+        <div class="card perfil-ia-card">
+            <h2>Dificultad de ejercicios con IA</h2>
+            <p class="hint">Solo afecta a los módulos <code>docs_*</code> (apuntes PDF). Los ejercicios predefinidos usan otro criterio de nivel.</p>
+            <div th:replace="~{fragments/selector-nivel-gemini :: formulario}"></div>
+            <p class="alerta-indexacion alerta-ok" th:if="${mensajeNivelGemini}" th:text="${mensajeNivelGemini}">OK</p>
+            <p class="alerta-indexacion alerta-error" th:if="${errorNivelGemini}" th:text="${errorNivelGemini}">Error</p>
+        </div>
+        </div>
+
+        <div class="card guia-card perfil-guia-completa">
             <h2 class="guia-titulo">Guía de uso</h2>
-            <p class="hint">Gemini, apuntes PDF y nuevos módulos. Guía general (también sin sesión):
+            <p class="hint">Apuntes PDF, ejercicios con IA y nuevos módulos. Guía general (también sin sesión):
                 <a th:href="@{/como-funciona}">Cómo funciona el programa</a>.</p>
             <div th:replace="~{fragments/guia-contenido :: guia}"></div>
         </div>

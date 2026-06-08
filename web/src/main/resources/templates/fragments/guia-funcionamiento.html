@@ -43,14 +43,14 @@
             <li><code>evaluador.py</code> devuelve nota (0–10), criterios cumplidos o no, y enlace a apuntes si el ejercicio venía de un PDF.</li>
             <li>Puedes pedir <strong>Otro ejercicio</strong> del mismo módulo o volver al inicio; tus últimos resultados y medallas se guardan en el navegador.</li>
         </ol>
-        <p class="hint">Los ejercicios generados con Gemini desde PDF muestran una pantalla de carga mientras la IA prepara la propuesta.</p>
+        <p class="hint">Los ejercicios generados con IA desde PDF muestran una pantalla de carga mientras se prepara la propuesta.</p>
     </section>
 
     <section id="gf-tipos" class="guia-seccion">
         <h2>Tipos de ejercicio</h2>
         <table class="guia-tabla">
             <thead>
-            <tr><th>Tipo</th><th>Origen</th><th>¿Necesita Gemini?</th></tr>
+            <tr><th>Tipo</th><th>Origen</th><th>¿Necesita clave API?</th></tr>
             </thead>
             <tbody>
             <tr>
@@ -60,7 +60,7 @@
             </tr>
             <tr>
                 <td><strong>B — Apuntes + IA</strong></td>
-                <td>PDF en <code>documentacion/</code> → índice → fragmento → Gemini → <code>modelo_ejercicio.py</code></td>
+                <td>PDF en <code>documentacion/</code> → índice → fragmento → IA → <code>modelo_ejercicio.py</code></td>
                 <td>Sí</td>
             </tr>
             <tr>
@@ -70,10 +70,10 @@
             </tr>
             </tbody>
         </table>
-        <p>Gemini <strong>no</strong> escribe el ejercicio final ni inventa expresiones regulares. Solo propone un JSON con
+        <p>La IA <strong>no</strong> escribe el ejercicio final ni inventa expresiones regulares. Solo propone un JSON con
             <code>tema</code>, <code>pregunta</code> y <code>palabras_clave</code>; el sistema construye enunciado y criterios
             y valida que las claves aparezcan en el fragmento del PDF.</p>
-        <pre class="code-block">PDF → indexador → fragmento → Gemini (propuesta)
+        <pre class="code-block">PDF → indexador → fragmento → propuesta IA
      → modelo_ejercicio.py → escenario JSON → pantalla del alumno</pre>
     </section>
 
@@ -93,7 +93,7 @@
         <h2>Banco de ejercicios y modo profesor</h2>
         <p>Entra con la cuenta <strong>profesor</strong> y revisa sin JSON crudo:</p>
         <ul class="guia-pasos">
-            <li><code>banco/pendientes/</code> — propuestas si <code>gemini-guardar-pendientes=true</code>.</li>
+            <li><code>banco/pendientes/</code> — propuestas de IA si <code>gemini-guardar-pendientes=true</code>.</li>
             <li><code>/profesor/revisar</code> — tabla comparativa, pruebas automáticas y paquete ZIP.</li>
             <li><code>vocabulario_claves.json</code> → <code>alias_comandos</code> (sinónimos como <code>docker container run</code>).</li>
         </ul>
@@ -124,7 +124,7 @@ docker exec -it forjaexamenes-practica bash</pre>
 
     <section id="gf-tecnico" class="guia-seccion">
         <h2>Configuración técnica</h2>
-        <p>Arranque, clave Gemini, PDFs y ampliación del generador:</p>
+        <p>Arranque, clave API, PDFs y ampliación del generador:</p>
         <div th:replace="~{fragments/guia-contenido :: guia}"></div>
         <p class="hint">Documentación ampliada en el repositorio: <code>README.md</code> y <code>documentacion/README.md</code>.</p>
     </section>

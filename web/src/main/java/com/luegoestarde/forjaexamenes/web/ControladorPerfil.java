@@ -41,7 +41,24 @@ public class ControladorPerfil {
         modelo.addAttribute("geminiConfigurado", estadoGemini.configurado());
         modelo.addAttribute("geminiMascara", estadoGemini.mascara());
         modelo.addAttribute("geminiModelo", estadoGemini.modelo());
+        modelo.addAttribute("nivelGemini", cuentasUsuarios.obtenerNivelGemini(login));
         return "perfil";
+    }
+
+    @PostMapping("/perfil/nivel-gemini")
+    public String guardarNivelGemini(
+            @RequestParam int nivelGemini,
+            RedirectAttributes atributos) {
+        String login = metadatosEjercicio.loginActual();
+        try {
+            cuentasUsuarios.actualizarNivelGemini(login, nivelGemini);
+            atributos.addFlashAttribute("mensajeNivelGemini", "Nivel de dificultad IA guardado: " + nivelGemini);
+        } catch (IllegalArgumentException ex) {
+            atributos.addFlashAttribute("errorNivelGemini", ex.getMessage());
+        } catch (Exception ex) {
+            atributos.addFlashAttribute("errorNivelGemini", "No se pudo guardar el nivel: " + ex.getMessage());
+        }
+        return "redirect:/perfil";
     }
 
     @PostMapping("/perfil/gemini")

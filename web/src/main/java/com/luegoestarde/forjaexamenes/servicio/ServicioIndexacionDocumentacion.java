@@ -4,9 +4,6 @@ import com.luegoestarde.forjaexamenes.configuracion.InterpretePython;
 import com.luegoestarde.forjaexamenes.configuracion.PropiedadesForjaExamenes;
 import com.luegoestarde.forjaexamenes.evento.RecursosActualizadosEvent;
 import com.luegoestarde.forjaexamenes.evento.RecursosActualizadosEvent.Tipo;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
@@ -131,25 +128,17 @@ public class ServicioIndexacionDocumentacion implements ApplicationRunner {
                     script.toString());
             pb.directory(script.getParent().toFile());
             pb.redirectErrorStream(true);
-            Process proceso = pb.start();
 
-            StringBuilder salida = new StringBuilder();
-            try (BufferedReader lector = new BufferedReader(
-                    new InputStreamReader(proceso.getInputStream(), StandardCharsets.UTF_8))) {
-                String linea;
-                while ((linea = lector.readLine()) != null) {
-                    salida.append(linea).append('\n');
-                }
-            }
-
-            int codigo = proceso.waitFor();
+            EjecutorProcesoPython.Resultado res = EjecutorProcesoPython.ejecutar(
+                    pb, propiedades.getTimeoutIndexadorSegundos());
+            int codigo = res.codigo();
             int colecciones = contarIndicesGenerados();
             Instant ahora = Instant.now();
 
             if (codigo != 0) {
                 ResultadoIndexacion r = new ResultadoIndexacion(
                         false,
-                        "indexador_docs.py falló (código " + codigo + "): " + resumirSalida(salida.toString()),
+                        "indexador_docs.py falló (código " + codigo + "): " + resumirSalida(res.salida()),
                         colecciones,
                         ahora);
                 ultimoResultado.set(r);

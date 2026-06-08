@@ -3,51 +3,15 @@
 <body>
 <article th:fragment="guia" class="guia-usuario">
     <nav class="guia-indice" aria-label="Secciones de la guía">
-        <a href="#guia-gemini">Clave Gemini</a>
         <a href="#guia-apuntes">Apuntes PDF</a>
         <a href="#guia-ejercicios">Nuevos ejercicios</a>
     </nav>
 
-    <section id="guia-gemini" class="guia-seccion">
-        <h2>Clave API de Gemini</h2>
-        <p>Necesaria solo para ejercicios generados desde <strong>apuntes PDF</strong>. Los módulos
-            <code>poo</code>, <code>docker</code>, <code>redes</code>, etc. funcionan sin ella.</p>
-
-        <p class="guia-estado" th:if="${geminiConfigurado}">
-            ✅ La aplicación detecta una clave configurada.
-        </p>
-        <p class="guia-estado guia-estado-warn" th:if="${!geminiConfigurado}">
-            ⚠️ Aún no hay clave válida. Sigue estos pasos:
-        </p>
-
-        <ol class="guia-pasos">
-            <li>Entra en <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio → API keys</a> e inicia sesión con tu cuenta Google.</li>
-            <li>Pulsa <strong>Create API key</strong> y copia la clave (suele empezar por <code>AIza…</code>).</li>
-            <li><strong>Desde la web (recomendado):</strong> <a th:href="@{/perfil}">Perfil</a> → sección <em>Clave API de Gemini</em>, pega la clave y guarda (pide tu contraseña de acceso).</li>
-            <li><strong>O manualmente:</strong> crea o edita <code>examenforge/.env</code>:</li>
-        </ol>
-        <pre class="code-block">cp .env.example .env
-GEMINI_API_KEY=AIzaSy_tu_clave_aqui
-FORJAEXAMENES_GEMINI_MODEL=gemini-2.5-flash</pre>
-        <p class="hint">La clave de la web se guarda en <code>datos/gemini.json</code> (local, no en GitHub).</p>
-        <ol class="guia-pasos" start="5">
-            <li>Instala dependencias Python (solo la primera vez):</li>
-        </ol>
-        <pre class="code-block">cd examenforge
-pip install -r requirements-docs.txt</pre>
-        <ol class="guia-pasos" start="7">
-            <li>Si usaste <code>.env</code>, reinicia la app. Si guardaste desde <strong>Perfil</strong>, basta volver a la portada.</li>
-        </ol>
-        <details class="guia-detalle">
-            <summary>Si aparece error de cuota (<code>429</code>)</summary>
-            <p>La clave es válida pero Google limita peticiones. Usa el modelo
-                <code>gemini-2.5-flash</code> en <code>.env</code> o espera un minuto y reintenta.</p>
-        </details>
-    </section>
-
     <section id="guia-apuntes" class="guia-seccion">
         <h2>Añadir apuntes (PDF)</h2>
         <p>Cada carpeta bajo <code>documentacion/</code> genera un módulo <code>docs_&lt;tema&gt;</code> en la portada, sin tocar Java.</p>
+        <p class="hint">Para generar ejercicios con <strong>IA</strong> desde esos PDF necesitas la clave API configurada en
+            <a th:href="@{/perfil}">Perfil</a> (sección dedicada a la clave).</p>
 
         <pre class="code-block">examenforge/documentacion/
 ├── docker/
@@ -66,9 +30,17 @@ pip install -r requirements-docs.txt</pre>
                     <li>Terminal: <code>python3 indexador_docs.py</code></li>
                 </ul>
             </li>
-            <li>En la portada, sección <strong>Apuntes del profesor</strong>, elige tema o capítulo.</li>
+            <li>En la portada, sección <strong>Ejercicios desde apuntes (PDF + IA)</strong>, elige tema o capítulo.</li>
         </ol>
         <p class="hint">Subcarpetas dentro de un tema = capítulos (p. ej. <code>documentacion/docker/volumenes/</code>).</p>
+
+        <details class="guia-detalle">
+            <summary>Dependencias Python e instalación manual de clave</summary>
+            <p>Primera vez con apuntes + IA:</p>
+            <pre class="code-block">cd examenforge
+pip install -r requirements-docs.txt</pre>
+            <p>Opcional: clave en <code>examenforge/.env</code> (ver <code>.env.example</code>). La opción recomendada es guardarla desde Perfil.</p>
+        </details>
     </section>
 
     <section id="guia-ejercicios" class="guia-seccion">
@@ -91,7 +63,7 @@ pip install -r requirements-docs.txt</pre>
         <ol class="guia-pasos" start="5">
             <li>Reinicia la aplicación. La corrección la hace <code>evaluador.py</code> con los criterios regex del JSON generado.</li>
         </ol>
-        <p class="hint">Para ejercicios desde PDF + IA no hace falta editar <code>generador.py</code>: basta indexar apuntes y configurar Gemini.</p>
+        <p class="hint">Para ejercicios desde PDF + IA no hace falta editar <code>generador.py</code>: basta indexar apuntes y configurar la clave en Perfil.</p>
     </section>
 </article>
 </body>

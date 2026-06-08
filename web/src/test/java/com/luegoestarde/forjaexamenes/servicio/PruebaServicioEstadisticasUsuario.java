@@ -1,6 +1,7 @@
 package com.luegoestarde.forjaexamenes.servicio;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.luegoestarde.forjaexamenes.configuracion.PropiedadesForjaExamenes;
@@ -48,6 +49,15 @@ class PruebaServicioEstadisticasUsuario {
 
         Path fichero = tempDir.resolve("estadisticas").resolve("alumno.json");
         assertTrue(Files.isRegularFile(fichero));
+    }
+
+    @Test
+    void limpiarEliminaFicheroYDejaEstadisticasVacias() throws Exception {
+        servicio.registrar("alumno", "poo", 7.0, true, 30L);
+        assertTrue(servicio.limpiar("alumno"));
+        assertEquals(0, servicio.obtener("alumno").getTotalIntentos());
+        // Segunda limpieza: ya no hay fichero que borrar, así que devuelve false (idempotente).
+        assertFalse(servicio.limpiar("alumno"));
     }
 
     @Test

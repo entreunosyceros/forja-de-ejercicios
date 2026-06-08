@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import os
 import random
 import uuid
 from pathlib import Path
@@ -113,8 +114,6 @@ def generar_ejercicio_documentacion(
     capitulo: str | None = None,
     seccion: str | None = None,
 ) -> dict:
-    import os
-
     solo_aprobados = os.environ.get("FORJAEXAMENES_GEMINI_SOLO_APROBADOS", "").lower() in (
         "1", "true", "yes"
     )
@@ -145,7 +144,6 @@ def generar_ejercicio_documentacion(
         "generado_desde_apuntes": True,
     }
 
-    import os
     if os.environ.get("FORJAEXAMENES_GEMINI_GUARDAR_PENDIENTES", "").lower() in (
         "1", "true", "yes"
     ):

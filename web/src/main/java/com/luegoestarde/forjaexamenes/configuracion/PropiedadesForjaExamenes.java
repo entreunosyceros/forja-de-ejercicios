@@ -23,6 +23,13 @@ public class PropiedadesForjaExamenes {
     private int subidaPdfMaxMb = 30;
     private boolean limpiarPracticaAlNuevoEjercicio = true;
     private String pythonInterprete = "";
+    private long timeoutGeneradorSegundos = 120;
+    private long timeoutEvaluadorSegundos = 30;
+    private long timeoutIndexadorSegundos = 900;
+    private long geminiTimeoutMs = 60000;
+    private boolean precargaEjerciciosActiva = true;
+    private int precargaPorClave = 1;
+    private int precargaHilos = 1;
 
     public String getRaiz() { return raiz; }
     public void setRaiz(String raiz) { this.raiz = raiz; }
@@ -98,5 +105,40 @@ public class PropiedadesForjaExamenes {
 
     public void setPythonInterprete(String pythonInterprete) {
         this.pythonInterprete = pythonInterprete;
+    }
+
+    public long getTimeoutGeneradorSegundos() { return timeoutGeneradorSegundos; }
+    public void setTimeoutGeneradorSegundos(long timeoutGeneradorSegundos) {
+        this.timeoutGeneradorSegundos = timeoutGeneradorSegundos;
+    }
+
+    public long getTimeoutEvaluadorSegundos() { return timeoutEvaluadorSegundos; }
+    public void setTimeoutEvaluadorSegundos(long timeoutEvaluadorSegundos) {
+        this.timeoutEvaluadorSegundos = timeoutEvaluadorSegundos;
+    }
+
+    public long getTimeoutIndexadorSegundos() { return timeoutIndexadorSegundos; }
+    public void setTimeoutIndexadorSegundos(long timeoutIndexadorSegundos) {
+        this.timeoutIndexadorSegundos = timeoutIndexadorSegundos;
+    }
+
+    public long getGeminiTimeoutMs() { return geminiTimeoutMs; }
+    public void setGeminiTimeoutMs(long geminiTimeoutMs) {
+        this.geminiTimeoutMs = geminiTimeoutMs;
+    }
+
+    public boolean isPrecargaEjerciciosActiva() { return precargaEjerciciosActiva; }
+    public void setPrecargaEjerciciosActiva(boolean precargaEjerciciosActiva) {
+        this.precargaEjerciciosActiva = precargaEjerciciosActiva;
+    }
+
+    public int getPrecargaPorClave() { return precargaPorClave; }
+    public void setPrecargaPorClave(int precargaPorClave) {
+        this.precargaPorClave = precargaPorClave;
+    }
+
+    public int getPrecargaHilos() { return precargaHilos; }
+    public void setPrecargaHilos(int precargaHilos) {
+        this.precargaHilos = precargaHilos;
     }
 }
