@@ -440,4 +440,6 @@ cd web && mvn test
 
 ## Licencia
 
+Creado por entreunosyceros con ☕ y 🚬 para el ICFT0112
+
 Ver [LICENSE](LICENSE).
