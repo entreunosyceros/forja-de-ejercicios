@@ -6,7 +6,7 @@
     <meta name="color-scheme" content="light dark"/>
     <title th:text="${tituloPagina != null ? tituloPagina + ' — Forja de ejercicios' : 'Forja de ejercicios'}">Forja de ejercicios</title>
     <link rel="icon" type="image/png" th:href="@{/img/forja-de-examenes.png}"/>
-    <link rel="stylesheet" th:href="@{/css/aplicacion.css(v=6)}"/>
+    <link rel="stylesheet" th:href="@{/css/aplicacion.css(v=7)}"/>
     <meta name="forja-login-usuario" th:content="${loginUsuario}" th:if="${loginUsuario != null}"/>
 </head>
 <body th:data-login-usuario="${loginUsuario}">
@@ -24,6 +24,7 @@
                 <a class="nav-link" th:href="@{/}">Inicio</a>
                 <a class="nav-link" th:href="@{/ejercicio/nuevo}">Nuevo ejercicio</a>
                 <a class="nav-link" th:href="@{/como-funciona}">Ayuda</a>
+                <a class="nav-link" th:if="${esProfesor}" th:href="@{/profesor/alumnos}">Alumnos</a>
             </nav>
             <div class="header-util">
                 <div class="usuario-sesion" th:if="${nombreUsuario != null}">
@@ -66,7 +67,7 @@
 
 <script th:src="@{/js/tema.js}"></script>
 <script th:src="@{/vendor/chart.umd.min.js}"></script>
-<script th:src="@{/js/progreso.js(v=4)}"></script>
+<script th:src="@{/js/progreso.js(v=5)}"></script>
 <script th:src="@{/js/cargando.js(v=1)}"></script>
 <script th:src="@{/js/practica.js(v=4)}"></script>
 </body>

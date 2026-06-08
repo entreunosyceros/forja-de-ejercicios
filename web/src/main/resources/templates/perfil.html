@@ -37,6 +37,9 @@
                 <div class="form-actions">
                     <button type="submit" class="btn btn-primary">Guardar cambios</button>
                     <a class="btn btn-ghost" th:href="@{/}">Volver al inicio</a>
+                    <a class="btn btn-secondary" th:if="${esProfesor}" th:href="@{/profesor/alumnos}">
+                        Seguimiento de alumnos
+                    </a>
                     <a class="btn btn-secondary" th:if="${esProfesor}" th:href="@{/profesor/revisar}">
                         Revisar propuestas
                     </a>

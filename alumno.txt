@@ -1,0 +1,72 @@
+================================================================================
+  FORJA DE EJERCICIOS — Guía para el ALUMNO
+  (luego es tarde... para estudiar)
+================================================================================
+
+ACCESO
+------
+  URL:      http://localhost:8080
+  Usuario:  alumno   (o demo para pruebas rápidas)
+  Contraseña: practica   (demo usa contraseña: demo)
+
+  Ayuda general (sin entrar): http://localhost:8080/como-funciona
+
+IMPORTANTE: cada alumno suele tener su PROPIA instalación en su PC. No está
+conectada con la del profesor ni con la de otros alumnos.
+
+
+QUÉ PUEDES HACER COMO ALUMNO
+----------------------------
+
+1. HACER EJERCICIOS
+   - En la portada elige un módulo: POO, SQL, Docker, redes, Git, etc.
+   - «Empezar ahora» o «Sorpresa» lanzan un ejercicio aleatorio.
+   - Escribes tu respuesta y la envías; la app corrige (nota 0–10, aprueba ≥ 5).
+   - En módulos de sistemas puedes practicar en el contenedor Docker (tarjeta
+     «Entorno Docker» en la portada).
+
+2. IMPORTAR EJERCICIOS DEL PROFESOR (banco local)
+   - El profesor prueba y exporta ejercicios en SU equipo.
+   - Deja el fichero banco-forja.json (o un ejercicio suelto) en la carpeta
+     compartida de la clase.
+   - Tú: portada → «Ejercicios del banco (del profesor)» → «Importar al banco
+     local».
+   - Tras importar aparecen botones para practicar esos ejercicios verificados.
+
+3. EJERCICIOS DESDE APUNTES (PDF + IA)
+   - Si hay PDFs indexados, aparecen en «Ejercicios desde apuntes».
+   - Necesitas clave API de Gemini en Perfil (solo módulos docs_*).
+   - Dificultad IA: Perfil → «Dificultad de ejercicios con IA».
+
+4. SUBIR APUNTES (PDF)
+   - Puedes subir PDFs desde la portada; se indexan para ejercicios docs_*.
+
+5. VER TU PROGRESO (portada, al final)
+   a) Tu progreso (local, sin red) — últimos 5 ejercicios en ESTE navegador.
+   b) Tus estadísticas de uso (servidor) — totales en tu equipo.
+
+6. ENTREGAR TU PROGRESO AL PROFESOR
+   - «Descargar entrega para el profesor» → fichero .json.
+   - Déjalo en la carpeta compartida para que el profesor lo importe en
+     Seguimiento de alumnos.
+
+7. TU PERFIL (/perfil)
+   - Nombre, contraseña, clave Gemini, dificultad IA.
+
+
+QUÉ NO PUEDES HACER COMO ALUMNO
+-------------------------------
+  - No accedes a /profesor/* (revisión del banco, seguimiento de otros).
+  - No ves la solución antes de enviar (salvo modo profesor en el servidor).
+  - No recibes automáticamente los ejercicios del profesor: debes IMPORTARLOS.
+
+
+PRUEBA RÁPIDA (checklist)
+-------------------------
+  [ ] Entrar con demo / demo
+  [ ] Importar banco-forja.json del profesor (carpeta compartida)
+  [ ] Comprobar que aparecen botones «Ejercicios del banco»
+  [ ] Hacer un ejercicio y ver la corrección
+  [ ] Descargar entrega para el profesor (.json)
+
+================================================================================

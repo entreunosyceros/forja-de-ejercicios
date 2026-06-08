@@ -13,10 +13,22 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Locale;
+import java.util.function.Predicate;
 import org.springframework.stereotype.Service;
 
 @Service
 public class ServicioEstadisticasUsuario {
+
+    public record ResumenAlumnoServidor(
+            String login,
+            int totalIntentos,
+            int totalAprobados,
+            double notaMedia,
+            String ultimaActividad,
+            int modulosDistintos) {}
 
     private static final ZoneId ZONA = ZoneId.of("Europe/Madrid");
     private static final DateTimeFormatter FORMATO =
@@ -42,6 +54,44 @@ public class ServicioEstadisticasUsuario {
         } catch (IOException e) {
             return vacias();
         }
+    }
+
+    public List<ResumenAlumnoServidor> listarResumenesEnServidor(Predicate<String> incluirLogin)
+            throws IOException {
+        Path carpeta = Path.of(propiedades.getDirectorioDatos())
+                .toAbsolutePath()
+                .normalize()
+                .resolve("estadisticas");
+        if (!Files.isDirectory(carpeta)) {
+            return List.of();
+        }
+        List<ResumenAlumnoServidor> lista = new ArrayList<>();
+        try (var stream = Files.list(carpeta)) {
+            stream.filter(p -> p.toString().endsWith(".json"))
+                    .forEach(fichero -> {
+                        String login = fichero.getFileName().toString().replace(".json", "");
+                        if (incluirLogin != null && !incluirLogin.test(login)) {
+                            return;
+                        }
+                        try {
+                            EstadisticasUsuario stats = mapeador.readValue(fichero.toFile(), EstadisticasUsuario.class);
+                            lista.add(new ResumenAlumnoServidor(
+                                    login,
+                                    stats.getTotalIntentos(),
+                                    stats.getTotalAprobados(),
+                                    stats.getNotaMedia(),
+                                    stats.getUltimaActividad(),
+                                    stats.getPorModulo().size()));
+                        } catch (IOException ignored) {
+                            // omitir ficheros corruptos
+                        }
+                    });
+        }
+        lista.sort(Comparator
+                .comparing(ResumenAlumnoServidor::ultimaActividad, Comparator.nullsLast(String::compareTo))
+                .reversed()
+                .thenComparing(r -> r.login().toLowerCase(Locale.ROOT)));
+        return lista;
     }
 
     public synchronized boolean limpiar(String login) throws IOException {

@@ -403,6 +403,16 @@ const Progreso = (function () {
         });
     }
 
+    function exportarParaEntrega() {
+        asegurarSufijoUsuario();
+        return {
+            historial: obtenerHistorial(),
+            stats: obtenerStats(),
+            medallas: obtenerMedallas(),
+            ranking: rankingLocal(),
+        };
+    }
+
     return {
         calcularNivel,
         registrarResultado,
@@ -413,6 +423,7 @@ const Progreso = (function () {
         rankingLocal,
         renderizarPanelInicio,
         limpiarProgresoLocal,
+        exportarParaEntrega,
         mensajeMotivacion,
     };
 })();

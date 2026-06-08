@@ -13,6 +13,7 @@ import com.luegoestarde.forjaexamenes.servicio.ServicioEntornoPractica;
 import com.luegoestarde.forjaexamenes.servicio.ServicioGenerador;
 import com.luegoestarde.forjaexamenes.servicio.ServicioMetadatosEjercicio;
 import com.luegoestarde.forjaexamenes.servicio.ServicioPdf;
+import com.luegoestarde.forjaexamenes.servicio.ServicioBancoPortable;
 import com.luegoestarde.forjaexamenes.servicio.ServicioPrecargaEjercicios;
 import jakarta.servlet.http.HttpServletResponse;
 import java.nio.charset.StandardCharsets;
@@ -59,6 +60,7 @@ public class ControladorEjercicio {
     private final ServicioEntornoPractica servicioEntornoPractica;
     private final ServicioCuentasUsuarios cuentasUsuarios;
     private final ServicioPrecargaEjercicios servicioPrecarga;
+    private final ServicioBancoPortable servicioBancoPortable;
     private final ObjectMapper mapeadorJson;
     private final Random aleatorio = new Random();
 
@@ -71,7 +73,8 @@ public class ControladorEjercicio {
                               ServicioEstadisticasUsuario servicioEstadisticas,
                               ServicioEntornoPractica servicioEntornoPractica,
                               ServicioCuentasUsuarios cuentasUsuarios,
-                              ServicioPrecargaEjercicios servicioPrecarga) {
+                              ServicioPrecargaEjercicios servicioPrecarga,
+                              ServicioBancoPortable servicioBancoPortable) {
         this.servicioGenerador = servicioGenerador;
         this.servicioEvaluador = servicioEvaluador;
         this.servicioPdf = servicioPdf;
@@ -82,6 +85,7 @@ public class ControladorEjercicio {
         this.servicioEntornoPractica = servicioEntornoPractica;
         this.cuentasUsuarios = cuentasUsuarios;
         this.servicioPrecarga = servicioPrecarga;
+        this.servicioBancoPortable = servicioBancoPortable;
         this.mapeadorJson = new ObjectMapper();
         this.mapeadorJson.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
     }
@@ -192,6 +196,18 @@ public class ControladorEjercicio {
         Escenario escenario = obtenerEscenario(id);
         byte[] bytes = mapeadorJson.writerWithDefaultPrettyPrinter().writeValueAsBytes(escenario);
         String nombre = "ejercicio-" + escenario.getId() + ".json";
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + nombre + "\"")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(bytes);
+    }
+
+    /** Paquete listo para importar en otro equipo (banco/aprobados/). */
+    @GetMapping("/{id}/exportar-banco.json")
+    public ResponseEntity<byte[]> exportarParaBanco(@PathVariable String id) throws Exception {
+        Escenario escenario = obtenerEscenario(id);
+        byte[] bytes = servicioBancoPortable.exportarEjercicio(escenario);
+        String nombre = "banco-" + escenario.getId() + ".json";
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + nombre + "\"")
                 .contentType(MediaType.APPLICATION_JSON)

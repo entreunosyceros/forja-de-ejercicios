@@ -1,0 +1,85 @@
+================================================================================
+  FORJA DE EJERCICIOS — Guía para el PROFESOR
+  (luego es tarde... para estudiar)
+================================================================================
+
+ACCESO
+------
+  URL:      http://localhost:8080
+  Usuario:  profesor
+  Contraseña: profesor
+
+  Seguimiento alumnos: http://localhost:8080/profesor/alumnos
+  Revisión banco IA:    http://localhost:8080/profesor/revisar
+
+IMPORTANTE: la app del profesor y la de cada alumno son instalaciones
+INDEPENDIENTES (cada uno en su PC). Publicar en tu banco local NO llega solo
+a los alumnos: debes EXPORTAR e importar vía carpeta compartida.
+
+
+QUÉ PUEDES HACER COMO PROFESOR
+------------------------------
+
+A) PRACTICAR Y PREPARAR EJERCICIOS
+   - Mismos módulos que el alumno desde la portada.
+   - Ves la solución de referencia antes y después de enviar.
+   - Tras probar un ejercicio: «Exportar para compartir» (pantalla de ejercicio
+     o resultado) → genera un .json que el alumno puede importar.
+   - Revisas propuestas IA en /profesor/revisar y las apruebas en TU banco local.
+
+
+B) COMPARTIR EJERCICIOS CON LA CLASE (carpeta compartida)
+   1. Preparas ejercicios (pruebas, apruebas propuestas IA, etc.).
+   2. Exportas:
+      - UN ejercicio: «Exportar para compartir» en el ejercicio/resultado.
+      - TODO el banco: /profesor/banco → «Descargar banco completo»
+        (banco-forja.json).
+   3. Dejas el fichero en la carpeta compartida (Drive, red del aula…).
+   4. Cada alumno importa en su portada → «Importar al banco local».
+   5. En su equipo ya pueden practicar esos ejercicios verificados.
+
+   «Aprobar y publicar» en tu app solo afecta a TU instalación hasta que exportes.
+
+
+C) SEGUIMIENTO DE ALUMNOS  (/profesor/alumnos)
+   - Importar entregas .json de alumnos (nombre personalizado por alumno).
+   - Tabla comparativa y gráficas de avance de la clase.
+   - Detalle por módulo/categoría.
+   - «Alumnos en este servidor» si comparten el mismo PC (caso raro en clase).
+
+
+D) REVISIÓN DEL BANCO IA  (/profesor/revisar)
+   - Validar ejercicios generados desde apuntes antes de exportarlos.
+   - Aprobar / rechazar / descargar paquete ZIP.
+
+
+E) APUNTES, PERFIL Y EXPORTACIONES
+   - Subir PDFs, reindexar, clave Gemini, dificultad IA.
+   - JSON/PDF de ejercicios individuales.
+
+
+FLUJO TÍPICO (instalaciones separadas)
+--------------------------------------
+  1. Profesor: prueba ejercicios → aprueba en su app → exporta banco-forja.json.
+  2. Carpeta compartida: banco-forja.json + (opcional) entregas de alumnos.
+  3. Alumno: importa banco → practica → exporta su entrega .json.
+  4. Profesor: importa entregas → consulta tabla y gráficas.
+
+
+PRUEBA RÁPIDA (checklist)
+-------------------------
+  [ ] Entrar con profesor / profesor
+  [ ] Hacer y corregir un ejercicio → «Exportar para compartir»
+  [ ] (Si hay pendientes IA) Aprobar uno en /profesor/banco
+  [ ] Descargar banco completo (banco-forja.json)
+  [ ] En otra sesión o como alumno: importar ese JSON en la portada
+  [ ] Importar entrega de un alumno en /profesor/alumnos
+
+
+DATOS EN DISCO (tu equipo)
+--------------------------
+  banco/aprobados/           — ejercicios verificados (tuyos)
+  datos/entregas/<profesor>/ — entregas de alumnos importadas
+  banco/pendientes/          — propuestas IA por revisar
+
+================================================================================

@@ -102,6 +102,8 @@
                 th:attr="data-modulo=${escenario.modulo}">Práctica infinita — otro ejercicio</button>
         <a class="btn btn-secondary" th:href="@{/ejercicio/{id}/pdf(id=${escenario.id})}">Descargar PDF</a>
         <a class="btn btn-ghost" th:href="@{/ejercicio/{id}/json(id=${escenario.id})}">Exportar JSON</a>
+        <a class="btn btn-secondary" th:if="${modoProfesor}"
+           th:href="@{/ejercicio/{id}/exportar-banco.json(id=${escenario.id})}">Exportar para compartir</a>
         <a class="btn btn-ghost" th:href="@{/}">Inicio</a>
     </div>
 </div>

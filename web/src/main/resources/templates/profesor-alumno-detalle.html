@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{plantilla :: plantilla(~{::section})}">
+<section class="pagina-profesor-alumno-detalle">
+    <div class="card card-wide">
+        <div class="panel-estadisticas-cabecera">
+            <h1 th:text="${tituloPagina}">Progreso del alumno</h1>
+            <div class="acciones-revision" th:if="${origen == 'importada'}">
+                <form method="post" th:action="@{/profesor/alumnos/importada/{id}/eliminar(id=${entregaId})}"
+                      onsubmit="return confirm('¿Eliminar esta entrega importada del panel?');">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                    <button type="submit" class="btn btn-ghost btn-sm">Eliminar entrega</button>
+                </form>
+            </div>
+        </div>
+
+        <p class="hint" th:if="${origen == 'importada'}">
+            <strong th:text="${entrega.nombreEtiqueta}">Nombre</strong>
+            <span th:if="${entrega.importadoEn != null and !entrega.importadoEn.isEmpty()}">
+                · Importado el <span th:text="${entrega.importadoEn}">—</span>
+            </span>
+            · Fichero: <span th:text="${entrega.alumno.nombreVisible}">—</span>
+            (<code th:text="${entrega.alumno.login}">login</code>)
+        </p>
+        <form th:if="${origen == 'importada'}" method="post"
+              th:action="@{/profesor/alumnos/importada/{id}/renombrar(id=${entregaId})}"
+              class="form-renombrar-alumno form-renombrar-detalle">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <label for="nombre-etiqueta-detalle">Nombre personalizado</label>
+            <div class="form-inline">
+                <input type="text" id="nombre-etiqueta-detalle" name="nombreEtiqueta"
+                       th:value="${entrega.nombreEtiqueta}" maxlength="80" required/>
+                <button type="submit" class="btn btn-secondary btn-sm">Guardar nombre</button>
+            </div>
+        </form>
+        <p class="hint" th:if="${origen == 'servidor'}">
+            Estadísticas guardadas en este servidor para <code th:text="${entrega.alumno.login}">login</code>
+            (<strong th:text="${entrega.alumno.nombreVisible}">Nombre</strong>).
+        </p>
+
+        <p class="hint" th:if="${estadisticas.totalIntentos == 0}">
+            Este alumno aún no tiene ejercicios registrados en la entrega.
+        </p>
+
+        <div class="stats-resumen-grid" th:if="${estadisticas.totalIntentos > 0}">
+            <div class="stat-card">
+                <span class="stat-valor" th:text="${estadisticas.totalIntentos}">0</span>
+                <span class="stat-etiqueta">Ejercicios hechos</span>
+            </div>
+            <div class="stat-card stat-ok">
+                <span class="stat-valor" th:text="${estadisticas.totalAprobados}">0</span>
+                <span class="stat-etiqueta">Aprobados</span>
+            </div>
+            <div class="stat-card stat-fail">
+                <span class="stat-valor" th:text="${estadisticas.totalSuspensos}">0</span>
+                <span class="stat-etiqueta">Suspensos</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-valor" th:text="${#numbers.formatDecimal(estadisticas.notaMedia, 1, 1)}">0</span>
+                <span class="stat-etiqueta">Nota media</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-valor" th:text="${#numbers.formatDecimal(estadisticas.mejorNota, 1, 1)}">0</span>
+                <span class="stat-etiqueta">Mejor nota</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-valor" th:text="${estadisticas.rachaActual}">0</span>
+                <span class="stat-etiqueta">Racha actual</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-valor" th:text="${tiempoPracticado}">0:00</span>
+                <span class="stat-etiqueta">Tiempo practicado</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-valor" th:text="${#maps.size(estadisticas.porModulo)}">0</span>
+                <span class="stat-etiqueta">Módulos distintos</span>
+            </div>
+        </div>
+
+        <div class="stats-modulos-wrap" th:if="${!#maps.isEmpty(estadisticas.porModulo)}">
+            <h2>Progreso por módulo / categoría</h2>
+            <div class="stats-modulos-scroll">
+                <table class="stats-modulos-table">
+                    <thead>
+                    <tr>
+                        <th>Módulo</th>
+                        <th>Intentos</th>
+                        <th>Aprobados</th>
+                        <th>Media</th>
+                        <th>Mejor</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="entry : ${estadisticas.porModulo}">
+                        <td><code th:text="${entry.key}">mod</code></td>
+                        <td th:text="${entry.value.intentos}">0</td>
+                        <td th:text="${entry.value.aprobados}">0</td>
+                        <td th:text="${#numbers.formatDecimal(entry.value.notaMedia, 1, 1)}">0</td>
+                        <td th:text="${#numbers.formatDecimal(entry.value.mejorNota, 1, 1)}">0</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="profesor-ultimos-intentos" th:if="${!#lists.isEmpty(estadisticas.ultimosIntentos)}">
+            <h2>Últimos ejercicios registrados</h2>
+            <table class="tabla-revision-profesor">
+                <thead>
+                <tr>
+                    <th>Módulo</th>
+                    <th>Título</th>
+                    <th>Nota</th>
+                    <th>Resultado</th>
+                    <th>Tiempo</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="i : ${estadisticas.ultimosIntentos}">
+                    <td><code th:text="${i.modulo}">mod</code></td>
+                    <td th:text="${i.titulo}">Título</td>
+                    <td th:text="${#numbers.formatDecimal(i.nota, 1, 1)}">0</td>
+                    <td th:text="${i.aprobado} ? 'Aprobado' : 'Suspenso'">—</td>
+                    <td th:text="${i.tiempoSegundos > 0 ? i.tiempoSegundos + ' s' : '—'}">—</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="profesor-progreso-local" th:if="${progresoLocal != null and !progresoLocal.isNull()}">
+            <h2>Progreso local del navegador (incluido en la entrega)</h2>
+            <p class="hint">Datos que el alumno tenía en su navegador al exportar: historial reciente, ranking y medallas.</p>
+            <pre class="code-block code-block-compact"
+                 th:text="${#strings.abbreviate(progresoLocal.toString(), 4000)}">{}</pre>
+        </div>
+
+        <div class="form-actions" style="margin-top:1.5rem">
+            <a class="btn btn-secondary" th:href="@{/profesor/alumnos}">Volver al listado</a>
+            <a class="btn btn-ghost" th:href="@{/}">Portada</a>
+        </div>
+    </div>
+</section>
+</html>

@@ -6,6 +6,8 @@ Genera ejercicios prácticos al azar, permite practicar en Docker y corrige la r
 
 **Guía en la web (sin login):** con la aplicación arrancada, abre **http://localhost:8080/como-funciona** — también enlazada desde la pantalla de login.
 
+**Guías por rol (texto plano):** [alumno.txt](alumno.txt) · [profesor.txt](profesor.txt)
+
 ---
 
 ## Instalación guiada (recomendado)
@@ -110,6 +112,7 @@ Estos ficheros se generan al usar la app y están en `.gitignore` (no deben subi
 | Ruta | Contenido |
 |------|-----------|
 | `datos/estadisticas/*.json` | Estadísticas por usuario en el **servidor** (totales acumulados). Se borran con «Limpiar estadísticas» en la portada |
+| `datos/entregas/<profesor>/` | Entregas JSON importadas por el profesor (carpeta compartida → panel) |
 | `datos/usuarios.json` | Perfiles, contraseñas y rol (`alumno` / `profesor`) |
 | `datos/gemini.json` | Clave API de Gemini guardada desde Perfil |
 | `datos-practica/` | Archivos del alumno en el contenedor de práctica |
@@ -126,20 +129,57 @@ Solo se versionan los `.gitkeep` de las carpetas vacías.
 
 ### Alumno
 
-1. Elige un módulo en la portada (POO, SQL, Docker, apuntes PDF, banco verificado…).
+1. Elige un módulo en la portada (POO, SQL, Docker, apuntes PDF…) o **importa el banco** que el profesor dejó en la carpeta compartida.
 2. La web ejecuta `generador.py` y muestra un enunciado (con nombre y fecha del alumno).
 3. Escribe la respuesta; `evaluador.py` aplica criterios y calcula la nota (0–10, aprueba ≥ 5).
 4. Opcional: contenedor Docker para practicar comandos reales.
-5. En la portada: dos bloques de seguimiento distintos (ver [Progreso y estadísticas](#progreso-y-estadísticas-portada)).
+5. En la portada: progreso local y estadísticas del servidor (ver [Progreso y estadísticas](#progreso-y-estadísticas-portada)).
+6. **Entrega al profesor:** descarga un `.json` con su avance y lo deja en la carpeta compartida.
 
 ### Profesor
 
 1. Entra con la cuenta **profesor** (o cualquier login configurado con rol profesor).
-2. Revisa propuestas de la IA en **`/profesor/revisar`** sin leer JSON crudo: tabla comparativa, casos de prueba y descarga de paquete ZIP.
-3. Aprueba o rechaza ejercicios; los aprobados pasan a `banco/aprobados/` y aparecen en la portada.
-4. Puede subir PDFs desde la portada, ver la solución de referencia y descargar JSON/PDF de cada ejercicio.
+2. **Practica igual que un alumno** desde la portada (mismos módulos, corrección y estadísticas propias).
+3. **Seguimiento de alumnos** en **`/profesor/alumnos`**: importa entregas JSON de la carpeta compartida (con nombre personalizado por alumno), tabla comparativa y gráficas de la clase.
+4. Revisa propuestas de la IA en **`/profesor/revisar`**: tabla comparativa, casos de prueba y paquete ZIP.
+5. Aprueba o rechaza ejercicios en **su** instalación; para que los alumnos los tengan debe **exportar** el banco (`banco-forja.json`) a la carpeta compartida.
+6. Puede subir PDFs, ver la solución de referencia y exportar ejercicios para compartir.
+
+Cada alumno y el profesor suelen tener **instalaciones independientes** (distinto PC). Ver [Compartir ejercicios del banco](#compartir-ejercicios-del-banco-carpeta-compartida).
 
 Los módulos clásicos (`poo`, `bd_sql`, `docker`, etc.) **no necesitan** Gemini.
+
+---
+
+## Instalaciones independientes (aula real)
+
+En clase, **cada alumno y el profesor suelen tener la app en su propio PC**. No hay servidor central que sincronice datos: lo que el profesor aprueba en su banco **no aparece solo** en los equipos de los alumnos.
+
+El intercambio es manual mediante una **carpeta compartida** (red del aula, Google Drive con Drive para escritorio, USB, etc.). La app **no envía correos ni sube a la nube** por sí sola.
+
+| Qué se comparte | Sentido | Fichero típico | Quién exporta | Quién importa |
+|-----------------|---------|----------------|---------------|---------------|
+| **Ejercicios verificados** | Profesor → alumnos | `banco-forja.json` o un `.json` suelto | Profesor | Alumno (portada) |
+| **Progreso del alumno** | Alumno → profesor | `entrega-<usuario>-<fecha>.json` | Alumno | Profesor (`/profesor/alumnos`) |
+
+### Flujo completo recomendado
+
+```
+Profesor                          Carpeta compartida                 Alumno
+────────                          ──────────────────                 ──────
+Prueba ejercicios
+Aprueba en su banco local
+Exporta banco-forja.json      →   banco-forja.json            →    Importa banco (portada)
+                                                                  Practica ejercicios
+                                                                  Exporta entrega .json   →
+Importa entregas + nombre       ←   entrega-*.json              ←   (deja en carpeta)
+Consulta tabla y gráficas
+```
+
+Detalle de cada intercambio:
+
+- [Compartir ejercicios del banco](#compartir-ejercicios-del-banco-carpeta-compartida)
+- [Entrega al profesor](#entrega-al-profesor-carpeta-compartida) y [Seguimiento de alumnos](#seguimiento-de-alumnos-profesor)
 
 ---
 
@@ -167,6 +207,82 @@ En la **portada** (`/`) hay dos paneles que **no comparten datos**: uno vive en 
 
 Requiere estar logueado y token CSRF (el formulario de la portada lo incluye).
 
+### Entrega al profesor (carpeta compartida)
+
+La app **no envía ficheros**; el intercambio es mediante una **carpeta compartida** de red o del aula.
+
+| Paso | Quién | Acción |
+|------|-------|--------|
+| 1 | Alumno | Portada → **Tus estadísticas de uso** → «Descargar entrega para el profesor» |
+| 2 | Alumno | Copia el `.json` en la carpeta compartida (opcional: PDFs de ejercicios desde la pantalla de resultado) |
+| 3 | Profesor | **Perfil → Seguimiento de alumnos** o `/profesor/alumnos` → elegir fichero y **nombre personalizado** del alumno |
+| 4 | Profesor | Tabla comparativa y gráficas de la clase; «Detalle» para ver cada módulo |
+
+El fichero incluye estadísticas del **servidor** y progreso **local** del navegador (historial, ranking, medallas).
+
+Si varios alumnos practican en el **mismo equipo**, el profesor también puede verlos en «Alumnos en este servidor» sin importar ficheros.
+
+---
+
+## Compartir ejercicios del banco (carpeta compartida)
+
+La app **no sincroniza** instalaciones entre profesor y alumnos. El banco local (`banco/aprobados/`) solo existe en cada equipo.
+
+| Paso | Quién | Acción |
+|------|-------|--------|
+| 1 | Profesor | Prueba ejercicios, aprueba en `/profesor/revisar` o `/profesor/banco` |
+| 2 | Profesor | Exporta: **un ejercicio** → «Exportar para compartir» en ejercicio/resultado, o **todo el banco** → `/profesor/banco` → «Descargar banco completo» (`banco-forja.json`) |
+| 3 | Profesor | Deja el `.json` en la carpeta compartida |
+| 4 | Alumno | Portada → «Ejercicios del banco (del profesor)» → «Importar al banco local» |
+| 5 | Alumno | Practica con los botones del banco que aparecen tras importar |
+
+Formato del paquete: `forja-banco-ejercicios` (también se acepta un ejercicio suelto con `criterios` y `enunciado`).
+
+| Ruta | Efecto |
+|------|--------|
+| `GET /profesor/banco/exportar.json` | Descarga todo el banco aprobado (solo profesor) |
+| `GET /ejercicio/{id}/exportar-banco.json` | Un ejercicio de la sesión actual, listo para importar |
+| `POST /banco/importar` | Alumno o profesor: sube paquete o ejercicio a `banco/aprobados/` |
+
+Guías de rol: [alumno.txt](alumno.txt) y [profesor.txt](profesor.txt).
+
+---
+
+## Seguimiento de alumnos (profesor)
+
+Ruta: **`/profesor/alumnos`** (requiere rol profesor).
+
+| Bloque | Origen | Uso |
+|--------|--------|-----|
+| **Importar desde carpeta compartida** | Fichero `.json` + nombre personalizado | Identifica a cada alumno al importar |
+| **Avance de la clase** | Entregas importadas | Tabla comparativa + gráficas (resumen y evolución) |
+| **Entregas guardadas** | `datos/entregas/<profesor>/` | Historial de ficheros importados en este equipo |
+| **Alumnos en este servidor** | `datos/estadisticas/*.json` | Alumnos que han practicado en la misma instalación |
+
+En el detalle de cada alumno verás totales, tabla **por módulo/categoría** (`poo`, `docker`, `docs_forense`, etc.) y los últimos ejercicios registrados.
+
+### Panel «Avance de la clase»
+
+Tras importar varias entregas:
+
+- **Tabla comparativa** con nombre personalizado, ejercicios, aprobados, media, módulos y última actividad (editable el nombre en cada fila).
+- **Tabla por módulo/categoría** con la nota media de cada alumno en cada tema.
+- **Gráficas:** resumen por alumno (métrica elegible) y evolución de las últimas notas; filtro por alumno o «toda la clase».
+
+### API (entregas y banco)
+
+| Método | Ruta | Quién | Efecto |
+|--------|------|-------|--------|
+| `GET` | `/entrega/exportar.json` | Alumno | Descarga entrega (estadísticas servidor; el navegador añade progreso local al guardar) |
+| `POST` | `/profesor/alumnos/importar` | Profesor | Importa entrega de un alumno (fichero + nombre personalizado) |
+| `POST` | `/profesor/alumnos/importada/{id}/renombrar` | Profesor | Cambia el nombre personalizado de una entrega |
+| `POST` | `/profesor/alumnos/importada/{id}/eliminar` | Profesor | Elimina una entrega importada |
+| `GET` | `/profesor/banco/exportar.json` | Profesor | Descarga paquete `forja-banco-ejercicios` con todo el banco aprobado |
+| `GET` | `/ejercicio/{id}/exportar-banco.json` | Profesor | Un ejercicio probado, listo para importar en otro equipo |
+| `POST` | `/banco/importar` | Todos | Importa paquete o ejercicio suelto a `banco/aprobados/` |
+
+Formato entrega alumno: `forja-entrega-alumno`. Formato banco: `forja-banco-ejercicios`.
+
 ---
 
 ## Cuenta y perfil
@@ -176,6 +292,11 @@ Requiere estar logueado y token CSRF (el formulario de la portada lo incluye).
 | Entrar | `/login` |
 | Cambiar nombre, usuario o contraseña | `/perfil` (enlace **Perfil** en la cabecera) |
 | Guía técnica (Gemini, PDF, nuevos módulos) | `/perfil` (sección inferior) o `/como-funciona` |
+| **Seguimiento de alumnos** (profesor) | `/profesor/alumnos` → importar entrega o ver alumnos del servidor |
+| Descargar entrega para el profesor (alumno) | Portada → «Descargar entrega para el profesor» |
+| Importar banco del profesor (alumno) | Portada → «Ejercicios del banco» → «Importar al banco local» |
+| Exportar banco completo (profesor) | `/profesor/banco` → «Descargar banco completo» |
+| Exportar un ejercicio para compartir (profesor) | Ejercicio o resultado → «Exportar para compartir» |
 | **Revisar propuestas IA** (profesor) | `/profesor/revisar` → detalle en `/profesor/revisar/{id}` |
 | Vista rápida del banco (profesor) | `/profesor/banco` |
 | Descargar paquete de revisión (profesor) | `/profesor/revisar/{id}/paquete` (ZIP) |
@@ -201,7 +322,7 @@ forjaexamenes.login.profesores=profesor
 
 ## Revisión del banco (profesor)
 
-Flujo recomendado para validar ejercicios generados desde apuntes antes de publicarlos:
+Flujo recomendado para validar ejercicios generados desde apuntes **en el equipo del profesor** y luego compartirlos con la clase:
 
 1. Activa `forjaexamenes.gemini-guardar-pendientes=true` → cada ejercicio `docs_*` se guarda en `banco/pendientes/`.
 2. Entra como **profesor** / **profesor**.
@@ -211,6 +332,9 @@ Flujo recomendado para validar ejercicios generados desde apuntes antes de publi
    - **Tabla de criterios** con pruebas automáticas: solución de referencia (debe pasar), variante con sinónimo (p. ej. `docker container run`) e respuesta insuficiente (debe fallar).
    - **Alias** aplicados a cada término (desde `vocabulario_claves.json`).
 5. **Aprobar y publicar**, **Rechazar** o **Descargar paquete ZIP** desde la misma pantalla.
+6. **Exportar** el banco o ejercicios sueltos a la carpeta compartida para que los alumnos los importen (ver [Compartir ejercicios del banco](#compartir-ejercicios-del-banco-carpeta-compartida)).
+
+> «Aprobar y publicar» solo actualiza el banco **local** del profesor. Los alumnos en otros PCs necesitan el paso de exportar/importar.
 
 ### Herramientas CLI (equivalente a la web)
 
@@ -339,10 +463,12 @@ Portada / ejercicio docs_*  →  ServicioGenerador (Java)
 ### Banco y aprobación
 
 ```
-banco/aprobados/     → publicados (portada + generador)
-banco/pendientes/    → propuestas Gemini en espera de revisión
-banco/catalogo.json  → índice (se regenera al arrancar)
+banco/aprobados/     → ejercicios verificados en ESTE equipo (portada + generador)
+banco/pendientes/    → propuestas Gemini en espera de revisión (solo profesor)
+banco/catalogo.json  → índice (se regenera al importar, aprobar o arrancar)
 ```
+
+Para repartir ejercicios entre equipos: exportar `forja-banco-ejercicios` (`GET /profesor/banco/exportar.json`) e importar en cada alumno (`POST /banco/importar`). Tras importar, los módulos del banco aparecen en la portada como «Ejercicios del banco (del profesor)».
 
 | Propiedad / variable | Efecto |
 |----------------------|--------|
@@ -357,6 +483,7 @@ banco/catalogo.json  → índice (se regenera al arrancar)
 
 ```
 examenforge/
+├── alumno.txt / profesor.txt    # Guías por rol (instalaciones independientes)
 ├── install.sh / install.ps1     # Instalación guiada
 ├── iniciar-forja.sh / .bat      # Arranque tras instalar
 ├── arrancar-web.sh
@@ -375,13 +502,19 @@ examenforge/
 │   ├── revisar_banco.py
 │   ├── revision_profesor.py     # JSON de revisión para la web/CLI
 │   └── paquete_entrega.py       # carpeta + HTML para el profesor
-├── datos/                       # usuarios, estadísticas
+├── datos/
+│   ├── estadisticas/            # por usuario en este equipo
+│   └── entregas/<profesor>/    # entregas de alumnos importadas
 └── web/                         # Spring Boot
     └── src/main/resources/templates/
         ├── login.html
+        ├── inicio.html            # importar banco + entrega alumno
         ├── como-funciona.html
+        ├── profesor-alumnos-lista.html
+        ├── profesor-alumnos-detalle.html
         ├── profesor-revisar-lista.html
         ├── profesor-revisar-detalle.html
+        ├── profesor-banco.html    # exportar banco completo
         └── fragments/
 ```
 
@@ -417,6 +550,9 @@ examenforge/
 | **Entorno Docker** | Botón «Limpiar entorno de práctica» en la portada; auto-limpieza de `datos-practica/` al iniciar ejercicios `docker`, `redes`, `sistemas`, `git` (`forjaexamenes.limpiar-practica-al-nuevo-ejercicio`, default `true`). |
 | **Progreso local** | Últimos 5 ejercicios en `localStorage` (`progreso.js`). Botón «Limpiar progreso local» en la portada. |
 | **Estadísticas de uso** | Totales en `datos/estadisticas/<usuario>.json`. Botón «Limpiar estadísticas» → `POST /estadisticas/limpiar`. |
+| **Entrega al profesor** | Alumno: «Descargar entrega para el profesor» → `GET /entrega/exportar.json` + progreso local en el navegador. Profesor: importar en `/profesor/alumnos` con nombre personalizado. |
+| **Banco portable** | Profesor exporta `banco-forja.json`; alumno importa en portada → `banco/aprobados/` + `catalogo.json`. |
+| **Seguimiento clase** | Tabla comparativa, notas por módulo y gráficas en `/profesor/alumnos` tras importar entregas. |
 | **Revisión profesor** | Badges **PASSED** / **FAILED** y resumen «listo para aprobar» en `/profesor/revisar/{id}`. |
 | **PDFs problemáticos** | `indexador_docs.py` avisa si un PDF está corrupto o protegido con contraseña (se omite y continúa con el resto). |
 
@@ -437,6 +573,11 @@ examenforge/
 | Sinónimo no aceptado | Añádelo en `vocabulario_claves.json` → `alias_comandos` |
 | El panel local muestra datos viejos o de otro sitio | «Limpiar progreso local»; no confundir con «Limpiar estadísticas» del servidor |
 | Quiero empezar de cero en totales e historial del servidor | «Limpiar estadísticas» en la portada (no afecta al progreso del navegador) |
+| El profesor no ve el progreso de un alumno en otro PC | El alumno deja el JSON en la carpeta compartida; el profesor lo importa en `/profesor/alumnos` con un nombre personalizado |
+| `403` en `/profesor/alumnos` | Solo cuentas con rol profesor; el alumno exporta su entrega, no accede a este panel |
+| Aprobé ejercicios pero el alumno no los ve | Normal en PCs distintos: el profesor debe **exportar** el banco y el alumno **importar** en la portada |
+| Tras importar banco no hay botones | Comprueba que el JSON sea `forja-banco-ejercicios` o un ejercicio con `criterios` y `enunciado`; recarga la portada |
+| Google Drive como carpeta compartida | Válido: sube/descarga los `.json` manualmente o usa Drive para escritorio y el selector de archivos al importar |
 
 ---
 
@@ -453,6 +594,8 @@ examenforge/
 | Nuevo módulo plantilla | `generador.py` + `pruebas/pruebas_generador_evaluador.py` |
 | Nuevo tema PDF | `documentacion/<tema>/` + indexar |
 | Ejercicio verificado manual | `banco/aprobados/<tema>/<id>.json` + `reindexar` |
+| Exportar/importar banco entre PCs | `ServicioBancoPortable.java`, `ControladorBanco.java` |
+| Entregas y seguimiento alumnos | `ServicioEntregasAlumno.java`, `ControladorProfesorAlumnos.java` |
 
 ---
 
