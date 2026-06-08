@@ -224,10 +224,18 @@ function Install-MavenViaWinget {
     return $null
 }
 
+function Test-IsAdminSession {
+    $principal = New-Object Security.Principal.WindowsPrincipal(
+        [Security.Principal.WindowsIdentity]::GetCurrent()
+    )
+    return $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+}
+
 function Install-WingetPackage {
     param(
         [string]$PackageId,
-        [string]$DisplayName
+        [string]$DisplayName,
+        [switch]$IgnoreSecurityHash
     )
     if (-not (Test-WingetAvailable)) {
         Write-Warn "winget no esta disponible. No se puede instalar $DisplayName automaticamente."
@@ -241,6 +249,9 @@ function Install-WingetPackage {
         "--disable-interactivity",
         "--silent"
     )
+    if ($IgnoreSecurityHash) {
+        $args += "--ignore-security-hash"
+    }
     $result = Invoke-Native -FilePath (Get-ToolPath "winget") -ArgumentList $args
     if ($result.ExitCode -eq 0 -or $result.ExitCode -eq -1978335189) {
         # 0 = ok; -1978335189 = ya instalado (winget)
@@ -253,6 +264,76 @@ function Install-WingetPackage {
         Write-Host $result.Output
     }
     return $false
+}
+
+function Install-DockerDesktop {
+    if (-not (Test-WingetAvailable)) {
+        return $false
+    }
+    if (Install-WingetPackage -PackageId "Docker.DockerDesktop" -DisplayName "Docker Desktop") {
+        return $true
+    }
+    Write-Warn "Docker Desktop: winget fallo (a menudo por hash del instalador desactualizado)."
+    Write-Host "  Descarga manual: https://www.docker.com/products/docker-desktop/"
+    if (Test-IsAdminSession) {
+        Write-Host "  PowerShell como admin no puede usar --ignore-security-hash."
+        Write-Host "  Abre PowerShell normal y ejecuta:"
+        Write-Host "    winget install Docker.DockerDesktop --ignore-security-hash"
+    } elseif (Preguntar-Si "Reintentar instalacion ignorando hash? (solo si confias en la descarga)") {
+        if (Install-WingetPackage -PackageId "Docker.DockerDesktop" -DisplayName "Docker Desktop" -IgnoreSecurityHash) {
+            return $true
+        }
+    }
+    if (Preguntar-Si "Abrir pagina de descarga de Docker en el navegador?") {
+        Start-Process "https://www.docker.com/products/docker-desktop/"
+    }
+    return $false
+}
+
+function Start-ForjaApplication {
+    param(
+        [string]$JavaPath = $null,
+        [string]$MavenPath = $null
+    )
+    $jar = Join-Path $Raiz "web\target\forjaexamenes-web-1.0.0.jar"
+    if (Test-Path -LiteralPath $jar) {
+        if (-not $JavaPath) {
+            $JavaPath = Get-ToolPath "java"
+        }
+        if (-not $JavaPath) {
+            Write-Err "Java no encontrado en PATH."
+            return $false
+        }
+        Write-Info "Arrancando Forja de ejercicios..."
+        Write-Host "  http://localhost:8080"
+        Write-Host "  Detener: Ctrl+C"
+        Write-Host ""
+        $env:FORJAEXAMENES_RAIZ = $Raiz
+        & $JavaPath -jar $jar
+        return ($LASTEXITCODE -eq 0)
+    }
+
+    if (-not $MavenPath) {
+        $MavenPath = Resolve-MavenExecutable
+    }
+    $webDir = Join-Path $Raiz "web"
+    $pomFile = Join-Path $webDir "pom.xml"
+    if (-not $MavenPath -or -not (Test-Path -LiteralPath $pomFile)) {
+        Write-Err "No hay JAR compilado. Vuelve a ejecutar install.ps1."
+        return $false
+    }
+    Write-Info "Arrancando con Maven spring-boot:run..."
+    Write-Host "  http://localhost:8080"
+    Write-Host "  Detener: Ctrl+C"
+    Write-Host ""
+    $env:FORJAEXAMENES_RAIZ = $Raiz
+    $run = Invoke-Native -FilePath $MavenPath -WorkingDirectory $webDir -ArgumentList @(
+        "-f", $pomFile, "spring-boot:run"
+    )
+    if ($run.ExitCode -ne 0 -and $run.Output) {
+        Write-Host $run.Output
+    }
+    return ($run.ExitCode -eq 0)
 }
 
 function Resolve-PythonExecutable {
@@ -554,7 +635,7 @@ Write-Host ""
 
 $geminiOk = "no"
 if (Preguntar-Si "Guardar clave Gemini ahora?") {
-    $geminiPlain = Read-Host "Pega tu clave API (AIzaSy...)"
+    $geminiPlain = Read-Host "Pega tu clave API Gemini"
     if ($geminiPlain) {
         $geminiModel = Read-Host "Modelo [gemini-2.5-flash]"
         if (-not $geminiModel) { $geminiModel = "gemini-2.5-flash" }
@@ -579,7 +660,7 @@ $dockerOk = "no"
 $dockerPath = Get-ToolPath "docker"
 if (-not $dockerPath) {
     if (Preguntar-Si "Instalar Docker Desktop con winget? (opcional, tarda)") {
-        Install-WingetPackage -PackageId "Docker.DockerDesktop" -DisplayName "Docker Desktop" | Out-Null
+        Install-DockerDesktop | Out-Null
         Refresh-SessionPath
         $dockerPath = Get-ToolPath "docker"
     }
@@ -600,8 +681,9 @@ if ($dockerPath) {
 } else {
     [void]$manualOptional.Add(@"
 [OPCIONAL] Docker Desktop (modulos docker, redes, sistemas, git)
-  - https://www.docker.com/products/docker-desktop/
-  - O: winget install Docker.DockerDesktop
+  - Descarga: https://www.docker.com/products/docker-desktop/
+  - Si winget falla por hash: winget install Docker.DockerDesktop --ignore-security-hash
+    (en PowerShell normal, no como administrador)
   - Luego: docker compose up -d --build practica
 "@)
     Write-Warn "Docker no instalado. La web funciona; la practica en contenedor no."
@@ -629,10 +711,7 @@ if ($manualOptional.Count -gt 0) {
 }
 
 if (Preguntar-Si "Arrancar la aplicacion ahora?") {
-    $bat = Join-Path $Raiz "iniciar-forja.bat"
-    if (Test-Path -LiteralPath $bat) {
-        & cmd.exe /c "`"$bat`""
-    }
+    Start-ForjaApplication -JavaPath (Get-ToolPath "java") -MavenPath $mvnPath | Out-Null
 }
 
 exit 0

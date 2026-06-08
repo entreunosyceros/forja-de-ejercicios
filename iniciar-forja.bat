@@ -7,7 +7,7 @@ set "FORJAEXAMENES_RAIZ=%RAIZ%"
 set "JAR=%RAIZ%\web\target\forjaexamenes-web-1.0.0.jar"
 
 if exist "%JAR%" (
-    echo [*] Arrancando Forja de ejercicios (JAR)...
+    echo [*] Arrancando Forja de ejercicios - JAR
     echo     http://localhost:8080
     echo     Detener: Ctrl+C
     java -jar "%JAR%"
@@ -30,14 +30,14 @@ if not defined MVN (
     exit /b 1
 )
 
-echo [*] No hay JAR; arrancando con Maven (spring-boot:run)...
+echo [*] No hay JAR - arrancando con Maven spring-boot:run
 set "WEB=%RAIZ%\web"
 set "POM=%WEB%\pom.xml"
 if not exist "%POM%" (
-    echo [X] No se encontro pom.xml en web\
+    echo [X] No se encontro pom.xml en carpeta web
     echo     Ruta esperada: %POM%
     exit /b 1
 )
 cd /d "%WEB%"
-"%MVN%" -f "%POM%" spring-boot:run
+call "%MVN%" -f "%POM%" spring-boot:run
 exit /b %ERRORLEVEL%
