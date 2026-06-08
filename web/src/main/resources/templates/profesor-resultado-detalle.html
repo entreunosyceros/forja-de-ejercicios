@@ -16,14 +16,22 @@
         <h2 th:text="${detalle.intento.titulo}">Título</h2>
 
         <h3>Enunciado</h3>
-        <pre class="code-block" th:text="${detalle.intento.enunciado}">—</pre>
+        <pre class="code-block code-block-resaltado"><code th:class="${'language-' + lenguajeCodigo}"
+             th:text="${detalle.intento.enunciado}">—</code></pre>
 
         <h3>Respuesta del alumno</h3>
-        <pre class="code-block" th:text="${detalle.intento.respuesta}">—</pre>
+        <pre class="code-block code-block-resaltado"><code th:class="${'language-' + lenguajeCodigo}"
+             th:text="${detalle.intento.respuesta}">—</code></pre>
 
         <div class="form-actions" style="margin-top:1.5rem">
             <a class="btn btn-secondary" th:href="@{/profesor/resultados}">Volver a resultados</a>
         </div>
     </div>
+    <link rel="stylesheet" th:href="@{/vendor/highlight.github.min.css}"/>
+    <script th:src="@{/vendor/highlight.min.js}"></script>
+    <script th:src="@{/vendor/highlight-sql.min.js}"></script>
+    <script th:src="@{/vendor/highlight-java.min.js}"></script>
+    <script th:src="@{/vendor/highlight-bash.min.js}"></script>
+    <script th:src="@{/js/profesor-resultado-detalle.js(v=1)}"></script>
 </section>
 </html>

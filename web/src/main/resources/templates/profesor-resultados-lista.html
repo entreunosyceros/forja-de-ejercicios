@@ -9,6 +9,8 @@
             (<code>datos/historial/</code>). Exporta a CSV (abre en Excel) o revisa el detalle de cada intento.
         </p>
 
+        <div th:replace="~{fragments/panel-profesor-metricas :: metricas(${metricas})}"></div>
+
         <div class="profesor-resultados-seccion">
             <div class="panel-estadisticas-cabecera">
                 <h2>En este servidor</h2>
@@ -18,7 +20,7 @@
             <p class="hint" th:if="${#lists.isEmpty(filasServidor)}">
                 Aún no hay intentos guardados de alumnos en este equipo.
             </p>
-            <div class="stats-modulos-scroll" th:if="${!#lists.isEmpty(filasServidor)}">
+            <div class="stats-modulos-scroll tabla-resultados-virtual" th:if="${!#lists.isEmpty(filasServidor)}">
                 <table class="stats-modulos-table tabla-resultados">
                     <thead>
                     <tr>
@@ -59,7 +61,7 @@
                 Importa entregas de alumnos en <a th:href="@{/profesor/alumnos}">Seguimiento de alumnos</a>
                 (incluyen historial si el alumno exportó tras practicar).
             </p>
-            <div class="stats-modulos-scroll" th:if="${!#lists.isEmpty(filasImportadas)}">
+            <div class="stats-modulos-scroll tabla-resultados-virtual" th:if="${!#lists.isEmpty(filasImportadas)}">
                 <table class="stats-modulos-table tabla-resultados">
                     <thead>
                     <tr>
@@ -90,5 +92,6 @@
             <a class="btn btn-ghost" th:href="@{/}">Portada</a>
         </div>
     </div>
+    <script th:src="@{/js/profesor-resultados-carga.js(v=1)}"></script>
 </section>
 </html>

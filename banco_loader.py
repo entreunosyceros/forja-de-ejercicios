@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Desarrollado por entreunosyceros - 2026
 """Carga ejercicios del banco verificable (aprobados / pendientes) y catálogo."""
 
 from __future__ import annotations

@@ -1,3 +1,4 @@
+// Desarrollado por entreunosyceros - 2026
 package com.luegoestarde.forjaexamenes.evento;
 
 import org.springframework.context.ApplicationEvent;

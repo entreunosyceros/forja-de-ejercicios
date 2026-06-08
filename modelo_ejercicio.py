@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Desarrollado por entreunosyceros - 2026
 """
 Banco de ejercicios verificables — formato único para todos los orígenes.
 

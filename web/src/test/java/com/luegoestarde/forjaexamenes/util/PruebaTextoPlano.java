@@ -1,3 +1,4 @@
+// Desarrollado por entreunosyceros - 2026
 package com.luegoestarde.forjaexamenes.util;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;

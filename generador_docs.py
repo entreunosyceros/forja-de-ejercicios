@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Desarrollado por entreunosyceros - 2026
 """Módulos docs_*: PDF → fragmentos → Gemini (un fragmento por ejercicio)."""
 
 from __future__ import annotations

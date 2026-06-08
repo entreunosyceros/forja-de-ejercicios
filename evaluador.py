@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Desarrollado por entreunosyceros - 2026
 """Evaluador automático de respuestas para La máquina de ejercicios."""
 
 import argparse

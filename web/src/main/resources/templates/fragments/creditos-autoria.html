@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<section th:fragment="creditos" id="gf-creditos" class="guia-seccion guia-creditos">
+    <h2>Créditos y autoría</h2>
+
+    <div class="creditos-bloque-principal card">
+        <p class="creditos-marca">Desarrollado por <strong>entreunosyceros</strong></p>
+        <p class="creditos-sub">Forja de ejercicios · <em>luego es tarde… para estudiar</em></p>
+        <p class="creditos-ciclo">Proyecto formativo <strong>IFCT0112</strong> · 2026</p>
+    </div>
+
+    <div class="creditos-grid">
+        <div class="card creditos-tarjeta">
+            <h3>Autoría</h3>
+            <p>Este sistema ha sido diseñado, implementado y mantenido por <strong>entreunosyceros</strong> como
+                plataforma de práctica evaluada para módulos de administración de sistemas, bases de datos,
+                programación y documentación técnica.</p>
+            <p>Incluye interfaz web (Spring Boot), motor de generación y corrección (Python), banco de ejercicios
+                verificados, seguimiento del profesor, exportación de resultados y ejercicios con IA a partir de apuntes PDF.</p>
+        </div>
+
+        <div class="card creditos-tarjeta">
+            <h3>Licencia</h3>
+            <p><strong>Sistema protegido bajo Licencia GNU GPLv3.</strong></p>
+            <p>Puedes usar, estudiar, modificar y redistribuir el software bajo los términos de la
+                <a href="https://www.gnu.org/licenses/gpl-3.0.html" rel="noopener noreferrer" target="_blank">
+                    GNU General Public License v3
+                </a>. Las modificaciones derivadas deben publicarse bajo la misma licencia.</p>
+            <p>El texto completo de la licencia está en el fichero <code>LICENSE</code> del repositorio.</p>
+        </div>
+
+        <div class="card creditos-tarjeta">
+            <h3>Componentes y reconocimientos</h3>
+            <ul class="guia-pasos">
+                <li><strong>Spring Boot</strong> — aplicación web y API REST.</li>
+                <li><strong>Python</strong> — <code>generador.py</code>, <code>evaluador.py</code>, indexación de PDFs.</li>
+                <li><strong>Google Gemini</strong> — generación opcional de ejercicios desde apuntes (clave del usuario).</li>
+                <li><strong>Apache PDFBox</strong> — exportación de ejercicios y correcciones a PDF.</li>
+                <li><strong>Docker</strong> — entorno de práctica aislado para módulos de sistemas.</li>
+            </ul>
+        </div>
+
+        <div class="card creditos-tarjeta">
+            <h3>Documentación ampliada</h3>
+            <p>Guías de rol: <code>alumno.txt</code> y <code>profesor.txt</code>.</p>
+            <p>Arquitectura y APIs: <code>README.md</code> del repositorio.</p>
+            <p>Wiki del proyecto:
+                <a href="https://deepwiki.com/entreunosyceros/forja-de-ejercicios/" rel="noopener noreferrer" target="_blank">
+                    DeepWiki — forja-de-ejercicios
+                </a>
+            </p>
+        </div>
+    </div>
+
+    <p class="hint creditos-pie-licencia">
+        Desarrollado por entreunosyceros — Sistema protegido bajo Licencia GPLv3 — IFCT0112
+    </p>
+</section>
+</body>
+</html>

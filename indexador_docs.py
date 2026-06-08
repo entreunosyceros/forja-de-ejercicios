@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Desarrollado por entreunosyceros - 2026
 """
 Indexa PDFs de documentacion/ en fragmentos JSON en indice/.
 

@@ -1,14 +1,20 @@
+// Desarrollado por entreunosyceros - 2026
 package com.luegoestarde.forjaexamenes.web;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.luegoestarde.forjaexamenes.modelo.EntregaAlumno;
 import com.luegoestarde.forjaexamenes.modelo.EstadisticasUsuario;
+import com.luegoestarde.forjaexamenes.servicio.ConflictoImportacionEntregaException;
 import com.luegoestarde.forjaexamenes.servicio.ServicioAccesoProfesor;
 import com.luegoestarde.forjaexamenes.servicio.ServicioCuentasUsuarios;
 import com.luegoestarde.forjaexamenes.servicio.ServicioEntregasAlumno;
+import com.luegoestarde.forjaexamenes.servicio.ServicioEntregasAlumno.ResultadoImportacion;
+import com.luegoestarde.forjaexamenes.servicio.ServicioEntregasAlumno.TipoImportacion;
 import com.luegoestarde.forjaexamenes.servicio.ServicioEstadisticasUsuario;
 import com.luegoestarde.forjaexamenes.servicio.ServicioMetadatosEjercicio;
+import com.luegoestarde.forjaexamenes.servicio.ServicioPanelProfesor;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,11 +29,15 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @RequestMapping("/profesor/alumnos")
 public class ControladorProfesorAlumnos {
 
+    static final String SESSION_RECORDAR_SOBRESCRIBIR = "forja.recordarSobrescribirEntregas";
+    static final String SESSION_IMPORTACION_PENDIENTE = "forja.importacionEntregaPendiente";
+
     private final ServicioEntregasAlumno servicioEntregas;
     private final ServicioEstadisticasUsuario servicioEstadisticas;
     private final ServicioAccesoProfesor accesoProfesor;
     private final ServicioMetadatosEjercicio metadatosEjercicio;
     private final ServicioCuentasUsuarios cuentasUsuarios;
+    private final ServicioPanelProfesor servicioPanel;
     private final ObjectMapper mapeadorJson = new ObjectMapper();
 
     public ControladorProfesorAlumnos(
@@ -35,12 +45,14 @@ public class ControladorProfesorAlumnos {
             ServicioEstadisticasUsuario servicioEstadisticas,
             ServicioAccesoProfesor accesoProfesor,
             ServicioMetadatosEjercicio metadatosEjercicio,
-            ServicioCuentasUsuarios cuentasUsuarios) {
+            ServicioCuentasUsuarios cuentasUsuarios,
+            ServicioPanelProfesor servicioPanel) {
         this.servicioEntregas = servicioEntregas;
         this.servicioEstadisticas = servicioEstadisticas;
         this.accesoProfesor = accesoProfesor;
         this.metadatosEjercicio = metadatosEjercicio;
         this.cuentasUsuarios = cuentasUsuarios;
+        this.servicioPanel = servicioPanel;
     }
 
     @GetMapping
@@ -53,6 +65,7 @@ public class ControladorProfesorAlumnos {
         modelo.addAttribute("comparativaJson", mapeadorJson.writeValueAsString(comparativa));
         modelo.addAttribute("alumnosServidor", servicioEstadisticas.listarResumenesEnServidor(
                 login -> !accesoProfesor.esProfesor(login)));
+        modelo.addAttribute("metricas", servicioPanel.calcular(profesor));
         return "profesor-alumnos-lista";
     }
 
@@ -60,19 +73,87 @@ public class ControladorProfesorAlumnos {
     public String importar(
             @RequestParam("archivo") MultipartFile archivo,
             @RequestParam("nombreEtiqueta") String nombreEtiqueta,
+            HttpSession sesion,
             RedirectAttributes flash) {
         try {
             if (!accesoProfesor.puedeAccederZonaProfesor()) {
                 return "redirect:/";
             }
+            byte[] contenido = archivo.getBytes();
             String profesor = metadatosEjercicio.loginActual();
-            EntregaAlumno entrega = servicioEntregas.importar(
-                    profesor, archivo.getBytes(), nombreEtiqueta);
-            flash.addFlashAttribute(
-                    "mensajePerfilOk",
-                    "Entrega importada como «" + entrega.getNombreEtiqueta() + "» ("
-                            + entrega.getEstadisticasServidor().getTotalIntentos()
-                            + " ejercicios).");
+            boolean autoSobrescribir = Boolean.TRUE.equals(sesion.getAttribute(SESSION_RECORDAR_SOBRESCRIBIR));
+            try {
+                ResultadoImportacion resultado = servicioEntregas.importar(
+                        profesor, contenido, nombreEtiqueta, autoSobrescribir);
+                flash.addFlashAttribute("mensajePerfilOk", formatearResultadoImportacion(resultado));
+                return "redirect:/profesor/alumnos";
+            } catch (ConflictoImportacionEntregaException conflicto) {
+                sesion.setAttribute(SESSION_IMPORTACION_PENDIENTE, new ImportacionEntregaPendiente(
+                        contenido,
+                        nombreEtiqueta,
+                        conflicto.getLoginAlumno(),
+                        conflicto.getNombreEtiquetaExistente(),
+                        conflicto.getImportadoEn(),
+                        conflicto.getIdExistente()));
+                return "redirect:/profesor/alumnos/importar/conflicto";
+            }
+        } catch (Exception ex) {
+            flash.addFlashAttribute("errorPerfil", ex.getMessage());
+            return "redirect:/profesor/alumnos";
+        }
+    }
+
+    @GetMapping("/importar/conflicto")
+    public String mostrarConflicto(HttpSession sesion, Model modelo) {
+        if (!accesoProfesor.puedeAccederZonaProfesor()) {
+            return "redirect:/";
+        }
+        ImportacionEntregaPendiente pendiente =
+                (ImportacionEntregaPendiente) sesion.getAttribute(SESSION_IMPORTACION_PENDIENTE);
+        if (pendiente == null) {
+            return "redirect:/profesor/alumnos";
+        }
+        modelo.addAttribute("tituloPagina", "Confirmar sobrescritura");
+        modelo.addAttribute("conflicto", pendiente);
+        return "profesor-alumnos-conflicto-importacion";
+    }
+
+    @PostMapping("/importar/confirmar")
+    public String confirmarImportacion(
+            @RequestParam("sobrescribir") boolean sobrescribir,
+            @RequestParam(value = "recordarDecision", required = false) boolean recordarDecision,
+            HttpSession sesion,
+            RedirectAttributes flash) {
+        try {
+            if (!accesoProfesor.puedeAccederZonaProfesor()) {
+                return "redirect:/";
+            }
+            ImportacionEntregaPendiente pendiente =
+                    (ImportacionEntregaPendiente) sesion.getAttribute(SESSION_IMPORTACION_PENDIENTE);
+            sesion.removeAttribute(SESSION_IMPORTACION_PENDIENTE);
+
+            if (pendiente == null) {
+                flash.addFlashAttribute("errorPerfil", "La importación pendiente ha caducado. Vuelve a seleccionar el fichero.");
+                return "redirect:/profesor/alumnos";
+            }
+
+            if (recordarDecision) {
+                sesion.setAttribute(SESSION_RECORDAR_SOBRESCRIBIR, true);
+            }
+
+            if (!sobrescribir) {
+                flash.addFlashAttribute("mensajePerfilOk",
+                        "Entregas procesadas: 0 nuevas, 0 actualizadas, 1 ignorada.");
+                return "redirect:/profesor/alumnos";
+            }
+
+            String profesor = metadatosEjercicio.loginActual();
+            ResultadoImportacion resultado = servicioEntregas.importar(
+                    profesor,
+                    pendiente.getContenido(),
+                    pendiente.getNombreEtiqueta(),
+                    true);
+            flash.addFlashAttribute("mensajePerfilOk", formatearResultadoImportacion(resultado));
             return "redirect:/profesor/alumnos";
         } catch (Exception ex) {
             flash.addFlashAttribute("errorPerfil", ex.getMessage());
@@ -149,5 +230,15 @@ public class ControladorProfesorAlumnos {
             flash.addFlashAttribute("errorPerfil", ex.getMessage());
         }
         return "redirect:/profesor/alumnos";
+    }
+
+    static String formatearResultadoImportacion(ResultadoImportacion resultado) {
+        int nuevas = resultado.tipo() == TipoImportacion.NUEVA ? 1 : 0;
+        int actualizadas = resultado.tipo() == TipoImportacion.ACTUALIZADA ? 1 : 0;
+        return "Entregas procesadas: " + nuevas + " nueva(s), "
+                + actualizadas + " actualizada(s), 0 ignorada(s). «"
+                + resultado.entrega().getNombreEtiqueta() + "» ("
+                + resultado.entrega().getEstadisticasServidor().getTotalIntentos()
+                + " ejercicios).";
     }
 }

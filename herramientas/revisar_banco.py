@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Desarrollado por entreunosyceros - 2026
 """CLI: revisar propuestas en banco/pendientes/."""
 
 from __future__ import annotations

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Desarrollado por entreunosyceros - 2026
 """Pruebas del indexador de documentación (sin Gemini ni pypdf obligatorio)."""
 
 import sys

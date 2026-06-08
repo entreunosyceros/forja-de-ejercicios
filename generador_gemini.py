@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Desarrollado por entreunosyceros - 2026
 """Genera un ejercicio JSON a partir de un único fragmento de texto (Gemini)."""
 
 from __future__ import annotations

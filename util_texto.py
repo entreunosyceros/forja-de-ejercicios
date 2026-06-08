@@ -1,3 +1,4 @@
+# Desarrollado por entreunosyceros - 2026
 """Convierte texto con markdown a texto plano (comandos/código listos para comparar)."""
 
 from __future__ import annotations

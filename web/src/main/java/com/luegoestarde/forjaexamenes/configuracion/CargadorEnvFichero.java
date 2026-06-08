@@ -1,3 +1,4 @@
+// Desarrollado por entreunosyceros - 2026
 package com.luegoestarde.forjaexamenes.configuracion;
 
 import com.fasterxml.jackson.databind.JsonNode;

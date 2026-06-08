@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Desarrollado por entreunosyceros - 2026
 """Sinónimos de comandos técnicos para criterios contiene_todos / contiene_alguno."""
 
 from __future__ import annotations

@@ -1,3 +1,5 @@
+<!-- Hecho con 💻 por entreunosyceros, de colega a colega. Respeta el código libre. -->
+
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org"
       th:replace="~{plantilla :: plantilla(~{::section})}">
@@ -13,6 +15,8 @@
 
         <p class="alerta-indexacion alerta-ok" th:if="${mensajePerfilOk}" th:text="${mensajePerfilOk}">OK</p>
         <p class="alerta-indexacion alerta-error" th:if="${errorPerfil}" th:text="${errorPerfil}">Error</p>
+
+        <div th:replace="~{fragments/panel-profesor-metricas :: metricas(${metricas})}"></div>
 
         <div class="profesor-alumnos-importar">
             <h2>Importar desde carpeta compartida</h2>

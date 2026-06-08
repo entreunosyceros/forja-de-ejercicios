@@ -1,0 +1,21 @@
+<!-- Hecho con 💻 por entreunosyceros, de colega a colega. Respeta el código libre. -->
+
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{plantilla :: plantilla(~{::section})}">
+<section class="pagina-profesor-panel">
+    <div class="card card-wide">
+        <h1>Panel del profesor</h1>
+        <p class="hint">Resumen de la actividad reciente de tus alumnos en este equipo y en las entregas importadas.</p>
+
+        <div th:replace="~{fragments/panel-profesor-metricas :: metricas(${metricas})}"></div>
+
+        <div class="form-actions panel-profesor-enlaces" style="margin-top:1.5rem">
+            <a class="btn btn-primary" th:href="@{/profesor/alumnos}">Seguimiento de alumnos</a>
+            <a class="btn btn-secondary" th:href="@{/profesor/resultados}">Resultados y CSV</a>
+            <a class="btn btn-secondary" th:href="@{/profesor/banco}">Banco de ejercicios</a>
+            <a class="btn btn-ghost" th:href="@{/profesor/revisar}">Revisar propuestas IA</a>
+        </div>
+    </div>
+</section>
+</html>

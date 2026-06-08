@@ -1,3 +1,4 @@
+// Desarrollado por entreunosyceros - 2026
 package com.luegoestarde.forjaexamenes.web;
 
 import com.luegoestarde.forjaexamenes.modelo.EntregaAlumno;
@@ -6,6 +7,7 @@ import com.luegoestarde.forjaexamenes.servicio.ServicioAccesoProfesor;
 import com.luegoestarde.forjaexamenes.servicio.ServicioEntregasAlumno;
 import com.luegoestarde.forjaexamenes.servicio.ServicioHistorialIntentos;
 import com.luegoestarde.forjaexamenes.servicio.ServicioMetadatosEjercicio;
+import com.luegoestarde.forjaexamenes.servicio.ServicioPanelProfesor;
 import com.luegoestarde.forjaexamenes.servicio.ServicioHistorialIntentos.FilaResultado;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,24 +28,29 @@ public class ControladorProfesorResultados {
     private final ServicioEntregasAlumno servicioEntregas;
     private final ServicioAccesoProfesor accesoProfesor;
     private final ServicioMetadatosEjercicio metadatosEjercicio;
+    private final ServicioPanelProfesor servicioPanel;
 
     public ControladorProfesorResultados(
             ServicioHistorialIntentos servicioHistorial,
             ServicioEntregasAlumno servicioEntregas,
             ServicioAccesoProfesor accesoProfesor,
-            ServicioMetadatosEjercicio metadatosEjercicio) {
+            ServicioMetadatosEjercicio metadatosEjercicio,
+            ServicioPanelProfesor servicioPanel) {
         this.servicioHistorial = servicioHistorial;
         this.servicioEntregas = servicioEntregas;
         this.accesoProfesor = accesoProfesor;
         this.metadatosEjercicio = metadatosEjercicio;
+        this.servicioPanel = servicioPanel;
     }
 
     @GetMapping
     public String listar(Model modelo) throws Exception {
+        String profesor = metadatosEjercicio.loginActual();
         modelo.addAttribute("tituloPagina", "Resultados de alumnos");
         modelo.addAttribute("filasServidor", servicioHistorial.listarFilas(
                 login -> !accesoProfesor.esProfesor(login)));
         modelo.addAttribute("filasImportadas", filasDesdeEntregasImportadas());
+        modelo.addAttribute("metricas", servicioPanel.calcular(profesor));
         return "profesor-resultados-lista";
     }
 
@@ -73,6 +80,7 @@ public class ControladorProfesorResultados {
         }
         modelo.addAttribute("tituloPagina", "Intento de " + detalle.alumno());
         modelo.addAttribute("detalle", detalle);
+        modelo.addAttribute("lenguajeCodigo", lenguajeResaltado(detalle.intento().getModulo()));
         return "profesor-resultado-detalle";
     }
 
@@ -105,6 +113,23 @@ public class ControladorProfesorResultados {
             }
         }
         return filas;
+    }
+
+    private static String lenguajeResaltado(String modulo) {
+        if (modulo == null || modulo.isBlank()) {
+            return "plaintext";
+        }
+        String mod = modulo.strip().toLowerCase();
+        if (mod.startsWith("bd") || mod.contains("sql")) {
+            return "sql";
+        }
+        if (mod.equals("poo") || mod.contains("java")) {
+            return "java";
+        }
+        if (mod.equals("docker") || mod.equals("git") || mod.equals("redes") || mod.equals("sistemas")) {
+            return "bash";
+        }
+        return "plaintext";
     }
 
     private static ResponseEntity<byte[]> respuestaCsv(byte[] csv, String nombre) {

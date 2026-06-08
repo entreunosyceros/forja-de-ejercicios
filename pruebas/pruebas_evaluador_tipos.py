@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Desarrollado por entreunosyceros - 2026
 """Pruebas de tipos de criterio en evaluador.py."""
 
 import sys

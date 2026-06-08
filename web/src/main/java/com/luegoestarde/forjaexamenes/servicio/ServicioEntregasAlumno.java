@@ -1,3 +1,4 @@
+// Desarrollado por entreunosyceros - 2026
 package com.luegoestarde.forjaexamenes.servicio;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -91,8 +92,21 @@ public class ServicioEntregasAlumno {
         return entrega;
     }
 
-    public synchronized EntregaAlumno importar(
-            String profesorLogin, byte[] contenido, String nombreEtiqueta) throws IOException {
+    public enum TipoImportacion { NUEVA, ACTUALIZADA, IGNORADA }
+
+    public record ResultadoImportacion(TipoImportacion tipo, EntregaAlumno entrega) {}
+
+    public ResultadoImportacion importar(
+            String profesorLogin, byte[] contenido, String nombreEtiqueta)
+            throws IOException, ConflictoImportacionEntregaException {
+        return importar(profesorLogin, contenido, nombreEtiqueta, false);
+    }
+
+    public synchronized ResultadoImportacion importar(
+            String profesorLogin,
+            byte[] contenido,
+            String nombreEtiqueta,
+            boolean sobrescribirSiExiste) throws IOException, ConflictoImportacionEntregaException {
         if (profesorLogin == null || profesorLogin.isBlank()) {
             throw new IOException("Sesión de profesor no válida.");
         }
@@ -116,7 +130,26 @@ public class ServicioEntregasAlumno {
             throw new IOException("Archivo inválido: revisa el formato de la entrega del alumno.");
         }
 
-        String id = generarId(entrega.getAlumno().getLogin());
+        String loginAlumno = entrega.getAlumno() != null ? entrega.getAlumno().getLogin() : "";
+        EntregaAlumno existente = buscarPorLoginAlumno(profesorLogin, loginAlumno);
+
+        TipoImportacion tipo;
+        String id;
+        if (existente != null) {
+            if (!sobrescribirSiExiste) {
+                throw new ConflictoImportacionEntregaException(
+                        loginAlumno,
+                        nombreEtiqueta(existente),
+                        existente.getImportadoEn(),
+                        existente.getIdImportacion());
+            }
+            id = existente.getIdImportacion();
+            tipo = TipoImportacion.ACTUALIZADA;
+        } else {
+            id = generarId(loginAlumno);
+            tipo = TipoImportacion.NUEVA;
+        }
+
         entrega.setIdImportacion(id);
         entrega.setImportadoPor(profesorLogin);
         entrega.setImportadoEn(LocalDateTime.now(ZONA).format(FORMATO));
@@ -125,7 +158,24 @@ public class ServicioEntregasAlumno {
         Path fichero = ficheroImportada(profesorLogin, id);
         Files.createDirectories(fichero.getParent());
         mapeador.writerWithDefaultPrettyPrinter().writeValue(fichero.toFile(), entrega);
-        return entrega;
+        return new ResultadoImportacion(tipo, entrega);
+    }
+
+    public EntregaAlumno buscarPorLoginAlumno(String profesorLogin, String loginAlumno) throws IOException {
+        if (loginAlumno == null || loginAlumno.isBlank()) {
+            return null;
+        }
+        String normalizado = loginAlumno.strip().toLowerCase(Locale.ROOT);
+        return listarEntregasCompletas(profesorLogin).stream()
+                .filter(e -> e.getAlumno() != null
+                        && e.getAlumno().getLogin() != null
+                        && normalizado.equals(e.getAlumno().getLogin().strip().toLowerCase(Locale.ROOT)))
+                .findFirst()
+                .orElse(null);
+    }
+
+    public List<EntregaAlumno> listarEntregasCompletas(String profesorLogin) throws IOException {
+        return listarEntregasCompletasInternas(profesorLogin);
     }
 
     public synchronized void renombrar(String profesorLogin, String id, String nombreEtiqueta) throws IOException {
@@ -194,7 +244,7 @@ public class ServicioEntregasAlumno {
         return Files.deleteIfExists(ficheroImportada(profesorLogin, id));
     }
 
-    private List<EntregaAlumno> listarEntregasCompletas(String profesorLogin) throws IOException {
+    private List<EntregaAlumno> listarEntregasCompletasInternas(String profesorLogin) throws IOException {
         Path carpeta = carpetaImportadas(profesorLogin);
         if (!Files.isDirectory(carpeta)) {
             return List.of();

@@ -1,3 +1,4 @@
+// Desarrollado por entreunosyceros - 2026
 package com.luegoestarde.forjaexamenes.servicio;
 
 import com.luegoestarde.forjaexamenes.configuracion.PropiedadesForjaExamenes;
@@ -24,6 +25,7 @@ public class ServicioPdf {
 
     private static final float MARGEN = 50;
     private static final float ALTURA_LINEA = 14;
+    private static final String PIE_PDF = "Desarrollador por entreunosyceros para - IFCT0112";
 
     private final PropiedadesForjaExamenes propiedades;
 
@@ -129,10 +131,12 @@ public class ServicioPdf {
                 y = escribirLinea(flujo, negrita, 13, MARGEN, y, linea);
             }
             y -= ALTURA_LINEA / 2;
+            float yMinima = MARGEN + ALTURA_LINEA * 2;
             for (String linea : dividirLineas(sanitizar(cuerpo), 88)) {
-                if (y < MARGEN) break;
+                if (y < yMinima) break;
                 y = escribirLinea(flujo, regular, 10, MARGEN, y, linea);
             }
+            escribirLinea(flujo, regular, 8, MARGEN, MARGEN - 4, sanitizar(PIE_PDF));
         }
     }
 

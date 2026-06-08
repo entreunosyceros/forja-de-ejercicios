@@ -1702,6 +1702,61 @@ body.carga-ia-activa {
     text-align: center;
 }
 
+.site-footer-creditos {
+    margin-top: 0.45rem !important;
+    padding-top: 0.55rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.78rem;
+    color: var(--muted);
+}
+
+.guia-creditos {
+    margin-top: 2.5rem;
+    padding-top: 2rem;
+    border-top: 2px solid var(--border);
+}
+
+.guia-creditos > h2 {
+    font-size: clamp(1.6rem, 4vw, 2.2rem);
+    margin-bottom: 1.25rem;
+}
+
+.creditos-bloque-principal {
+    text-align: center;
+    padding: 1.75rem 1.5rem;
+    margin-bottom: 1.5rem;
+    background: color-mix(in srgb, var(--accent, #2563eb) 8%, var(--surface));
+}
+
+.creditos-marca {
+    font-size: clamp(1.35rem, 3.5vw, 1.85rem);
+    margin: 0 0 0.35rem;
+}
+
+.creditos-sub,
+.creditos-ciclo {
+    margin: 0.25rem 0;
+    color: var(--muted);
+}
+
+.creditos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.creditos-tarjeta h3 {
+    margin-top: 0;
+    font-size: 1.05rem;
+}
+
+.creditos-pie-licencia {
+    text-align: center;
+    font-size: 0.9rem;
+    margin-top: 1rem;
+}
+
 .conmutador-tema .btn-tema {
     min-width: 2.25rem;
     padding: 0.45rem 0.6rem;
@@ -1820,6 +1875,70 @@ body.carga-ia-activa {
     overflow: hidden;
     clip: rect(0, 0, 0, 0);
     border: 0;
+}
+
+/* Panel métricas profesor */
+.panel-profesor-metricas {
+    margin: 1.25rem 0 1.5rem;
+}
+
+.metricas-profesor-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+    gap: 0.85rem;
+}
+
+.metrica-profesor {
+    padding: 1rem 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.metrica-valor {
+    font-size: 1.45rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.metrica-etiqueta {
+    font-size: 0.82rem;
+    color: var(--muted);
+}
+
+.metrica-detalle {
+    margin: 0;
+    font-size: 0.78rem;
+}
+
+.tabla-resultados-mas {
+    margin-top: 0.65rem;
+    justify-content: flex-start;
+}
+
+.tabla-resultados-info {
+    margin: 0.5rem 0 0;
+}
+
+.code-block-resaltado {
+    padding: 0;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: auto;
+}
+
+.code-block-resaltado code {
+    display: block;
+    padding: 1rem;
+    font-size: 0.88rem;
+    line-height: 1.45;
+    background: var(--bg);
+}
+
+.profesor-check-recordar {
+    display: block;
+    margin: 1rem 0;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<div th:fragment="metricas(metricas)" class="panel-profesor-metricas" th:if="${metricas != null}">
+    <div class="metricas-profesor-grid">
+        <div class="card metrica-profesor">
+            <span class="metrica-valor" th:text="${metricas.alumnosActivosSemana}">0</span>
+            <span class="metrica-etiqueta">Alumnos activos (7 días)</span>
+        </div>
+        <div class="card metrica-profesor">
+            <span class="metrica-valor"><code th:text="${metricas.moduloMasPracticado}">—</code></span>
+            <span class="metrica-etiqueta">Módulo más practicado</span>
+        </div>
+        <div class="card metrica-profesor">
+            <span class="metrica-valor"
+                  th:text="${metricas.intentosUltimos7Dias > 0 ? #numbers.formatDecimal(metricas.tasaAprobacion7Dias, 1, 1) + '%' : '—'}">—</span>
+            <span class="metrica-etiqueta">Tasa de aprobados (7 días)</span>
+            <span class="hint metrica-detalle"
+                  th:if="${metricas.intentosUltimos7Dias > 0}"
+                  th:text="${metricas.aprobadosUltimos7Dias} + ' / ' + ${metricas.intentosUltimos7Dias} + ' intentos'">—</span>
+        </div>
+    </div>
+</div>
+</html>

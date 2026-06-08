@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Desarrollado por entreunosyceros - 2026
 """Generador de escenarios aleatorios para La máquina de ejercicios."""
 
 import argparse

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Desarrollado por entreunosyceros - 2026
 """Genera un paquete de entrega (carpeta) para revisión offline por el profesor."""
 
 from __future__ import annotations

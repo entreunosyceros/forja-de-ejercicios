@@ -1,3 +1,4 @@
+// Desarrollado por entreunosyceros - 2026
 package com.luegoestarde.forjaexamenes.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;

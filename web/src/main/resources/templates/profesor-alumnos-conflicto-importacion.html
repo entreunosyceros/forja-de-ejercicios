@@ -1,0 +1,30 @@
+<!-- Hecho con 💻 por entreunosyceros, de colega a colega. Respeta el código libre. -->
+
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{plantilla :: plantilla(~{::section})}">
+<section class="pagina-profesor-conflicto-importacion">
+    <div class="card card-wide">
+        <h1>Entrega ya importada</h1>
+        <p class="hint">
+            Ya existe una entrega del alumno
+            <strong th:text="${conflicto.nombreEtiquetaExistente}">Alumno</strong>
+            (<code th:text="${conflicto.loginAlumno}">login</code>)
+            importada el <span th:text="${conflicto.importadoEn}">fecha</span>.
+        </p>
+        <p>La nueva entrega se guardará como «<strong th:text="${conflicto.nombreEtiqueta}">Nombre</strong>».</p>
+
+        <form method="post" th:action="@{/profesor/alumnos/importar/confirmar}" class="form-conflicto-importacion">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <label class="profesor-check-recordar">
+                <input type="checkbox" name="recordarDecision" value="true"/>
+                Recordar mi decisión (sobrescribir automáticamente en futuras importaciones)
+            </label>
+            <div class="form-actions">
+                <button type="submit" name="sobrescribir" value="true" class="btn btn-primary">Sobrescribir</button>
+                <button type="submit" name="sobrescribir" value="false" class="btn btn-secondary">Cancelar (ignorar)</button>
+            </div>
+        </form>
+    </div>
+</section>
+</html>

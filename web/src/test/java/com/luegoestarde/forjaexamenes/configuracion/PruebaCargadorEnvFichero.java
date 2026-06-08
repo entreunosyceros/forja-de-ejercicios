@@ -1,3 +1,4 @@
+// Desarrollado por entreunosyceros - 2026
 package com.luegoestarde.forjaexamenes.configuracion;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

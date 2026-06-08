@@ -1,3 +1,4 @@
+// Desarrollado por entreunosyceros - 2026
 package com.luegoestarde.forjaexamenes.web;
 
 import com.luegoestarde.forjaexamenes.servicio.ServicioEstadisticasUsuario;

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Desarrollado por entreunosyceros - 2026
 """Genera datos de revisión (tabla comparativa + casos de prueba) para el profesor."""
 
 from __future__ import annotations

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Desarrollado por entreunosyceros - 2026
 """Pruebas del modelo de ejercicio verificable y construcción desde Gemini."""
 
 import sys

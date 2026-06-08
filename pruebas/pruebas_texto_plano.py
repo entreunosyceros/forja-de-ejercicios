@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Desarrollado por entreunosyceros - 2026
 """Pruebas de conversión markdown → texto plano."""
 
 import sys
