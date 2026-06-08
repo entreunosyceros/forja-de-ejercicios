@@ -2,6 +2,10 @@
 
 <img width="768" height="419" alt="forja-de-examenes" src="https://github.com/user-attachments/assets/7afefe21-33a0-4796-8376-8ce24c1ba2b2" />
 
+[![Wiki](https://img.shields.io/badge/Wiki-DeepWiki-blue?style=for-the-badge&logo=wikipedia)](https://deepwiki.com/entreunosyceros/forja-de-ejercicios/)
+
+> 📘 **Documentación completa del desarrollo:** Puedes consultar la arquitectura del sistema, el flujo de la IA, los endpoints de Spring Boot y las guías detalladas en nuestro portal oficial de [DeepWiki](https://deepwiki.com/entreunosyceros/forja-de-ejercicios/).
+
 Genera ejercicios prácticos al azar, permite practicar en Docker y corrige la respuesta del alumno con criterios verificables. La interfaz es **Spring Boot**; la generación y corrección las hace **Python** (`generador.py`, `evaluador.py`, `modelo_ejercicio.py`).
 
 **Guía en la web (sin login):** con la aplicación arrancada, abre **http://localhost:8080/como-funciona** — también enlazada desde la pantalla de login.
