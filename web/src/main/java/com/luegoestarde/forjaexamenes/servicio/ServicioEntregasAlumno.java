@@ -1,5 +1,6 @@
 package com.luegoestarde.forjaexamenes.servicio;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.luegoestarde.forjaexamenes.configuracion.PropiedadesForjaExamenes;
@@ -102,8 +103,18 @@ public class ServicioEntregasAlumno {
             throw new IOException("El fichero supera el límite de 2 MB.");
         }
 
-        JsonNode raiz = mapeador.readTree(contenido);
-        EntregaAlumno entrega = normalizarEntrada(raiz);
+        JsonNode raiz;
+        try {
+            raiz = mapeador.readTree(contenido);
+        } catch (JsonProcessingException ex) {
+            throw new IOException("Archivo inválido: el JSON está mal formado o corrupto.");
+        }
+        EntregaAlumno entrega;
+        try {
+            entrega = normalizarEntrada(raiz);
+        } catch (JsonProcessingException ex) {
+            throw new IOException("Archivo inválido: revisa el formato de la entrega del alumno.");
+        }
 
         String id = generarId(entrega.getAlumno().getLogin());
         entrega.setIdImportacion(id);

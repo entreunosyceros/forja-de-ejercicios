@@ -157,7 +157,7 @@ def metadatos_desde_ruta(ruta_pdf: Path, carpeta_tema: Path) -> dict[str, str]:
         "capitulo_slug": _slug(capitulo),
         "seccion_ruta": seccion_ruta,
         "archivo": archivo,
-        "fuente": str(ruta_pdf.relative_to(RAIZ)),
+        "fuente": str(ruta_pdf.resolve().relative_to(RAIZ.resolve())),
     }
 
 
@@ -200,6 +200,13 @@ def indexar_coleccion(
             paginas = extraer_texto_pdf(ruta_pdf)
         except Exception as error:
             print(f"  ⚠ No se pudo leer {ruta_pdf}: {error}", file=sys.stderr)
+            continue
+
+        if not paginas:
+            print(
+                f"  ⚠ Sin texto extraíble en {ruta_pdf.name} (¿escaneado o vacío?).",
+                file=sys.stderr,
+            )
             continue
 
         meta_ruta = metadatos_desde_ruta(ruta_pdf, carpeta)
