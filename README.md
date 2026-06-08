@@ -34,6 +34,10 @@ Set-ExecutionPolicy -Scope Process Bypass
 .\install.ps1
 ```
 
+El script comprueba **JDK 21**, **Maven** y **Python 3.10+**. Si faltan, ofrece instalarlos con **winget**; si no puede, muestra una lista de lo que debes instalar manualmente antes de continuar. Opcional: Docker Desktop, `pip install -r requirements-docs.txt` y clave Gemini.
+
+> Si PowerShell muestra *«Falta `}` en la línea 8»*, suele deberse a una copia antigua del script con caracteres especiales (`✓`, `═`). Actualiza el repositorio y usa la versión actual (solo ASCII, compatible con Windows PowerShell 5.1).
+
 El instalador:
 
 1. Comprueba JDK 21, Maven y Python.
@@ -528,7 +532,7 @@ Para repartir ejercicios entre equipos: exportar `forja-banco-ejercicios` (`GET 
 ```
 examenforge/
 ├── alumno.txt / profesor.txt    # Guías por rol (instalaciones independientes)
-├── install.sh / install.ps1     # Instalación guiada
+├── install.sh / install.ps1     # Instalación guiada (Linux/macOS / Windows)
 ├── iniciar-forja.sh / .bat      # Arranque tras instalar
 ├── arrancar-web.sh
 ├── generador.py / evaluador.py
