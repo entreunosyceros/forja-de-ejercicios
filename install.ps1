@@ -45,15 +45,40 @@ function Refresh-SessionPath {
     }
 }
 
+function Format-ProcessArguments {
+    param([string[]]$ArgumentList)
+    $quoted = @()
+    foreach ($arg in $ArgumentList) {
+        if ($null -eq $arg) { continue }
+        if ($arg -match '[\s"]') {
+            $quoted += ('"' + ($arg -replace '"', '""') + '"')
+        } else {
+            $quoted += $arg
+        }
+    }
+    return ($quoted -join " ")
+}
+
 function Invoke-Native {
     param(
         [Parameter(Mandatory = $true)]
         [string]$FilePath,
-        [string[]]$ArgumentList = @()
+        [string[]]$ArgumentList = @(),
+        [string]$WorkingDirectory = $null
     )
     $psi = New-Object System.Diagnostics.ProcessStartInfo
-    $psi.FileName = $FilePath
-    $psi.Arguments = [string]::Join(" ", $ArgumentList)
+    if ($WorkingDirectory -and (Test-Path -LiteralPath $WorkingDirectory)) {
+        $psi.WorkingDirectory = $WorkingDirectory
+    }
+    $ext = [System.IO.Path]::GetExtension($FilePath).ToLowerInvariant()
+    if ($ext -eq ".cmd" -or $ext -eq ".bat") {
+        # mvn.cmd debe ejecutarse via cmd.exe para heredar el directorio de trabajo
+        $psi.FileName = $env:ComSpec
+        $psi.Arguments = "/c `"$FilePath`" $(Format-ProcessArguments $ArgumentList)"
+    } else {
+        $psi.FileName = $FilePath
+        $psi.Arguments = Format-ProcessArguments $ArgumentList
+    }
     $psi.RedirectStandardOutput = $true
     $psi.RedirectStandardError = $true
     $psi.UseShellExecute = $false
@@ -492,18 +517,26 @@ if (Preguntar-Si "Instalar dependencias Python ahora?") {
 Write-Host ""
 Write-Info "Compilando aplicacion web (mvn package, puede tardar varios minutos)..."
 $webDir = Join-Path $Raiz "web"
+$pomFile = Join-Path $webDir "pom.xml"
 if (-not (Test-Path -LiteralPath $webDir)) {
     Write-Err "No existe la carpeta web\"
     exit 1
 }
-Push-Location -LiteralPath $webDir
-$mvnBuild = Invoke-Native -FilePath $mvnPath -ArgumentList @("-q", "-DskipTests", "package")
-Pop-Location
+if (-not (Test-Path -LiteralPath $pomFile)) {
+    Write-Err "No se encontro pom.xml en web\"
+    Write-Host "  Ruta esperada: $pomFile"
+    exit 1
+}
+Write-Info "Proyecto Maven: $pomFile"
+$mvnBuild = Invoke-Native -FilePath $mvnPath -WorkingDirectory $webDir -ArgumentList @(
+    "-q", "-DskipTests", "-f", $pomFile, "package"
+)
 if ($mvnBuild.ExitCode -ne 0) {
     Write-Err "Maven fallo al compilar."
     Write-Host $mvnBuild.Output
     Write-Host ""
-    Write-Host "Comprueba que JDK 21 y Maven esten en el PATH."
+    Write-Host "Directorio de trabajo: $webDir"
+    Write-Host "Comprueba que JDK 21 y Maven esten instalados correctamente."
     exit 1
 }
 $jar = Join-Path $Raiz "web\target\forjaexamenes-web-1.0.0.jar"

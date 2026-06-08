@@ -31,6 +31,13 @@ if not defined MVN (
 )
 
 echo [*] No hay JAR; arrancando con Maven (spring-boot:run)...
-cd /d "%RAIZ%\web"
-"%MVN%" spring-boot:run
+set "WEB=%RAIZ%\web"
+set "POM=%WEB%\pom.xml"
+if not exist "%POM%" (
+    echo [X] No se encontro pom.xml en web\
+    echo     Ruta esperada: %POM%
+    exit /b 1
+)
+cd /d "%WEB%"
+"%MVN%" -f "%POM%" spring-boot:run
 exit /b %ERRORLEVEL%
