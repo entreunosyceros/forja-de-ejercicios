@@ -9,13 +9,12 @@ import com.luegoestarde.forjaexamenes.modelo.EntregaAlumno;
 import com.luegoestarde.forjaexamenes.modelo.EntregaAlumno.AlumnoInfo;
 import com.luegoestarde.forjaexamenes.modelo.EstadisticasUsuario;
 import com.luegoestarde.forjaexamenes.modelo.EstadisticasUsuario.EstadisticasModulo;
+import com.luegoestarde.forjaexamenes.util.FechasForja;
+import com.luegoestarde.forjaexamenes.util.RutasUsuario;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -31,9 +30,6 @@ import org.springframework.stereotype.Service;
 @Service
 public class ServicioEntregasAlumno {
 
-    private static final ZoneId ZONA = ZoneId.of("Europe/Madrid");
-    private static final DateTimeFormatter FORMATO =
-            DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
     private static final int MAX_NOMBRE_ETIQUETA = 80;
 
     public record ResumenEntregaImportada(
@@ -152,7 +148,7 @@ public class ServicioEntregasAlumno {
 
         entrega.setIdImportacion(id);
         entrega.setImportadoPor(profesorLogin);
-        entrega.setImportadoEn(LocalDateTime.now(ZONA).format(FORMATO));
+        entrega.setImportadoEn(FechasForja.ahora());
         entrega.setNombreEtiqueta(normalizarNombreEtiqueta(nombreEtiqueta, entrega));
 
         Path fichero = ficheroImportada(profesorLogin, id);
@@ -360,16 +356,14 @@ public class ServicioEntregasAlumno {
     }
 
     private Path carpetaImportadas(String profesorLogin) {
-        String seguro = profesorLogin.replaceAll("[^a-z0-9_\\-]", "");
         return Path.of(propiedades.getDirectorioDatos())
                 .toAbsolutePath()
                 .normalize()
                 .resolve("entregas")
-                .resolve(seguro);
+                .resolve(RutasUsuario.sanitizarLogin(profesorLogin));
     }
 
     private Path ficheroImportada(String profesorLogin, String id) {
-        String seguro = id.replaceAll("[^a-z0-9_\\-]", "");
-        return carpetaImportadas(profesorLogin).resolve(seguro + ".json");
+        return carpetaImportadas(profesorLogin).resolve(RutasUsuario.sanitizarLogin(id) + ".json");
     }
 }

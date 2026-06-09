@@ -110,15 +110,27 @@
             headers: { "X-Requested-With": "XMLHttpRequest" },
         });
         if (!resp.ok) throw new Error("Error al evaluar: " + resp.status);
+        let mensajeDificultad = null;
         if (typeof Progreso !== "undefined") {
-            Progreso.registrarDesdeCabecera(resp);
+            const resCab = Progreso.registrarDesdeCabecera(resp);
+            if (resCab?.mensaje) mensajeDificultad = resCab.mensaje;
         }
         const html = await resp.text();
         const zona = obtenerZona();
         if (zona) {
             zona.outerHTML = html;
             const nueva = obtenerZona();
-            if (nueva) registrarDesdeResultado(nueva);
+            if (nueva) {
+                registrarDesdeResultado(nueva);
+                if (mensajeDificultad) {
+                    const msgEl = document.getElementById("mensaje-motivacion");
+                    if (msgEl) {
+                        msgEl.textContent = mensajeDificultad;
+                        msgEl.hidden = false;
+                        msgEl.classList.add("card");
+                    }
+                }
+            }
             enlazarEventos();
         }
         window.scrollTo({ top: 0, behavior: "smooth" });

@@ -3,19 +3,13 @@ package com.luegoestarde.forjaexamenes.servicio;
 
 import com.luegoestarde.forjaexamenes.modelo.Escenario;
 import com.luegoestarde.forjaexamenes.modelo.ResultadoEvaluacion;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
+import com.luegoestarde.forjaexamenes.util.FechasForja;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 @Service
 public class ServicioMetadatosEjercicio {
-
-    private static final ZoneId ZONA = ZoneId.of("Europe/Madrid");
-    private static final DateTimeFormatter FORMATO =
-            DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     private final ServicioCuentasUsuarios cuentasUsuarios;
 
@@ -50,7 +44,7 @@ public class ServicioMetadatosEjercicio {
     }
 
     public String ahoraFormateado() {
-        return LocalDateTime.now(ZONA).format(FORMATO);
+        return FechasForja.ahora();
     }
 
     public void marcarEscenario(Escenario escenario, String login, String nombreVisible) {

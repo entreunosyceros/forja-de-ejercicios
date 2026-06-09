@@ -27,7 +27,7 @@
                     <a class="btn btn-primary" th:href="@{/ejercicio/nuevo}">Empezar ahora</a>
                     <a class="btn btn-secondary" id="btn-ejercicio-sorpresa" th:href="@{/ejercicio/nuevo(sorpresa=true)}">🎲 Sorpresa</a>
                 </div>
-                <p class="hint">La dificultad sube sola en tu navegador (nivel 1 → 3 tras aprobados).</p>
+                <p class="hint">Dificultad adaptativa: 5 aprobados seguidos suben nivel; 3 suspensos lo bajan (1–3).</p>
             </div>
 
             <div class="card card-accent card-entorno-docker">
@@ -198,7 +198,7 @@ docker exec -it forjaexamenes-practica bash</pre>
 
             <p class="hint" th:if="${geminiConfigurado}">
                 Un <strong>fragmento</strong> de apuntes por ejercicio — la IA no pregunta fuera del material indexado.
-                La dificultad se configura en <a th:href="@{/perfil}">Perfil</a>.
+                La dificultad se adapta sola según tus resultados (o manualmente en <a th:href="@{/perfil}">Perfil</a>).
             </p>
             <p class="hint hint-warn" th:if="${!geminiConfigurado}">
                 Para generar ejercicios con IA, configura la clave API en <a th:href="@{/perfil}">Perfil</a>.

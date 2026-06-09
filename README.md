@@ -143,7 +143,7 @@ Solo se versionan los `.gitkeep` de las carpetas vacías.
 
 1. Elige un módulo en la portada (POO, SQL, Docker, apuntes PDF…) o **importa el banco** que el profesor dejó en la carpeta compartida.
 2. La web ejecuta `generador.py` y muestra un enunciado (con nombre y fecha del alumno).
-3. Escribe la respuesta; `evaluador.py` aplica criterios y calcula la nota (0–10, aprueba ≥ 5).
+3. Escribe la respuesta; `evaluador.py` aplica criterios y calcula la nota (0–10, aprueba ≥ 5). La dificultad se [adapta sola](#dificultad-adaptativa) según tus rachas.
 4. Opcional: contenedor Docker para practicar comandos reales.
 5. En la portada: progreso local y estadísticas del servidor (ver [Progreso y estadísticas](#progreso-y-estadísticas-portada)).
 6. **Entrega al profesor:** descarga un `.json` con su avance y lo deja en la carpeta compartida.
@@ -160,6 +160,24 @@ Solo se versionan los `.gitkeep` de las carpetas vacías.
 Cada alumno y el profesor suelen tener **instalaciones independientes** (distinto PC). Ver [Compartir ejercicios del banco](#compartir-ejercicios-del-banco-carpeta-compartida).
 
 Los módulos clásicos (`poo`, `bd_sql`, `docker`, etc.) **no necesitan** Gemini.
+
+---
+
+## Dificultad adaptativa
+
+El nivel de dificultad (1–3) de cada alumno **se ajusta solo** según sus resultados, sin tener que tocar el perfil:
+
+| Racha consecutiva | Efecto |
+|-------------------|--------|
+| **5 aprobados seguidos** | Sube un nivel (máximo 3) |
+| **3 suspensos seguidos** | Baja un nivel (mínimo 1) |
+
+- Aplica a **todos los módulos** (clásicos y `docs_*`), no solo a los de IA.
+- Solo afecta a **cuentas de alumno**; el profesor mantiene el nivel que elija manualmente.
+- Tras un ajuste, la racha correspondiente se reinicia (no encadena varias subidas/bajadas seguidas) y el alumno ve un aviso en pantalla.
+- El nivel se guarda por usuario (`datos/usuarios.json`, campo `nivelGemini`) y también puede fijarse a mano en **Perfil → «Dificultad de ejercicios»**.
+
+Lógica en `ServicioDificultadAdaptativa.java` (umbrales 5/3) apoyada en las rachas de `EstadisticasUsuario` (`rachaActual` / `rachaSuspensos`).
 
 ---
 
@@ -345,6 +363,7 @@ Formato entrega alumno: `forja-entrega-alumno`. Formato banco: `forja-banco-ejer
 | Guía técnica (Gemini, PDF, nuevos módulos) | `/perfil` (sección inferior) o `/como-funciona` |
 | Clave API de Gemini | `/perfil` → requiere **contraseña de acceso** (no la clave API) |
 | Modelo de Gemini | `/perfil` → **Guardar modelo** (p. ej. `gemini-2.5-flash`; no pide contraseña) |
+| Dificultad de ejercicios (1–3) | `/perfil` → **«Dificultad de ejercicios»** (manual); también se ajusta sola, ver [Dificultad adaptativa](#dificultad-adaptativa) |
 | **Seguimiento de alumnos** (profesor) | `/profesor/alumnos` → importar entrega o ver alumnos del servidor |
 | **Resultados y CSV** (profesor) | `/profesor/resultados` → revisar intentos y exportar CSV |
 | Descargar entrega para el profesor (**solo alumno**) | Portada → «Descargar entrega para el profesor» |
@@ -532,7 +551,7 @@ PDF  →  indexador_docs.py  →  indice/docs_*.json (tipo_materia)
 Portada docs_*  →  generador_docs  →  tipo_materia  →  generador_gemini  →  modelo_ejercicio  →  evaluador
 ```
 
-- **Nivel (1–3):** Perfil del alumno → `--nivel` en Python (`_instrucciones_nivel()`).
+- **Nivel (1–3):** Perfil del alumno o **[dificultad adaptativa](#dificultad-adaptativa)** (5 aprobados seguidos ↑, 3 suspensos ↓, para todos los módulos) → `--nivel` en Python (`_instrucciones_nivel()`).
 - **Tipo de materia:** carpeta, `.forja-tipo` o `vocabulario_claves.json` → prompt y validación distintos.
 - **Clave API / modelo:** `datos/gemini.json` o `.env` (`GEMINI_API_KEY`, `FORJAEXAMENES_GEMINI_MODEL`).
 - **Pre-generación:** `forjaexamenes.precarga-ejercicios-activa` — pool de ejercicios `docs_*` listos.
@@ -578,6 +597,7 @@ examenforge/
 ├── generador_gemini.py / generador_docs.py / indexador_docs.py
 ├── modelo_ejercicio.py / tipo_materia.py / banco_loader.py
 ├── alias_comandos.py
+├── comun.py                     # utilidades compartidas (slug, identificadores)
 ├── vocabulario_claves.json      # tipos_materia, prohibidas, alias_comandos
 ├── documentacion/               # PDFs de entrada
 ├── indice/                      # JSON indexado
@@ -635,6 +655,7 @@ examenforge/
 | **Índice de apuntes** | Caché en memoria invalidada por fecha de `indice/docs_*.json` y tras cada indexación. |
 | **Actualizar apuntes** | Indexación **en segundo plano** (`@Async`): no bloquea la sesión; la portada hace polling y se recarga al terminar. |
 | **Entorno Docker** | Botón «Limpiar entorno de práctica» en la portada; auto-limpieza de `datos-practica/` al iniciar ejercicios `docker`, `redes`, `sistemas`, `git` (`forjaexamenes.limpiar-practica-al-nuevo-ejercicio`, default `true`). |
+| **Dificultad adaptativa** | El nivel del alumno sube tras 5 aprobados seguidos y baja tras 3 suspensos seguidos (`ServicioDificultadAdaptativa.java`). Ver [Dificultad adaptativa](#dificultad-adaptativa). |
 | **Progreso local** | Últimos 5 ejercicios en `localStorage` (`progreso.js`). Botón «Limpiar progreso local» en la portada. |
 | **Estadísticas de uso** | Totales en `datos/estadisticas/<usuario>.json`. Botón «Limpiar estadísticas» → `POST /estadisticas/limpiar`. |
 | **Entrega al profesor** | **Alumno:** portada → «Descargar entrega para el profesor» → `GET /entrega/exportar.json` + progreso local. **Profesor:** no exporta entrega; importa en `/profesor/alumnos` con nombre personalizado. |
@@ -695,6 +716,8 @@ examenforge/
 | Ejercicio verificado manual | `banco/aprobados/<tema>/<id>.json` + `reindexar` |
 | Exportar/importar banco entre PCs | `ServicioBancoPortable.java`, `ControladorBanco.java` |
 | Entregas y seguimiento alumnos | `ServicioEntregasAlumno.java`, `ControladorProfesorAlumnos.java` |
+| Dificultad adaptativa (umbrales) | `ServicioDificultadAdaptativa.java` (constantes `APROBADOS_PARA_SUBIR` / `SUSPENSOS_PARA_BAJAR`) |
+| Utilidades compartidas (evitar duplicar) | Java: `util/` (`MapeadorJson`, `FechasForja`, `RutasUsuario`) · Python: `comun.py` (`slug`, `generar_identificador`) |
 
 ---
 

@@ -6,13 +6,12 @@ import com.luegoestarde.forjaexamenes.configuracion.PropiedadesForjaExamenes;
 import com.luegoestarde.forjaexamenes.modelo.EstadisticasUsuario;
 import com.luegoestarde.forjaexamenes.modelo.EstadisticasUsuario.EstadisticasModulo;
 import com.luegoestarde.forjaexamenes.modelo.EstadisticasUsuario.IntentoReciente;
+import com.luegoestarde.forjaexamenes.util.FechasForja;
+import com.luegoestarde.forjaexamenes.util.RutasUsuario;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -30,10 +29,6 @@ public class ServicioEstadisticasUsuario {
             double notaMedia,
             String ultimaActividad,
             int modulosDistintos) {}
-
-    private static final ZoneId ZONA = ZoneId.of("Europe/Madrid");
-    private static final DateTimeFormatter FORMATO =
-            DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     private final PropiedadesForjaExamenes propiedades;
     private final ObjectMapper mapeador = new ObjectMapper();
@@ -95,6 +90,24 @@ public class ServicioEstadisticasUsuario {
         return lista;
     }
 
+    public synchronized void reiniciarRachaAprobados(String login) throws IOException {
+        if (login == null || login.isBlank()) {
+            return;
+        }
+        EstadisticasUsuario stats = obtener(login);
+        stats.setRachaActual(0);
+        guardar(login, stats);
+    }
+
+    public synchronized void reiniciarRachaSuspensos(String login) throws IOException {
+        if (login == null || login.isBlank()) {
+            return;
+        }
+        EstadisticasUsuario stats = obtener(login);
+        stats.setRachaSuspensos(0);
+        guardar(login, stats);
+    }
+
     public synchronized boolean limpiar(String login) throws IOException {
         if (login == null || login.isBlank()) {
             return false;
@@ -132,9 +145,11 @@ public class ServicioEstadisticasUsuario {
         if (aprobado) {
             stats.setTotalAprobados(stats.getTotalAprobados() + 1);
             stats.setRachaActual(stats.getRachaActual() + 1);
+            stats.setRachaSuspensos(0);
         } else {
             stats.setTotalSuspensos(stats.getTotalSuspensos() + 1);
             stats.setRachaActual(0);
+            stats.setRachaSuspensos(stats.getRachaSuspensos() + 1);
         }
 
         double sumaPrev = stats.getNotaMedia() * (stats.getTotalIntentos() - 1);
@@ -146,7 +161,7 @@ public class ServicioEstadisticasUsuario {
         if (tiempoSegundos != null && tiempoSegundos > 0) {
             stats.setTiempoTotalSegundos(stats.getTiempoTotalSegundos() + tiempoSegundos);
         }
-        stats.setUltimaActividad(LocalDateTime.now(ZONA).format(FORMATO));
+        stats.setUltimaActividad(FechasForja.ahora());
 
         EstadisticasModulo pm = stats.getPorModulo().computeIfAbsent(modulo, m -> new EstadisticasModulo());
         pm.setIntentos(pm.getIntentos() + 1);
@@ -213,12 +228,7 @@ public class ServicioEstadisticasUsuario {
     }
 
     private Path ficheroEstadisticas(String login) {
-        String seguro = login.replaceAll("[^a-z0-9_\\-]", "");
-        return Path.of(propiedades.getDirectorioDatos())
-                .toAbsolutePath()
-                .normalize()
-                .resolve("estadisticas")
-                .resolve(seguro + ".json");
+        return RutasUsuario.ficheroJson(propiedades.getDirectorioDatos(), "estadisticas", login);
     }
 
     private static EstadisticasUsuario vacias() {

@@ -7,10 +7,10 @@ from __future__ import annotations
 import json
 import os
 import random
-import uuid
 from pathlib import Path
 from typing import Callable
 
+import comun
 import generador_gemini
 
 RAIZ = Path(__file__).resolve().parent
@@ -20,12 +20,11 @@ MODULOS_DOCS: tuple[str, ...] = ()
 
 
 def _generar_identificador() -> str:
-    return str(uuid.uuid4())[:8]
+    return comun.generar_identificador()
 
 
 def _slug(texto: str) -> str:
-    import re
-    return re.sub(r"[^a-z0-9_]+", "_", (texto or "").lower()).strip("_")
+    return comun.slug(texto)
 
 
 def listar_modulos_indexados(carpeta_indice: Path = CARPETA_INDICE) -> list[str]:

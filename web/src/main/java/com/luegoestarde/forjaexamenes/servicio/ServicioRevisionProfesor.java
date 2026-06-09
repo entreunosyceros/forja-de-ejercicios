@@ -6,9 +6,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.luegoestarde.forjaexamenes.configuracion.InterpretePython;
 import com.luegoestarde.forjaexamenes.configuracion.PropiedadesForjaExamenes;
 import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -73,21 +70,15 @@ public class ServicioRevisionProfesor {
         ProcessBuilder pb = new ProcessBuilder(comando);
         pb.directory(directorio.toFile());
         pb.redirectErrorStream(true);
-        Process proceso = pb.start();
-        StringBuilder salida = new StringBuilder();
-        try (BufferedReader lector = new BufferedReader(
-                new InputStreamReader(proceso.getInputStream(), StandardCharsets.UTF_8))) {
-            String linea;
-            while ((linea = lector.readLine()) != null) {
-                salida.append(linea).append('\n');
-            }
-        }
-        int codigo = proceso.waitFor();
-        if (codigo != 0) {
+        // Reutiliza el ejecutor común: fuerza UTF-8 (consola cp1252 en Windows)
+        // y aplica timeout para no dejar procesos colgados.
+        EjecutorProcesoPython.Resultado resultado = EjecutorProcesoPython.ejecutar(
+                pb, propiedades.getTimeoutGeneradorSegundos());
+        if (resultado.codigo() != 0) {
             throw new IllegalStateException(
-                    "Script falló (" + codigo + "): " + salida.toString().strip());
+                    "Script falló (" + resultado.codigo() + "): " + resultado.salida().strip());
         }
-        return salida.toString();
+        return resultado.salida();
     }
 
     private byte[] zipCarpeta(Path carpeta) throws Exception {

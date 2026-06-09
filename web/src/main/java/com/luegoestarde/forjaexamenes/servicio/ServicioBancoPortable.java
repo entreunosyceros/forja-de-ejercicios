@@ -3,10 +3,10 @@ package com.luegoestarde.forjaexamenes.servicio;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.luegoestarde.forjaexamenes.modelo.Escenario;
+import com.luegoestarde.forjaexamenes.util.MapeadorJson;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -39,8 +39,7 @@ public class ServicioBancoPortable {
 
     public ServicioBancoPortable(ServicioBancoEjercicios servicioBanco) {
         this.servicioBanco = servicioBanco;
-        this.mapeador = new ObjectMapper();
-        this.mapeador.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
+        this.mapeador = MapeadorJson.snakeCase();
     }
 
     public int contarAprobados() throws IOException {

@@ -20,6 +20,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+import comun
 from tipo_materia import leer_tipo_desde_carpeta, resolver_tipo_materia
 
 RAIZ = Path(__file__).resolve().parent
@@ -47,7 +48,7 @@ def _limpiar_texto(texto: str) -> str:
 
 
 def _slug(texto: str) -> str:
-    return re.sub(r"[^a-z0-9_]+", "_", texto.lower()).strip("_") or "general"
+    return comun.slug(texto, "general")
 
 
 def _titulo_legible(slug: str) -> str:

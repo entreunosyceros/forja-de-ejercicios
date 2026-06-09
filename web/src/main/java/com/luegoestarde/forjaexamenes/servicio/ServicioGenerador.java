@@ -2,11 +2,11 @@
 package com.luegoestarde.forjaexamenes.servicio;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.luegoestarde.forjaexamenes.configuracion.CargadorEnvFichero;
 import com.luegoestarde.forjaexamenes.configuracion.InterpretePython;
 import com.luegoestarde.forjaexamenes.configuracion.PropiedadesForjaExamenes;
 import com.luegoestarde.forjaexamenes.modelo.Escenario;
+import com.luegoestarde.forjaexamenes.util.MapeadorJson;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -26,8 +26,7 @@ public class ServicioGenerador {
             ServicioConfiguracionGemini configuracionGemini) {
         this.propiedades = propiedades;
         this.configuracionGemini = configuracionGemini;
-        this.mapeador = new ObjectMapper();
-        this.mapeador.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
+        this.mapeador = MapeadorJson.snakeCase();
     }
 
     public Escenario generar(Optional<String> modulo) throws Exception {

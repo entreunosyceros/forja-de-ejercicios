@@ -8,6 +8,9 @@ import tempfile
 from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
+# sys.executable usa el mismo intérprete que lanza la prueba (python en Windows,
+# python3 en Linux/macOS) en lugar de un nombre fijo que puede no existir.
+PYTHON = sys.executable or "python3"
 
 
 def ejecutar(comando):
@@ -22,7 +25,7 @@ MODULOS_PRUEBA = (
 
 def probar_generador_todos_modulos():
     for modulo in MODULOS_PRUEBA:
-        resultado = ejecutar(["python3", "generador.py", "-m", modulo])
+        resultado = ejecutar([PYTHON, "generador.py", "-m", modulo])
         assert resultado.returncode == 0, resultado.stderr
         datos = json.loads(resultado.stdout)
         assert datos["modulo"] == modulo
@@ -32,14 +35,14 @@ def probar_generador_todos_modulos():
 def probar_poo_variantes():
     modulos = set()
     for _ in range(30):
-        resultado = ejecutar(["python3", "generador.py", "-m", "poo"])
+        resultado = ejecutar([PYTHON, "generador.py", "-m", "poo"])
         datos = json.loads(resultado.stdout)
         modulos.add(datos["titulo"])
     assert len(modulos) >= 3, "POO debería rotar entre varias variantes"
 
 
 def probar_evaluador_nota_maxima():
-    generacion = ejecutar(["python3", "generador.py", "-m", "bd_jdbc"])
+    generacion = ejecutar([PYTHON, "generador.py", "-m", "bd_jdbc"])
     escenario = json.loads(generacion.stdout)
     respuesta = escenario["solucion_referencia"]
 
@@ -48,7 +51,7 @@ def probar_evaluador_nota_maxima():
         ruta_escenario = archivo.name
 
     evaluacion = ejecutar([
-        "python3", "evaluador.py",
+        PYTHON, "evaluador.py",
         "-e", ruta_escenario,
         "-r", respuesta,
     ])
@@ -61,13 +64,13 @@ def probar_evaluador_nota_maxima():
 
 
 def probar_evaluador_respuesta_vacia():
-    generacion = ejecutar(["python3", "generador.py", "-m", "git"])
+    generacion = ejecutar([PYTHON, "generador.py", "-m", "git"])
     escenario = json.loads(generacion.stdout)
     with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as archivo:
         json.dump(escenario, archivo)
         ruta_escenario = archivo.name
 
-    evaluacion = ejecutar(["python3", "evaluador.py", "-e", ruta_escenario, "-r", ""])
+    evaluacion = ejecutar([PYTHON, "evaluador.py", "-e", ruta_escenario, "-r", ""])
     resultado = json.loads(evaluacion.stdout)
     assert resultado["nota"] < 5.0
     assert resultado["aprobado"] is False

@@ -2,11 +2,13 @@
 package com.luegoestarde.forjaexamenes.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.luegoestarde.forjaexamenes.modelo.Escenario;
 import com.luegoestarde.forjaexamenes.modelo.ResultadoEvaluacion;
 import com.luegoestarde.forjaexamenes.servicio.AlmacenSesionesEjercicios;
+import com.luegoestarde.forjaexamenes.servicio.ServicioAccesoProfesor;
 import com.luegoestarde.forjaexamenes.servicio.ServicioCuentasUsuarios;
+import com.luegoestarde.forjaexamenes.servicio.ServicioDificultadAdaptativa;
+import com.luegoestarde.forjaexamenes.servicio.ServicioDificultadAdaptativa.AjusteDificultad;
 import com.luegoestarde.forjaexamenes.servicio.ServicioEvaluador;
 import com.luegoestarde.forjaexamenes.servicio.ServicioDocumentacion;
 import com.luegoestarde.forjaexamenes.servicio.ServicioEstadisticasUsuario;
@@ -17,6 +19,7 @@ import com.luegoestarde.forjaexamenes.servicio.ServicioMetadatosEjercicio;
 import com.luegoestarde.forjaexamenes.servicio.ServicioPdf;
 import com.luegoestarde.forjaexamenes.servicio.ServicioBancoPortable;
 import com.luegoestarde.forjaexamenes.servicio.ServicioPrecargaEjercicios;
+import com.luegoestarde.forjaexamenes.util.MapeadorJson;
 import jakarta.servlet.http.HttpServletResponse;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -61,6 +64,8 @@ public class ControladorEjercicio {
     private final ServicioEstadisticasUsuario servicioEstadisticas;
     private final ServicioEntornoPractica servicioEntornoPractica;
     private final ServicioCuentasUsuarios cuentasUsuarios;
+    private final ServicioAccesoProfesor accesoProfesor;
+    private final ServicioDificultadAdaptativa servicioDificultadAdaptativa;
     private final ServicioPrecargaEjercicios servicioPrecarga;
     private final ServicioBancoPortable servicioBancoPortable;
     private final ServicioHistorialIntentos servicioHistorial;
@@ -76,6 +81,8 @@ public class ControladorEjercicio {
                               ServicioEstadisticasUsuario servicioEstadisticas,
                               ServicioEntornoPractica servicioEntornoPractica,
                               ServicioCuentasUsuarios cuentasUsuarios,
+                              ServicioAccesoProfesor accesoProfesor,
+                              ServicioDificultadAdaptativa servicioDificultadAdaptativa,
                               ServicioPrecargaEjercicios servicioPrecarga,
                               ServicioBancoPortable servicioBancoPortable,
                               ServicioHistorialIntentos servicioHistorial) {
@@ -88,11 +95,12 @@ public class ControladorEjercicio {
         this.servicioEstadisticas = servicioEstadisticas;
         this.servicioEntornoPractica = servicioEntornoPractica;
         this.cuentasUsuarios = cuentasUsuarios;
+        this.accesoProfesor = accesoProfesor;
+        this.servicioDificultadAdaptativa = servicioDificultadAdaptativa;
         this.servicioPrecarga = servicioPrecarga;
         this.servicioBancoPortable = servicioBancoPortable;
         this.servicioHistorial = servicioHistorial;
-        this.mapeadorJson = new ObjectMapper();
-        this.mapeadorJson.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
+        this.mapeadorJson = MapeadorJson.snakeCase();
     }
 
     @GetMapping("/nuevo")
@@ -102,8 +110,7 @@ public class ControladorEjercicio {
                         @RequestParam(required = false) String capitulo,
                         @RequestParam(required = false) String seccion,
                         Model modelo) throws Exception {
-        Escenario escenario = crearYGuardarEscenario(modulo, sorpresa, nivel, capitulo, seccion);
-        modelo.addAttribute("escenario", escenario);
+        prepararNuevoEjercicio(modulo, sorpresa, nivel, capitulo, seccion, modelo);
         return "ejercicio";
     }
 
@@ -114,9 +121,15 @@ public class ControladorEjercicio {
                                  @RequestParam(required = false) String capitulo,
                                  @RequestParam(required = false) String seccion,
                                  Model modelo) throws Exception {
+        prepararNuevoEjercicio(modulo, sorpresa, nivel, capitulo, seccion, modelo);
+        return "fragments/ejercicio-contenido :: contenido";
+    }
+
+    /** Genera y guarda el escenario y lo expone en el modelo (común a página y fragmento). */
+    private void prepararNuevoEjercicio(String modulo, Boolean sorpresa, Integer nivel,
+                                        String capitulo, String seccion, Model modelo) throws Exception {
         Escenario escenario = crearYGuardarEscenario(modulo, sorpresa, nivel, capitulo, seccion);
         modelo.addAttribute("escenario", escenario);
-        return "fragments/ejercicio-contenido :: contenido";
     }
 
     @GetMapping("/{id}")
@@ -158,7 +171,9 @@ public class ControladorEjercicio {
         } else if (tiempoEfectivo > 0) {
             modelo.addAttribute("tiempoSegundos", tiempoEfectivo);
         }
-        adjuntarCabeceraProgresoLocal(respuestaHttp, escenario, resultado, id, tiempoEfectivo);
+        String login = metadatosEjercicio.loginActual();
+        Optional<AjusteDificultad> ajuste = servicioDificultadAdaptativa.evaluarTrasIntento(login);
+        adjuntarCabeceraProgresoLocal(respuestaHttp, escenario, resultado, id, tiempoEfectivo, ajuste, login);
         return "fragments/resultado-contenido :: contenido";
     }
 
@@ -294,13 +309,9 @@ public class ControladorEjercicio {
     }
 
     private int resolverNivelEfectivo(Optional<String> moduloOpt, Integer nivelParam) {
-        String mod = moduloOpt.orElse("");
-        if (mod.startsWith("docs_")) {
-            String login = metadatosEjercicio.loginActual();
-            if (login != null && !login.isBlank()) {
-                return cuentasUsuarios.obtenerNivelGemini(login);
-            }
-            return 2;
+        String login = metadatosEjercicio.loginActual();
+        if (login != null && !login.isBlank() && !accesoProfesor.esProfesor(login)) {
+            return cuentasUsuarios.obtenerNivelGemini(login);
         }
         if (nivelParam != null) {
             return Math.max(1, Math.min(3, nivelParam));
@@ -338,7 +349,9 @@ public class ControladorEjercicio {
             Escenario escenario,
             ResultadoEvaluacion resultado,
             String ejercicioId,
-            long tiempoSegundos) throws Exception {
+            long tiempoSegundos,
+            Optional<AjusteDificultad> ajusteDificultad,
+            String login) throws Exception {
         Map<String, Object> datos = new LinkedHashMap<>();
         datos.put("modulo", escenario.getModulo());
         datos.put("titulo", escenario.getTitulo());
@@ -347,6 +360,13 @@ public class ControladorEjercicio {
         datos.put("aprobado", resultado.isAprobado());
         datos.put("tiempoSegundos", tiempoSegundos);
         datos.put("ejercicioId", ejercicioId);
+        ajusteDificultad.ifPresent(a -> {
+            datos.put("mensajeDificultad", a.mensaje());
+            datos.put("nivelDificultad", a.nivelNuevo());
+        });
+        if (login != null && !login.isBlank()) {
+            datos.put("nivelDificultad", cuentasUsuarios.obtenerNivelGemini(login));
+        }
         String json = mapeadorJson.writeValueAsString(datos);
         String b64 = Base64.getEncoder().encodeToString(json.getBytes(StandardCharsets.UTF_8));
         respuestaHttp.setHeader("X-Forja-Progreso", b64);

@@ -58,7 +58,7 @@ def probar_evaluador_enriquece_al_vuelo():
 
 def probar_generador_bd_no_regex_en_pista():
     proc = subprocess.run(
-        ["python3", "generador.py", "-m", "bd"],
+        [sys.executable or "python3", "generador.py", "-m", "bd"],
         capture_output=True,
         text=True,
         cwd=RAIZ,

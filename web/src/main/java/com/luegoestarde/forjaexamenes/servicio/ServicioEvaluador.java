@@ -2,11 +2,11 @@
 package com.luegoestarde.forjaexamenes.servicio;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.luegoestarde.forjaexamenes.configuracion.InterpretePython;
 import com.luegoestarde.forjaexamenes.configuracion.PropiedadesForjaExamenes;
 import com.luegoestarde.forjaexamenes.modelo.Escenario;
 import com.luegoestarde.forjaexamenes.modelo.ResultadoEvaluacion;
+import com.luegoestarde.forjaexamenes.util.MapeadorJson;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -22,8 +22,7 @@ public class ServicioEvaluador {
 
     public ServicioEvaluador(PropiedadesForjaExamenes propiedades) {
         this.propiedades = propiedades;
-        this.mapeador = new ObjectMapper();
-        this.mapeador.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
+        this.mapeador = MapeadorJson.snakeCase();
     }
 
     public ResultadoEvaluacion evaluar(Escenario escenario, String respuesta) throws Exception {

@@ -365,16 +365,19 @@ const Progreso = (function () {
     });
 
     function registrarDesdeCabecera(respuestaFetch) {
-        if (!respuestaFetch || typeof respuestaFetch.headers?.get !== "function") return false;
+        if (!respuestaFetch || typeof respuestaFetch.headers?.get !== "function") return null;
         const b64 = respuestaFetch.headers.get("X-Forja-Progreso");
-        if (!b64) return false;
+        if (!b64) return null;
         try {
             const datos = JSON.parse(atob(b64));
-            registrarResultado(datos);
-            return true;
+            const res = registrarResultado(datos);
+            if (res && datos.mensaje_dificultad) {
+                res.mensaje = datos.mensaje_dificultad;
+            }
+            return res;
         } catch (e) {
             console.warn("Forja: cabecera de progreso no válida", e);
-            return false;
+            return null;
         }
     }
 

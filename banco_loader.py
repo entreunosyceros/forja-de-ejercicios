@@ -6,11 +6,11 @@ from __future__ import annotations
 
 import json
 import random
-import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
 
+import comun
 import modelo_ejercicio
 
 RAIZ = Path(__file__).resolve().parent
@@ -23,7 +23,7 @@ MODULOS_BANCO: tuple[str, ...] = ()
 
 
 def _generar_id() -> str:
-    return str(uuid.uuid4())[:8]
+    return comun.generar_identificador()
 
 
 def _ahora_iso() -> str:

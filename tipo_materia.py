@@ -9,6 +9,8 @@ import re
 from pathlib import Path
 from typing import Any
 
+import comun
+
 RAIZ = Path(__file__).resolve().parent
 RUTA_VOCABULARIO = RAIZ / "vocabulario_claves.json"
 FICHEROS_TIPO = (".forja-tipo", "tipo_materia.txt")
@@ -34,7 +36,7 @@ def _cargar_vocabulario() -> dict[str, Any]:
 
 
 def _slug(texto: str) -> str:
-    return re.sub(r"[^a-z0-9_]+", "_", (texto or "").lower()).strip("_")
+    return comun.slug(texto)
 
 
 def _config_tipo(tipo: str) -> dict[str, Any]:

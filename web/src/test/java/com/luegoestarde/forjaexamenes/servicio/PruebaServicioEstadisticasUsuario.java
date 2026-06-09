@@ -72,6 +72,26 @@ class PruebaServicioEstadisticasUsuario {
     }
 
     @Test
+    void registrarAlternaRachasAprobadosYSuspensos() throws Exception {
+        for (int i = 0; i < 3; i++) {
+            servicio.registrar("alumno", "git", 8.0, true, 30L);
+        }
+        EstadisticasUsuario stats = servicio.obtener("alumno");
+        assertEquals(3, stats.getRachaActual());
+        assertEquals(0, stats.getRachaSuspensos());
+
+        servicio.registrar("alumno", "git", 4.0, false, 30L);
+        stats = servicio.obtener("alumno");
+        assertEquals(0, stats.getRachaActual());
+        assertEquals(1, stats.getRachaSuspensos());
+
+        servicio.registrar("alumno", "git", 7.0, true, 30L);
+        stats = servicio.obtener("alumno");
+        assertEquals(1, stats.getRachaActual());
+        assertEquals(0, stats.getRachaSuspensos());
+    }
+
+    @Test
     void formatearTiempoMuestraMinutosYHoras() {
         assertEquals("2:05", ServicioEstadisticasUsuario.formatearTiempo(125));
         assertEquals("1:01:05", ServicioEstadisticasUsuario.formatearTiempo(3665));

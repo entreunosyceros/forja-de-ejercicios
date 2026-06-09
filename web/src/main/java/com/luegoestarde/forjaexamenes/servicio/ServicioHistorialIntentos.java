@@ -7,13 +7,12 @@ import com.luegoestarde.forjaexamenes.modelo.Escenario;
 import com.luegoestarde.forjaexamenes.modelo.HistorialUsuario;
 import com.luegoestarde.forjaexamenes.modelo.IntentoHistorial;
 import com.luegoestarde.forjaexamenes.modelo.ResultadoEvaluacion;
+import com.luegoestarde.forjaexamenes.util.FechasForja;
+import com.luegoestarde.forjaexamenes.util.RutasUsuario;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -25,9 +24,6 @@ import org.springframework.stereotype.Service;
 @Service
 public class ServicioHistorialIntentos {
 
-    private static final ZoneId ZONA = ZoneId.of("Europe/Madrid");
-    private static final DateTimeFormatter FORMATO =
-            DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
     private static final int MAX_TEXTO = 8000;
 
     public record FilaResultado(
@@ -70,7 +66,7 @@ public class ServicioHistorialIntentos {
 
         IntentoHistorial intento = new IntentoHistorial();
         intento.setId(UUID.randomUUID().toString().substring(0, 12));
-        intento.setFecha(LocalDateTime.now(ZONA).format(FORMATO));
+        intento.setFecha(FechasForja.ahora());
         intento.setModulo(escenario.getModulo() != null ? escenario.getModulo() : "");
         intento.setTitulo(escenario.getTitulo() != null ? escenario.getTitulo() : escenario.getModulo());
         intento.setNota(resultado.getNota());
@@ -232,8 +228,7 @@ public class ServicioHistorialIntentos {
     }
 
     private Path ficheroHistorial(String login) {
-        String seguro = login.replaceAll("[^a-z0-9_\\-]", "");
-        return carpetaHistorial().resolve(seguro + ".json");
+        return RutasUsuario.ficheroJson(propiedades.getDirectorioDatos(), "historial", login);
     }
 
     private static String truncar(String texto) {

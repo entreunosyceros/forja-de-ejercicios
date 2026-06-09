@@ -4,10 +4,9 @@ package com.luegoestarde.forjaexamenes.servicio;
 import com.luegoestarde.forjaexamenes.modelo.EntregaAlumno;
 import com.luegoestarde.forjaexamenes.modelo.EstadisticasUsuario;
 import com.luegoestarde.forjaexamenes.modelo.IntentoHistorial;
+import com.luegoestarde.forjaexamenes.util.FechasForja;
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -20,10 +19,6 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class ServicioPanelProfesor {
-
-    private static final ZoneId ZONA = ZoneId.of("Europe/Madrid");
-    private static final DateTimeFormatter FORMATO =
-            DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     public record MetricasPanel(
             int alumnosActivosSemana,
@@ -49,7 +44,7 @@ public class ServicioPanelProfesor {
     }
 
     public MetricasPanel calcular(String profesorLogin) throws IOException {
-        LocalDateTime limite = LocalDateTime.now(ZONA).minusDays(7);
+        LocalDateTime limite = FechasForja.ahoraLocal().minusDays(7);
         Predicate<String> esAlumno = login -> !accesoProfesor.esProfesor(login);
 
         Set<String> alumnosActivos = new HashSet<>();
@@ -133,7 +128,7 @@ public class ServicioPanelProfesor {
             return false;
         }
         try {
-            return LocalDateTime.parse(fechaTexto.strip(), FORMATO).isAfter(limite);
+            return FechasForja.parsear(fechaTexto).isAfter(limite);
         } catch (DateTimeParseException ignored) {
             return false;
         }

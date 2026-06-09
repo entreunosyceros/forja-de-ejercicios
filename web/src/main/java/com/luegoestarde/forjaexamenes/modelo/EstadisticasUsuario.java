@@ -16,6 +16,8 @@ public class EstadisticasUsuario {
     private double notaMedia;
     private double mejorNota;
     private int rachaActual;
+    /** Suspensos consecutivos (para bajar dificultad). */
+    private int rachaSuspensos;
     private long tiempoTotalSegundos;
     private String ultimaActividad = "";
     private Map<String, EstadisticasModulo> porModulo = new LinkedHashMap<>();
@@ -39,6 +41,9 @@ public class EstadisticasUsuario {
 
     public int getRachaActual() { return rachaActual; }
     public void setRachaActual(int rachaActual) { this.rachaActual = rachaActual; }
+
+    public int getRachaSuspensos() { return rachaSuspensos; }
+    public void setRachaSuspensos(int rachaSuspensos) { this.rachaSuspensos = rachaSuspensos; }
 
     public long getTiempoTotalSegundos() { return tiempoTotalSegundos; }
     public void setTiempoTotalSegundos(long tiempoTotalSegundos) { this.tiempoTotalSegundos = tiempoTotalSegundos; }

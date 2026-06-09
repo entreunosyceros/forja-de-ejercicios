@@ -6,15 +6,16 @@ import argparse
 import json
 import random
 import sys
-import uuid
 from datetime import datetime, timezone
+
+import comun
 
 # MODULOS se completa al final del archivo (incluye docs_* si hay indice/)
 MODULOS: tuple[str, ...] = ()
 
 
 def _generar_identificador() -> str:
-    return str(uuid.uuid4())[:8]
+    return comun.generar_identificador()
 
 
 def _elegir_vlan() -> int:
