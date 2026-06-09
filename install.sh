@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Instalador de Forja de ejercicios (Linux / macOS).
 # Comprueba requisitos, compila la web, opcionalmente configura Gemini y Docker.
+# Desarrollado por entreunosyceros - 2026
+
 set -euo pipefail
 
 RAIZ="$(cd "$(dirname "$0")" && pwd)"

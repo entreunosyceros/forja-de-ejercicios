@@ -9,8 +9,10 @@ ACCESO
   Usuario:  profesor
   Contraseña: profesor
 
-  Seguimiento alumnos: http://localhost:8080/profesor/alumnos
+  Panel profesor:       http://localhost:8080/profesor
+  Seguimiento alumnos:  http://localhost:8080/profesor/alumnos
   Resultados / CSV:     http://localhost:8080/profesor/resultados
+  Banco aprobado:       http://localhost:8080/profesor/banco
   Revisión banco IA:    http://localhost:8080/profesor/revisar
 
 IMPORTANTE: la app del profesor y la de cada alumno son instalaciones
@@ -21,7 +23,13 @@ a los alumnos: debes EXPORTAR e importar vía carpeta compartida.
 QUÉ PUEDES HACER COMO PROFESOR
 ------------------------------
 
-A) PRACTICAR Y PREPARAR EJERCICIOS
+A) PANEL RÁPIDO  (/profesor)
+   - Métricas de los últimos 7 días: alumnos activos, módulo más practicado,
+     tasa de aprobados.
+   - Accesos rápidos a Alumnos, Resultados y Revisar.
+
+
+B) PRACTICAR Y PREPARAR EJERCICIOS
    - Mismos módulos que el alumno desde la portada.
    - Ves la solución de referencia antes y después de enviar.
    - Tras probar un ejercicio: «Exportar para compartir» (pantalla de ejercicio
@@ -29,7 +37,7 @@ A) PRACTICAR Y PREPARAR EJERCICIOS
    - Revisas propuestas IA en /profesor/revisar y las apruebas en TU banco local.
 
 
-B) COMPARTIR EJERCICIOS CON LA CLASE (carpeta compartida)
+C) COMPARTIR EJERCICIOS CON LA CLASE (carpeta compartida)
    1. Preparas ejercicios (pruebas, apruebas propuestas IA, etc.).
    2. Exportas:
       - UN ejercicio: «Exportar para compartir» en el ejercicio/resultado.
@@ -42,30 +50,36 @@ B) COMPARTIR EJERCICIOS CON LA CLASE (carpeta compartida)
    «Aprobar y publicar» en tu app solo afecta a TU instalación hasta que exportes.
 
 
-C) SEGUIMIENTO DE ALUMNOS  (/profesor/alumnos)
+D) SEGUIMIENTO DE ALUMNOS  (/profesor/alumnos)
    - Importar entregas .json de alumnos (nombre personalizado por alumno).
+   - Si ya importaste a ese alumno, la app pregunta si sobrescribir o ignorar
+     (puedes «recordar decisión» en la sesión).
    - Tabla comparativa y gráficas de avance de la clase.
    - Detalle por módulo/categoría.
    - Historial de ejercicios (enunciado + respuesta + nota) en cada entrega.
    - «Alumnos en este servidor» si comparten el mismo PC (caso raro en clase).
 
 
-D) RESULTADOS Y EXPORTAR CSV  (/profesor/resultados)
+E) RESULTADOS Y EXPORTAR CSV  (/profesor/resultados)
    - Cada corrección del alumno se guarda en disco (ejercicio, respuesta, nota).
    - Lista de intentos: alumnos en este servidor + entregas importadas.
-   - Ver detalle de cada intento (enunciado y respuesta completos).
+   - Ver detalle de cada intento (enunciado y respuesta con resaltado de código).
    - Descargar CSV para Excel: Alumno, Fecha, Módulo, Nota, Tiempo, etc.
      (servidor e importados por separado).
 
 
-E) REVISIÓN DEL BANCO IA  (/profesor/revisar)
+F) REVISIÓN DEL BANCO IA  (/profesor/revisar)
    - Validar ejercicios generados desde apuntes antes de exportarlos.
    - Aprobar / rechazar / descargar paquete ZIP.
 
 
-F) APUNTES, PERFIL Y EXPORTACIONES
-   - Subir PDFs, reindexar, clave Gemini, dificultad IA.
-   - JSON/PDF de ejercicios individuales.
+G) APUNTES, PERFIL Y CONFIGURACIÓN
+   - Subir PDFs desde la portada o en documentacion/<tema>/.
+   - «Actualizar apuntes» o indexador_docs.py tras añadir PDFs.
+   - Cualquier materia: informática, idiomas, historia… (módulos docs_*).
+   - Opcional: documentacion/<tema>/.forja-tipo con informatica, idiomas o general.
+   - Clave Gemini y dificultad IA en Perfil.
+   - Exportar JSON/PDF de ejercicios individuales.
 
 
 FLUJO TÍPICO (instalaciones separadas)
@@ -77,22 +91,12 @@ FLUJO TÍPICO (instalaciones separadas)
   5. (Opcional) Exporta CSV desde Resultados para hoja de cálculo.
 
 
-PRUEBA RÁPIDA (checklist)
--------------------------
-  [ ] Entrar con profesor / profesor
-  [ ] Hacer y corregir un ejercicio → «Exportar para compartir»
-  [ ] (Si hay pendientes IA) Aprobar uno en /profesor/banco
-  [ ] Descargar banco completo (banco-forja.json)
-  [ ] En otra sesión o como alumno: importar ese JSON en la portada
-  [ ] Importar entrega de un alumno en /profesor/alumnos
-  [ ] Revisar intentos en /profesor/resultados y descargar CSV
-
-
 DATOS EN DISCO (tu equipo)
 --------------------------
   banco/aprobados/           — ejercicios verificados (tuyos)
   datos/entregas/<profesor>/ — entregas de alumnos importadas
   datos/historial/           — intentos por alumno (enunciado, respuesta, nota)
   banco/pendientes/          — propuestas IA por revisar
+  indice/                    — fragmentos indexados de PDFs (docs_*)
 
 ================================================================================

@@ -24,6 +24,7 @@ QUÉ PUEDES HACER COMO ALUMNO
    - Escribes tu respuesta y la envías; la app corrige (nota 0–10, aprueba ≥ 5).
    - En módulos de sistemas puedes practicar en el contenedor Docker (tarjeta
      «Entorno Docker» en la portada).
+   - «Limpiar entorno de práctica» vacía la carpeta datos-practica/ del host.
 
 2. IMPORTAR EJERCICIOS DEL PROFESOR (banco local)
    - El profesor prueba y exporta ejercicios en SU equipo.
@@ -34,16 +35,26 @@ QUÉ PUEDES HACER COMO ALUMNO
    - Tras importar aparecen botones para practicar esos ejercicios verificados.
 
 3. EJERCICIOS DESDE APUNTES (PDF + IA)
-   - Si hay PDFs indexados, aparecen en «Ejercicios desde apuntes».
+   - Si hay PDFs indexados, aparecen en «Ejercicios desde apuntes» (módulos
+     docs_*).
+   - Pueden ser de informática, idiomas u otras materias: la app adapta el tipo
+     de ejercicio (comandos, traducción/gramática, respuesta escrita…).
    - Necesitas clave API de Gemini en Perfil (solo módulos docs_*).
-   - Dificultad IA: Perfil → «Dificultad de ejercicios con IA».
+   - Dificultad IA: Perfil → «Dificultad de ejercicios con IA» (nivel 1–3).
 
-4. SUBIR APUNTES (PDF)
-   - Puedes subir PDFs desde la portada; se indexan para ejercicios docs_*.
+4. SUBIR E INDEXAR APUNTES (PDF)
+   - Portada → «Apuntes del profesor» → subir PDF (se crea documentacion/<tema>/).
+   - También puedes copiar PDFs a documentacion/<tema>/ y pulsar
+     «Actualizar apuntes».
+   - Cada carpeta genera un módulo docs_<tema> (p. ej. ingles → docs_ingles).
+   - Opcional: fichero documentacion/<tema>/.forja-tipo con una línea:
+     informatica, idiomas o general (si la materia no se detecta sola).
 
 5. VER TU PROGRESO (portada, al final)
    a) Tu progreso (local, sin red) — últimos 5 ejercicios en ESTE navegador.
+      Botón «Limpiar progreso local» (solo este navegador).
    b) Tus estadísticas de uso (servidor) — totales en tu equipo.
+      Botón «Limpiar estadísticas» (pide confirmación; borra datos del servidor).
 
 6. ENTREGAR TU PROGRESO AL PROFESOR
    - «Descargar entrega para el profesor» → fichero .json.
@@ -58,7 +69,7 @@ QUÉ PUEDES HACER COMO ALUMNO
 
 QUÉ NO PUEDES HACER COMO ALUMNO
 -------------------------------
-  - No accedes a /profesor/* (revisión del banco, seguimiento de otros).
+  - No accedes a /profesor/* (panel, revisión del banco, seguimiento de otros).
   - No ves la solución antes de enviar (salvo modo profesor en el servidor).
   - No recibes automáticamente los ejercicios del profesor: debes IMPORTARLOS.
 
