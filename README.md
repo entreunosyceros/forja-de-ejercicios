@@ -653,6 +653,7 @@ examenforge/
 | `API_KEY_INVALID` | Clave real en `.env`; reinicia; `unset GEMINI_API_KEY` en el shell si molesta |
 | Cuota Gemini `429` | `FORJAEXAMENES_GEMINI_MODEL=gemini-2.5-flash` en `.env` |
 | Indexación lenta | Es normal en PDFs grandes; espera el aviso «en segundo plano» en la portada |
+| Windows: `indexador_docs.py falló (código 1)` al arrancar | Actualiza `indexador_docs.py` e `iniciar-forja.bat`; comprueba `pip install -r requirements-docs.txt`; prueba `python indexador_docs.py` en la carpeta del proyecto |
 | Ejercicios PDF piden comandos en materia no técnica | Crea `documentacion/<tema>/.forja-tipo` con `general` o `idiomas` y reindexa |
 | Palabra clave rechazada en apuntes PDF | Revisa `vocabulario_claves.json` (prohibidas del módulo o del tipo) |
 | `generador.py falló` | `python3 generador.py -m poo` desde `examenforge/` |

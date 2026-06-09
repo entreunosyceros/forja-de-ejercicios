@@ -24,6 +24,7 @@ final class EjecutorProcesoPython {
      */
     static Resultado ejecutar(ProcessBuilder constructor, long timeoutSegundos)
             throws IOException, InterruptedException {
+        prepararEntornoPython(constructor);
         Process proceso = constructor.start();
         StringBuilder salida = new StringBuilder();
 
@@ -61,5 +62,12 @@ final class EjecutorProcesoPython {
     private static boolean esperarSinLimite(Process proceso) throws InterruptedException {
         proceso.waitFor();
         return true;
+    }
+
+    /** UTF-8 en Windows evita fallos al imprimir acentos o simbolos desde Python. */
+    static void prepararEntornoPython(ProcessBuilder constructor) {
+        var entorno = constructor.environment();
+        entorno.put("PYTHONUTF8", "1");
+        entorno.put("PYTHONIOENCODING", "utf-8");
     }
 }

@@ -54,6 +54,25 @@ def _titulo_legible(slug: str) -> str:
     return slug.replace("_", " ").replace("-", " ").strip().title() or "General"
 
 
+def _ruta_relativa_segura(ruta: Path, base: Path) -> str:
+    """Ruta relativa portable (evita ValueError en Windows con unidades distintas)."""
+    try:
+        return str(ruta.resolve().relative_to(base.resolve()))
+    except ValueError:
+        return str(ruta.resolve())
+
+
+def _configurar_salida_consola() -> None:
+    """Evita UnicodeEncodeError en consola Windows (cp1252) al imprimir mensajes."""
+    for stream in (sys.stdout, sys.stderr):
+        reconfigurar = getattr(stream, "reconfigure", None)
+        if callable(reconfigurar):
+            try:
+                reconfigurar(encoding="utf-8", errors="replace")
+            except (OSError, ValueError):
+                pass
+
+
 def extraer_texto_pdf(ruta_pdf: Path) -> list[tuple[int, str]]:
     try:
         from pypdf import PdfReader
@@ -160,7 +179,7 @@ def metadatos_desde_ruta(ruta_pdf: Path, carpeta_tema: Path) -> dict[str, str]:
         "capitulo_slug": _slug(capitulo),
         "seccion_ruta": seccion_ruta,
         "archivo": archivo,
-        "fuente": str(ruta_pdf.resolve().relative_to(RAIZ.resolve())),
+        "fuente": _ruta_relativa_segura(ruta_pdf, RAIZ),
     }
 
 
@@ -205,12 +224,12 @@ def indexar_coleccion(
         try:
             paginas = extraer_texto_pdf(ruta_pdf)
         except Exception as error:
-            print(f"  ⚠ No se pudo leer {ruta_pdf}: {error}", file=sys.stderr)
+            print(f"  [!] No se pudo leer {ruta_pdf}: {error}", file=sys.stderr)
             continue
 
         if not paginas:
             print(
-                f"  ⚠ Sin texto extraíble en {ruta_pdf.name} (¿escaneado o vacío?).",
+                f"  [!] Sin texto extraible en {ruta_pdf.name} (escaneado o vacio?).",
                 file=sys.stderr,
             )
             continue
@@ -263,7 +282,7 @@ def indexar_coleccion(
         "tema": tema_slug,
         "tipo_materia": tipo_materia,
         "titulo_visible": titulo_visible,
-        "carpeta": str(carpeta.relative_to(RAIZ)),
+        "carpeta": _ruta_relativa_segura(carpeta, RAIZ),
         "chunks": chunks,
         "secciones": _construir_catalogo_secciones(chunks),
         "total_fragmentos": len(chunks),
@@ -293,7 +312,7 @@ def indexar_todo(
 
     pdfs_raiz = list(carpeta_documentacion.glob("*.pdf"))
     if pdfs_raiz:
-        print("Indexando PDFs en la raíz de documentacion/…")
+        print("Indexando PDFs en la raiz de documentacion/...")
         indice = indexar_coleccion(
             carpeta_documentacion,
             carpeta_indice,
@@ -303,25 +322,27 @@ def indexar_todo(
         if indice:
             n = indice["total_fragmentos"]
             s = len(indice.get("secciones", []))
-            print(f"  → {indice['modulo']}: {n} fragmentos, {s} capítulos")
+            print(f"  -> {indice['modulo']}: {n} fragmentos, {s} capitulos")
             resultados.append(indice)
 
     for carpeta in subcarpetas:
         modulo_esperado = nombre_modulo_desde_carpeta(carpeta.name)
-        print(f"Indexando {carpeta.name}/ → {modulo_esperado}…")
+        print(f"Indexando {carpeta.name}/ -> {modulo_esperado}...")
         indice = indexar_coleccion(carpeta, carpeta_indice)
         if indice:
             n = indice["total_fragmentos"]
             s = len(indice.get("secciones", []))
-            print(f"  → {indice['modulo']}: {n} fragmentos, {s} capítulos/secciones")
+            print(f"  -> {indice['modulo']}: {n} fragmentos, {s} capitulos/secciones")
             resultados.append(indice)
         else:
-            print(f"  → sin PDFs legibles en {carpeta.name}")
+            print(f"  -> sin PDFs legibles en {carpeta.name}")
 
     return resultados
 
 
 def principal() -> int:
+    _configurar_salida_consola()
+
     try:
         import pypdf  # noqa: F401
     except ImportError:
@@ -329,22 +350,27 @@ def principal() -> int:
         return 1
 
     analizador = argparse.ArgumentParser(
-        description="Indexar PDFs: cada carpeta en documentacion/ → docs_<tema>.json"
+        description="Indexar PDFs: cada carpeta en documentacion/ -> docs_<tema>.json"
     )
     analizador.add_argument("--documentacion", type=Path, default=CARPETA_DOCUMENTACION)
     analizador.add_argument("--indice", type=Path, default=CARPETA_INDICE)
     argumentos = analizador.parse_args()
 
-    colecciones = indexar_todo(argumentos.documentacion, argumentos.indice)
+    try:
+        colecciones = indexar_todo(argumentos.documentacion, argumentos.indice)
+    except Exception as error:
+        print(f"Error al indexar: {error}", file=sys.stderr)
+        return 1
+
     if not colecciones:
         print(
-            "No se indexó nada. Añade PDFs en documentacion/<tema>/ y vuelve a ejecutar.",
+            "No se indexo nada. Anade PDFs en documentacion/<tema>/ y vuelve a ejecutar.",
             file=sys.stderr,
         )
         return 1
-    print(f"\nListo: {len(colecciones)} módulo(s) en {argumentos.indice}")
+    print(f"\nListo: {len(colecciones)} modulo(s) en {argumentos.indice}")
     for ind in colecciones:
-        print(f"  • {ind['modulo']}: {ind['titulo_visible']}")
+        print(f"  - {ind['modulo']}: {ind['titulo_visible']}")
     return 0
 
 

@@ -195,6 +195,6 @@ public class ServicioIndexacionDocumentacion implements ApplicationRunner {
             return "(sin salida)";
         }
         String limpio = salida.strip();
-        return limpio.length() > 400 ? limpio.substring(0, 400) + "…" : limpio;
+        return limpio.length() > 1200 ? limpio.substring(0, 1200) + "…" : limpio;
     }
 }

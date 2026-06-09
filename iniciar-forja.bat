@@ -3,6 +3,8 @@ setlocal EnableExtensions
 set "RAIZ=%~dp0"
 set "RAIZ=%RAIZ:~0,-1%"
 set "FORJAEXAMENES_RAIZ=%RAIZ%"
+set "PYTHONUTF8=1"
+set "PYTHONIOENCODING=utf-8"
 
 set "JAR=%RAIZ%\web\target\forjaexamenes-web-1.0.0.jar"
 
