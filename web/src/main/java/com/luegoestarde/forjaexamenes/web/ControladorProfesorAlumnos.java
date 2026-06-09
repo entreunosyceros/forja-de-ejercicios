@@ -1,6 +1,7 @@
 // Desarrollado por entreunosyceros - 2026
 package com.luegoestarde.forjaexamenes.web;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.luegoestarde.forjaexamenes.modelo.EntregaAlumno;
@@ -15,6 +16,8 @@ import com.luegoestarde.forjaexamenes.servicio.ServicioEstadisticasUsuario;
 import com.luegoestarde.forjaexamenes.servicio.ServicioMetadatosEjercicio;
 import com.luegoestarde.forjaexamenes.servicio.ServicioPanelProfesor;
 import jakarta.servlet.http.HttpSession;
+import java.util.List;
+import java.util.Map;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -59,10 +62,14 @@ public class ControladorProfesorAlumnos {
     public String listar(Model modelo) throws Exception {
         String profesor = metadatosEjercicio.loginActual();
         var comparativa = servicioEntregas.construirComparativa(profesor);
+        Map<String, Object> comparativaVista = mapeadorJson.convertValue(
+                comparativa, new TypeReference<Map<String, Object>>() {});
         modelo.addAttribute("tituloPagina", "Seguimiento de alumnos");
         modelo.addAttribute("entregasImportadas", servicioEntregas.listarImportadas(profesor));
-        modelo.addAttribute("comparativa", comparativa);
-        modelo.addAttribute("comparativaJson", mapeadorJson.writeValueAsString(comparativa));
+        modelo.addAttribute("comparativa", comparativaVista);
+        modelo.addAttribute("comparativaModulos", comparativa.modulos());
+        modelo.addAttribute("comparativaAlumnos", comparativaVista.getOrDefault("alumnos", List.of()));
+        modelo.addAttribute("comparativaJson", mapeadorJson.writeValueAsString(comparativaVista));
         modelo.addAttribute("alumnosServidor", servicioEstadisticas.listarResumenesEnServidor(
                 login -> !accesoProfesor.esProfesor(login)));
         modelo.addAttribute("metricas", servicioPanel.calcular(profesor));

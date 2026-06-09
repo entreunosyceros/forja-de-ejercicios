@@ -8,7 +8,7 @@
 
 Genera ejercicios prácticos al azar (informática, idiomas u otras materias desde PDF), permite practicar en Docker y corrige la respuesta del alumno con criterios verificables. La interfaz es **Spring Boot**; la generación y corrección las hace **Python** (`generador.py`, `evaluador.py`, `modelo_ejercicio.py`, `tipo_materia.py`).
 
-**Guía en la web (sin login):** con la aplicación arrancada, abre **http://localhost:8080/como-funciona** — también enlazada desde la pantalla de login.
+**Guía en la web:** **http://localhost:8080/como-funciona** (menú **Ayuda**). Sin sesión muestra «Entrar»; si ya estás logueado (alumno o profesor), el botón pasa a **Inicio** y vuelve a la portada.
 
 **Guías por rol (texto plano):** [alumno.txt](alumno.txt) · [profesor.txt](profesor.txt)
 
@@ -151,8 +151,8 @@ Solo se versionan los `.gitkeep` de las carpetas vacías.
 ### Profesor
 
 1. Entra con la cuenta **profesor** (o cualquier login configurado con rol profesor).
-2. **Practica igual que un alumno** desde la portada (mismos módulos, corrección y estadísticas propias).
-3. **Seguimiento de alumnos** en **`/profesor/alumnos`**: importa entregas JSON de la carpeta compartida (con nombre personalizado por alumno), tabla comparativa y gráficas de la clase.
+2. **Practica igual que un alumno** desde la portada (mismos módulos, corrección y estadísticas propias). No verá «Descargar entrega para el profesor» (solo alumnos).
+3. **Seguimiento de alumnos** en **`/profesor/alumnos`**: importa entregas JSON de la carpeta compartida (con nombre personalizado por alumno), tabla comparativa, gráficas y nota media por módulo.
 4. Revisa propuestas de la IA en **`/profesor/revisar`**: tabla comparativa, casos de prueba y paquete ZIP.
 5. Aprueba o rechaza ejercicios en **su** instalación; para que los alumnos los tengan debe **exportar** el banco (`banco-forja.json`) a la carpeta compartida.
 6. Puede subir PDFs, ver la solución de referencia y exportar ejercicios para compartir.
@@ -225,7 +225,7 @@ La app **no envía ficheros**; el intercambio es mediante una **carpeta comparti
 
 | Paso | Quién | Acción |
 |------|-------|--------|
-| 1 | Alumno | Portada → **Tus estadísticas de uso** → «Descargar entrega para el profesor» |
+| 1 | Alumno | Portada → **Tus estadísticas de uso** → «Descargar entrega para el profesor» (solo cuentas alumno; el profesor no ve este bloque) |
 | 2 | Alumno | Copia el `.json` en la carpeta compartida (opcional: PDFs de ejercicios desde la pantalla de resultado) |
 | 3 | Profesor | **Perfil → Seguimiento de alumnos** o `/profesor/alumnos` → elegir fichero y **nombre personalizado** del alumno |
 | 4 | Profesor | Tabla comparativa y gráficas de la clase; «Detalle» para ver cada módulo |
@@ -343,9 +343,11 @@ Formato entrega alumno: `forja-entrega-alumno`. Formato banco: `forja-banco-ejer
 | Entrar | `/login` |
 | Cambiar nombre, usuario o contraseña | `/perfil` (enlace **Perfil** en la cabecera) |
 | Guía técnica (Gemini, PDF, nuevos módulos) | `/perfil` (sección inferior) o `/como-funciona` |
+| Clave API de Gemini | `/perfil` → requiere **contraseña de acceso** (no la clave API) |
+| Modelo de Gemini | `/perfil` → **Guardar modelo** (p. ej. `gemini-2.5-flash`; no pide contraseña) |
 | **Seguimiento de alumnos** (profesor) | `/profesor/alumnos` → importar entrega o ver alumnos del servidor |
 | **Resultados y CSV** (profesor) | `/profesor/resultados` → revisar intentos y exportar CSV |
-| Descargar entrega para el profesor (alumno) | Portada → «Descargar entrega para el profesor» |
+| Descargar entrega para el profesor (**solo alumno**) | Portada → «Descargar entrega para el profesor» |
 | Importar banco del profesor (alumno) | Portada → «Ejercicios del banco» → «Importar al banco local» |
 | Exportar banco completo (profesor) | `/profesor/banco` → «Descargar banco completo» |
 | Exportar un ejercicio para compartir (profesor) | Ejercicio o resultado → «Exportar para compartir» |
@@ -422,6 +424,10 @@ Los criterios `contiene_todos` y `contiene_alguno` aceptan **sinónimos técnico
 - Para añadir sinónimos: edita `alias_comandos` en el JSON (frases completas, no palabras sueltas sueltas).
 
 Tipos de criterio soportados: `regex`, `contiene_todos`, `contiene_alguno`.
+
+### Retroalimentación al corregir
+
+Tras enviar una respuesta, la pantalla de resultado muestra **criterios en lenguaje claro** (qué se esperaba y una **pista** distinta si fallas), no expresiones regulares crudas. La lógica está en [`retroalimentacion_criterios.py`](retroalimentacion_criterios.py) y se aplica al generar (`generador.py`) y al evaluar (`evaluador.py`). En **modo profesor** puedes ver el patrón técnico del criterio.
 
 ---
 
@@ -631,7 +637,7 @@ examenforge/
 | **Entorno Docker** | Botón «Limpiar entorno de práctica» en la portada; auto-limpieza de `datos-practica/` al iniciar ejercicios `docker`, `redes`, `sistemas`, `git` (`forjaexamenes.limpiar-practica-al-nuevo-ejercicio`, default `true`). |
 | **Progreso local** | Últimos 5 ejercicios en `localStorage` (`progreso.js`). Botón «Limpiar progreso local» en la portada. |
 | **Estadísticas de uso** | Totales en `datos/estadisticas/<usuario>.json`. Botón «Limpiar estadísticas» → `POST /estadisticas/limpiar`. |
-| **Entrega al profesor** | Alumno: «Descargar entrega para el profesor» → `GET /entrega/exportar.json` + progreso local en el navegador. Profesor: importar en `/profesor/alumnos` con nombre personalizado. |
+| **Entrega al profesor** | **Alumno:** portada → «Descargar entrega para el profesor» → `GET /entrega/exportar.json` + progreso local. **Profesor:** no exporta entrega; importa en `/profesor/alumnos` con nombre personalizado. |
 | **Banco portable** | Profesor exporta `banco-forja.json`; alumno importa en portada → `banco/aprobados/` + `catalogo.json`. |
 | **Seguimiento clase** | Tabla comparativa, notas por módulo y gráficas en `/profesor/alumnos` tras importar entregas. |
 | **Historial de intentos** | Tras cada corrección: `datos/historial/<login>.json` (enunciado, respuesta, nota). Panel y CSV en `/profesor/resultados`. |
@@ -682,6 +688,7 @@ examenforge/
 | Texto de la guía pública | `templates/fragments/guia-funcionamiento.html` |
 | Vista de revisión profesor | `profesor-revisar-detalle.html`, `herramientas/revision_profesor.py` |
 | Nuevos sinónimos de comandos | `vocabulario_claves.json` → `alias_comandos` |
+| Textos de corrección (esperado / pista) | `retroalimentacion_criterios.py`, `evaluador.py` |
 | Botón en portada | `templates/inicio.html` |
 | Nuevo módulo plantilla | `generador.py` + `pruebas/pruebas_generador_evaluador.py` |
 | Nuevo tema PDF | `documentacion/<tema>/` + indexar |
@@ -701,6 +708,7 @@ python3 pruebas/pruebas_alias_comandos.py
 python3 pruebas/pruebas_banco_loader.py
 python3 pruebas/pruebas_indexador_docs.py
 python3 pruebas/pruebas_tipo_materia.py
+python3 pruebas/pruebas_retroalimentacion_criterios.py
 cd web && mvn test
 ```
 

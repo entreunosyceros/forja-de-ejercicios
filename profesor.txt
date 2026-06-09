@@ -14,6 +14,7 @@ ACCESO
   Resultados / CSV:     http://localhost:8080/profesor/resultados
   Banco aprobado:       http://localhost:8080/profesor/banco
   Revisión banco IA:    http://localhost:8080/profesor/revisar
+  Ayuda:                http://localhost:8080/como-funciona (con sesión → Inicio)
 
 IMPORTANTE: la app del profesor y la de cada alumno son instalaciones
 INDEPENDIENTES (cada uno en su PC). Publicar en tu banco local NO llega solo
@@ -31,6 +32,7 @@ A) PANEL RÁPIDO  (/profesor)
 
 B) PRACTICAR Y PREPARAR EJERCICIOS
    - Mismos módulos que el alumno desde la portada.
+   - NO aparece «Descargar entrega para el profesor» (eso es solo para alumnos).
    - Ves la solución de referencia antes y después de enviar.
    - Tras probar un ejercicio: «Exportar para compartir» (pantalla de ejercicio
      o resultado) → genera un .json que el alumno puede importar.
@@ -54,8 +56,7 @@ D) SEGUIMIENTO DE ALUMNOS  (/profesor/alumnos)
    - Importar entregas .json de alumnos (nombre personalizado por alumno).
    - Si ya importaste a ese alumno, la app pregunta si sobrescribir o ignorar
      (puedes «recordar decisión» en la sesión).
-   - Tabla comparativa y gráficas de avance de la clase.
-   - Detalle por módulo/categoría.
+   - Tabla comparativa, gráficas de avance y tabla «Nota media por módulo».
    - Historial de ejercicios (enunciado + respuesta + nota) en cada entrega.
    - «Alumnos en este servidor» si comparten el mismo PC (caso raro en clase).
 
@@ -78,7 +79,8 @@ G) APUNTES, PERFIL Y CONFIGURACIÓN
    - «Actualizar apuntes» o indexador_docs.py tras añadir PDFs.
    - Cualquier materia: informática, idiomas, historia… (módulos docs_*).
    - Opcional: documentacion/<tema>/.forja-tipo con informatica, idiomas o general.
-   - Clave Gemini y dificultad IA en Perfil.
+   - Perfil: clave Gemini (pide contraseña de acceso), modelo Gemini
+     (Guardar modelo, p. ej. gemini-2.5-flash, sin contraseña), dificultad IA.
    - Exportar JSON/PDF de ejercicios individuales.
 
 

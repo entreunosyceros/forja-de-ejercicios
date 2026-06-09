@@ -3,8 +3,8 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org"
       th:replace="~{plantilla :: plantilla(~{::section})}">
-<section class="pagina-profesor-alumnos"
-         th:attr="data-comparativa=${comparativaJson != null ? comparativaJson : '{}'}">
+<section class="pagina-profesor-alumnos">
+    <script type="application/json" id="datos-comparativa-clase" th:inline="text" th:utext="${comparativaJson != null ? comparativaJson : '{&quot;alumnos&quot;:[],&quot;modulos&quot;:[]}'}">{}</script>
     <div class="card card-wide">
         <h1>Seguimiento de alumnos</h1>
         <p class="hint">
@@ -127,24 +127,23 @@
                 </div>
             </div>
 
-            <div class="stats-modulos-wrap" th:if="${comparativa != null and !#lists.isEmpty(comparativa.modulos)}">
+            <div class="stats-modulos-wrap" th:if="${comparativaModulos != null and !#lists.isEmpty(comparativaModulos)}">
                 <h3>Nota media por módulo / categoría</h3>
                 <div class="stats-modulos-scroll">
                     <table class="stats-modulos-table tabla-modulos-clase">
                         <thead>
                         <tr>
                             <th>Alumno</th>
-                            <th th:each="mod : ${comparativa.modulos}">
-                                <code th:text="${mod}">mod</code>
+                            <th th:each="moduloCodigo : ${comparativaModulos}">
+                                <code th:text="${moduloCodigo}">mod</code>
                             </th>
                         </tr>
                         </thead>
                         <tbody>
-                        <tr th:each="fila : ${comparativa.alumnos}">
-                            <td th:text="${fila.nombreEtiqueta}">Alumno</td>
-                            <td th:each="mod : ${comparativa.modulos}"
-                                th:with="valor=${fila.notaMediaPorModulo.get(mod)}"
-                                th:text="${valor != null ? #numbers.formatDecimal(valor, 1, 1) : '—'}">—</td>
+                        <tr th:each="fila : ${comparativaAlumnos}">
+                            <td th:text="${fila['nombreEtiqueta']}">Alumno</td>
+                            <td th:each="moduloCodigo : ${comparativaModulos}"
+                                th:text="${fila['notaMediaPorModulo'] != null and fila['notaMediaPorModulo'][moduloCodigo] != null ? #numbers.formatDecimal(fila['notaMediaPorModulo'][moduloCodigo], 1, 1) : '—'}">—</td>
                         </tr>
                         </tbody>
                     </table>
@@ -205,6 +204,6 @@
             <a class="btn btn-ghost" th:href="@{/perfil}">Perfil</a>
         </div>
     </div>
-    <script th:src="@{/js/profesor-alumnos-grafico.js(v=1)}"></script>
+    <script th:src="@{/js/profesor-alumnos-grafico.js(v=2)}"></script>
 </section>
 </html>

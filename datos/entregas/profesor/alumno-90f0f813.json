@@ -1,0 +1,56 @@
+{
+  "formato" : "forja-entrega-alumno",
+  "version" : 1,
+  "generado" : "2026-06-09T15:33:36.249993997Z",
+  "alumno" : {
+    "login" : "alumno",
+    "nombreVisible" : "Ana García"
+  },
+  "estadisticasServidor" : {
+    "totalIntentos" : 2,
+    "totalAprobados" : 2,
+    "totalSuspensos" : 0,
+    "notaMedia" : 6.8,
+    "mejorNota" : 7.5,
+    "rachaActual" : 2,
+    "tiempoTotalSegundos" : 75,
+    "ultimaActividad" : "09/06/2026 17:33",
+    "porModulo" : {
+      "bd" : {
+        "intentos" : 1,
+        "aprobados" : 1,
+        "notaMedia" : 7.5,
+        "mejorNota" : 7.5
+      },
+      "docker" : {
+        "intentos" : 1,
+        "aprobados" : 1,
+        "notaMedia" : 6.0,
+        "mejorNota" : 6.0
+      }
+    },
+    "ultimosIntentos" : [ {
+      "modulo" : "docker",
+      "titulo" : "Logs",
+      "nota" : 6.0,
+      "aprobado" : true,
+      "tiempoSegundos" : 30,
+      "fecha" : "2026-06-09T15:33:36.248978908Z",
+      "ejercicioId" : "ex2"
+    }, {
+      "modulo" : "bd",
+      "titulo" : "Índices",
+      "nota" : 7.5,
+      "aprobado" : true,
+      "tiempoSegundos" : 45,
+      "fecha" : "2026-06-09T15:33:36.239442614Z",
+      "ejercicioId" : "ex1"
+    } ]
+  },
+  "progresoLocal" : null,
+  "historialIntentos" : [ ],
+  "idImportacion" : "alumno-90f0f813",
+  "importadoPor" : "profesor",
+  "importadoEn" : "09/06/2026 17:33",
+  "nombreEtiqueta" : "Ana García — 1º DAM"
+}

@@ -12,11 +12,12 @@
 <body class="pagina-login pagina-ayuda">
 <header class="ayuda-cabecera">
     <div class="container ayuda-cabecera-inner">
-        <a class="brand brand-compact" th:href="@{/login}">
+        <a class="brand brand-compact" th:href="${loginUsuario != null} ? @{/} : @{/login}">
             <img class="brand-logo" th:src="@{/img/forja-de-examenes.png}" alt="" width="40" height="40"/>
             <span class="brand-text">Forja de ejercicios</span>
         </a>
-        <a class="btn btn-primary btn-sm" th:href="@{/login}">Entrar</a>
+        <a class="btn btn-primary btn-sm" th:if="${loginUsuario == null}" th:href="@{/login}">Entrar</a>
+        <a class="btn btn-primary btn-sm" th:if="${loginUsuario != null}" th:href="@{/}">Inicio</a>
     </div>
 </header>
 
@@ -26,7 +27,8 @@
         <p class="hint">Guía para alumnos y profesores. No hace falta tener sesión iniciada para leerla.</p>
         <div th:replace="~{fragments/guia-funcionamiento :: funcionamiento}"></div>
         <div class="form-actions" style="margin-top: 2rem;">
-            <a class="btn btn-primary" th:href="@{/login}">Ir al login</a>
+            <a class="btn btn-primary" th:if="${loginUsuario == null}" th:href="@{/login}">Ir al login</a>
+            <a class="btn btn-primary" th:if="${loginUsuario != null}" th:href="@{/}">Ir al inicio</a>
         </div>
     </div>
 </main>

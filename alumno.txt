@@ -9,7 +9,8 @@ ACCESO
   Usuario:  alumno   (o demo para pruebas rápidas)
   Contraseña: practica   (demo usa contraseña: demo)
 
-  Ayuda general (sin entrar): http://localhost:8080/como-funciona
+  Ayuda: http://localhost:8080/como-funciona (menú Ayuda; sin sesión → Entrar;
+  con sesión → botón Inicio a la portada)
 
 IMPORTANTE: cada alumno suele tener su PROPIA instalación en su PC. No está
 conectada con la del profesor ni con la de otros alumnos.
@@ -22,6 +23,8 @@ QUÉ PUEDES HACER COMO ALUMNO
    - En la portada elige un módulo: POO, SQL, Docker, redes, Git, etc.
    - «Empezar ahora» o «Sorpresa» lanzan un ejercicio aleatorio.
    - Escribes tu respuesta y la envías; la app corrige (nota 0–10, aprueba ≥ 5).
+   - Si fallas un criterio, verás qué se esperaba y una pista en lenguaje claro
+     (no expresiones regulares técnicas).
    - En módulos de sistemas puedes practicar en el contenedor Docker (tarjeta
      «Entorno Docker» en la portada).
    - «Limpiar entorno de práctica» vacía la carpeta datos-practica/ del host.
@@ -56,15 +59,18 @@ QUÉ PUEDES HACER COMO ALUMNO
    b) Tus estadísticas de uso (servidor) — totales en tu equipo.
       Botón «Limpiar estadísticas» (pide confirmación; borra datos del servidor).
 
-6. ENTREGAR TU PROGRESO AL PROFESOR
-   - «Descargar entrega para el profesor» → fichero .json.
+6. ENTREGAR TU PROGRESO AL PROFESOR (solo cuentas alumno)
+   - Portada → «Descargar entrega para el profesor» → fichero .json.
    - Incluye estadísticas, historial de ejercicios (enunciado, respuesta, nota)
      y progreso local del navegador.
    - Déjalo en la carpeta compartida para que el profesor lo importe en
      Seguimiento de alumnos o lo consulte en Resultados (CSV).
 
 7. TU PERFIL (/perfil)
-   - Nombre, contraseña, clave Gemini, dificultad IA.
+   - Nombre, contraseña, clave Gemini, modelo Gemini, dificultad IA.
+   - Modelo recomendado: gemini-2.5-flash (con guiones, no gemini-2.5.flash).
+   - «Guardar modelo» no pide contraseña; guardar o cambiar la clave API sí
+     (contraseña de acceso: practica si no la cambiaste).
 
 
 QUÉ NO PUEDES HACER COMO ALUMNO

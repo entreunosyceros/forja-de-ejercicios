@@ -332,12 +332,12 @@ docker exec -it forjaexamenes-practica bash</pre>
             </div>
         </div>
 
-        <div class="card-entrega-profesor">
+        <div class="card-entrega-profesor" th:if="${!esProfesor}">
             <h3>Entrega para el profesor</h3>
             <p class="hint">
                 Descarga un fichero <code>.json</code> con tus estadísticas del servidor y el progreso de este navegador.
                 Déjalo en la <strong>carpeta compartida</strong> de la clase para que el profesor lo importe
-                (<a th:href="@{/profesor/alumnos}" th:if="${esProfesor}">Seguimiento de alumnos</a><span th:if="${!esProfesor}">Seguimiento de alumnos</span>).
+                (Seguimiento de alumnos).
                 Opcional: guarda también el PDF de ejercicios concretos desde la pantalla de resultado.
             </p>
             <button type="button" class="btn btn-secondary btn-sm" id="btn-exportar-entrega">

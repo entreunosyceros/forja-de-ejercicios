@@ -87,6 +87,11 @@ class PruebaServicioEntregasAlumno {
         EntregaAlumno importada = servicioEntregas.importar("profesor", json, "Pedro").entrega();
         assertEquals(3, importada.getEstadisticasServidor().getTotalIntentos());
         assertEquals("Pedro", importada.getNombreEtiqueta());
+
+        var comparativa = servicioEntregas.construirComparativa("profesor");
+        assertEquals(1, comparativa.alumnos().size());
+        assertEquals("Pedro", comparativa.alumnos().get(0).nombreEtiqueta());
+        assertEquals(1, servicioEntregas.listarImportadas("profesor").size());
     }
 
     @Test

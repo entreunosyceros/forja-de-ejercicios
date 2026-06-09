@@ -12,8 +12,8 @@
     let chartEvolucion = null;
 
     function leerComparativa() {
-        const seccion = document.querySelector(".pagina-profesor-alumnos");
-        const raw = seccion?.dataset?.comparativa;
+        const nodo = document.getElementById("datos-comparativa-clase");
+        const raw = nodo?.textContent?.trim();
         if (!raw) return;
         try {
             comparativa = JSON.parse(raw);
