@@ -3,6 +3,7 @@ package com.luegoestarde.forjaexamenes.servicio;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.luegoestarde.forjaexamenes.configuracion.CargadorEnvFichero;
+import com.luegoestarde.forjaexamenes.configuracion.ModeloGemini;
 import com.luegoestarde.forjaexamenes.configuracion.PropiedadesForjaExamenes;
 import com.luegoestarde.forjaexamenes.modelo.ConfiguracionGeminiAlmacenada;
 import java.io.IOException;
@@ -38,9 +39,11 @@ public class ServicioConfiguracionGemini {
     public String resolverModelo() {
         String desdeDatos = cargarDesdeDisco().map(ConfiguracionGeminiAlmacenada::getModel).orElse("");
         if (desdeDatos != null && !desdeDatos.isBlank()) {
-            return desdeDatos.strip();
+            return ModeloGemini.normalizar(desdeDatos);
         }
-        return CargadorEnvFichero.resolverGeminiModelo(propiedades.getGeminiModel(), raizProyecto());
+        String desdeEnv = CargadorEnvFichero.resolverGeminiModelo(
+                propiedades.getGeminiModel(), raizProyecto());
+        return ModeloGemini.normalizar(desdeEnv);
     }
 
     public boolean estaConfigurado() {
@@ -52,7 +55,24 @@ public class ServicioConfiguracionGemini {
         return new EstadoGemini(
                 !clave.isBlank(),
                 enmascarar(clave),
-                resolverModelo().isBlank() ? "gemini-2.5-flash" : resolverModelo());
+                resolverModelo());
+    }
+
+    /**
+     * Cambia solo el modelo (sin pedir contraseña). Requiere sesión y clave ya configurada.
+     */
+    public void actualizarSoloModelo(String modeloNuevo) throws IOException {
+        if (modeloNuevo == null || modeloNuevo.isBlank()) {
+            throw new IllegalArgumentException("Indica el nombre del modelo (p. ej. gemini-2.5-flash).");
+        }
+        if (!estaConfigurado()) {
+            throw new IllegalArgumentException(
+                    "Primero guarda la clave API de Gemini (formulario de arriba).");
+        }
+        ConfiguracionGeminiAlmacenada datos = cargarDesdeDisco()
+                .orElseThrow(() -> new IllegalStateException("No se encontró datos/gemini.json."));
+        datos.setModel(ModeloGemini.normalizar(modeloNuevo));
+        guardarEnDisco(datos);
     }
 
     public void guardarDesdeInterfaz(
@@ -71,9 +91,9 @@ public class ServicioConfiguracionGemini {
         }
 
         if (modeloNuevo != null && !modeloNuevo.isBlank()) {
-            datos.setModel(modeloNuevo.strip());
+            datos.setModel(ModeloGemini.normalizar(modeloNuevo));
         } else if (datos.getModel() == null || datos.getModel().isBlank()) {
-            datos.setModel("gemini-2.5-flash");
+            datos.setModel(ModeloGemini.POR_DEFECTO);
         }
 
         datos.setActualizadoPor(login);
@@ -94,7 +114,10 @@ public class ServicioConfiguracionGemini {
         var cuenta = cuentasUsuarios.obtenerCuenta(login)
                 .orElseThrow(() -> new IllegalArgumentException("No se encontró tu cuenta."));
         if (!cuentasUsuarios.verificarContrasena(contrasenaActual, cuenta.getPasswordHash())) {
-            throw new IllegalArgumentException("La contraseña actual no es correcta.");
+            throw new IllegalArgumentException(
+                    "La contraseña no es correcta para el usuario «" + login + "». "
+                            + "Usa la contraseña con la que entraste (no la clave API de Gemini). "
+                            + "Si no la cambiaste: alumno/practica, demo/demo o profesor/profesor.");
         }
     }
 

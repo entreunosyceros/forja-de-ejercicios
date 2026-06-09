@@ -42,10 +42,13 @@
                 th:classappend="${d.cumplido} ? ' criterion-ok' : ' criterion-fail'">
                 <span class="criterion-icon" th:text="${d.cumplido} ? '✅' : '❌'">?</span>
                 <div class="criterion-body">
-                    <code th:if="${d.patron != null and !#strings.isEmpty(d.patron)}"
+                    <p class="criterion-titulo"
+                       th:text="${d.descripcion != null and !#strings.isEmpty(d.descripcion) ? d.descripcion : (d.esperado != null ? d.esperado : 'Criterio')}">
+                        Criterio
+                    </p>
+                    <code class="criterion-tecnico muted"
+                          th:if="${modoProfesor and d.patron != null and !#strings.isEmpty(d.patron)}"
                           th:text="${d.patron}">patron</code>
-                    <code th:if="${(d.patron == null or #strings.isEmpty(d.patron)) and d.terminos != null}"
-                          th:text="${#strings.listJoin(d.terminos, ', ')}">terminos</code>
                     <p class="criterion-esperado" th:if="${d.esperado != null}">
                         <strong>Esperado:</strong> <span th:text="${d.esperado}">—</span>
                     </p>

@@ -48,4 +48,21 @@ class PruebaServicioConfiguracionGemini {
     void enmascararClave() {
         assertEquals("AIza••••••6789", ServicioConfiguracionGemini.enmascarar("AIzaSy123456789"));
     }
+
+    @Test
+    void normalizaModeloConTypoAlResolver() throws Exception {
+        var cfg = new com.fasterxml.jackson.databind.ObjectMapper().readValue(
+                tempDir.resolve("datos/gemini.json").toFile(),
+                ConfiguracionGeminiAlmacenada.class);
+        cfg.setModel("gemini-2.5.flash");
+        new com.fasterxml.jackson.databind.ObjectMapper()
+                .writeValue(tempDir.resolve("datos/gemini.json").toFile(), cfg);
+        assertEquals("gemini-2.5-flash", servicio.resolverModelo());
+    }
+
+    @Test
+    void actualizarSoloModeloSinContrasena() throws Exception {
+        servicio.actualizarSoloModelo("gemini-2.5.flash");
+        assertEquals("gemini-2.5-flash", servicio.resolverModelo());
+    }
 }

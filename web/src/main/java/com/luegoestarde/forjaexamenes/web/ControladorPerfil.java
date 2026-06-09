@@ -62,6 +62,23 @@ public class ControladorPerfil {
         return "redirect:/perfil";
     }
 
+    @PostMapping("/perfil/gemini-modelo")
+    public String guardarModeloGemini(
+            @RequestParam String geminiModelo,
+            RedirectAttributes atributos) {
+        try {
+            configuracionGemini.actualizarSoloModelo(geminiModelo);
+            atributos.addFlashAttribute(
+                    "mensajePerfilOk",
+                    "Modelo Gemini actualizado: " + configuracionGemini.resolverModelo());
+        } catch (IllegalArgumentException ex) {
+            atributos.addFlashAttribute("errorPerfil", ex.getMessage());
+        } catch (Exception ex) {
+            atributos.addFlashAttribute("errorPerfil", "No se pudo guardar el modelo: " + ex.getMessage());
+        }
+        return "redirect:/perfil";
+    }
+
     @PostMapping("/perfil/gemini")
     public String guardarGemini(
             @RequestParam(required = false) String geminiApiKey,

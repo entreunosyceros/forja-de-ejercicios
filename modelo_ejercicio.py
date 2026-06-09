@@ -221,19 +221,28 @@ def criterio_desde_palabra_clave(
             terminos.append(v)
 
     if len(terminos) > 1:
+        lista = ", ".join(f"«{t}»" for t in terminos)
         return {
             "tipo": "contiene_alguno",
             "terminos": terminos,
             "peso": peso,
-            "esperado": f"Incluir uno de: {', '.join(terminos)}",
-            "pista": f"Tu respuesta debe usar alguno de: {', '.join(terminos)}",
+            "descripcion": f"Uno de: {lista}",
+            "esperado": f"Debe incluir al menos uno de: {lista}.",
+            "pista": (
+                f"Válido cualquiera de estas formas: {lista}. "
+                "El concepto del enunciado debe quedar reflejado con alguna de ellas."
+            ),
         }
     return {
         "tipo": "contiene_todos",
         "terminos": [palabra],
         "peso": peso,
-        "esperado": f"Incluir en la respuesta: {palabra}",
-        "pista": f"Tu solución debe mencionar o usar: {palabra}",
+        "descripcion": f"Incluir: «{palabra}»",
+        "esperado": f"Debe aparecer en tu respuesta: «{palabra}».",
+        "pista": (
+            f"El ejercicio se basa en tus apuntes: debías mencionar o aplicar "
+            f"«{palabra}». Revisa el enunciado y el fragmento usado."
+        ),
     }
 
 

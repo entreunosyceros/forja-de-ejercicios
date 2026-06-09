@@ -493,12 +493,10 @@ MODULOS = tuple(sorted(GENERADORES.keys()))
 
 
 def _enriquecer_criterios(escenario: dict) -> None:
+    from retroalimentacion_criterios import aplicar_retroalimentacion_a_criterio
+
     for criterio in escenario.get("criterios", []):
-        patron = criterio.get("patron", "")
-        if "esperado" not in criterio:
-            criterio["esperado"] = f"Incluir en la respuesta: {patron[:55]}"
-        if "pista" not in criterio:
-            criterio["pista"] = criterio["esperado"]
+        aplicar_retroalimentacion_a_criterio(criterio)
 
 
 def _aplicar_nivel(escenario: dict, nivel: int) -> dict:

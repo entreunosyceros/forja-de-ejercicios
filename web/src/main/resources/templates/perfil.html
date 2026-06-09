@@ -73,6 +73,20 @@
                 y pégala aquí.
             </p>
 
+            <form class="form-perfil form-gemini" method="post" th:action="@{/perfil/gemini-modelo}">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+                <label for="geminiModelo">Modelo</label>
+                <input type="text" id="geminiModelo" name="geminiModelo" required
+                       th:value="${geminiModelo}" placeholder="gemini-2.5-flash"/>
+                <p class="hint">Nombre exacto con guiones, p. ej. <code>gemini-2.5-flash</code>
+                    (no <code>gemini-2.5.flash</code>). No pide contraseña.</p>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Guardar modelo</button>
+                </div>
+            </form>
+
             <form class="form-perfil form-gemini" method="post" th:action="@{/perfil/gemini}">
                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
 
@@ -80,13 +94,12 @@
                 <input type="password" id="geminiApiKey" name="geminiApiKey" autocomplete="off"
                        placeholder="AIzaSy…" th:required="${!geminiConfigurado}"/>
 
-                <label for="geminiModelo">Modelo</label>
-                <input type="text" id="geminiModelo" name="geminiModelo"
-                       th:value="${geminiModelo}" placeholder="gemini-2.5-flash"/>
-
-                <label for="contrasenaActualGemini">Tu contraseña actual (confirmación)</label>
+                <label for="contrasenaActualGemini">Contraseña de acceso (confirmación)</label>
                 <input type="password" id="contrasenaActualGemini" name="contrasenaActual" required
                        autocomplete="current-password"/>
+                <p class="hint">La contraseña con la que entraste como
+                    <strong th:text="${usuarioAcceso}">alumno</strong>, no la clave API.
+                    Por defecto: alumno/practica, demo/demo, profesor/profesor (si no la cambiaste).</p>
 
                 <div class="form-actions">
                     <button type="submit" class="btn btn-primary">Guardar clave Gemini</button>

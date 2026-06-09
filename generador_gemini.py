@@ -21,6 +21,19 @@ from tipo_materia import (
 )
 
 MODELO_POR_DEFECTO = os.environ.get("FORJAEXAMENES_GEMINI_MODEL", "gemini-2.5-flash")
+
+
+def _normalizar_modelo(modelo: str) -> str:
+    """Corrige typos frecuentes (p. ej. gemini-2.5.flash → gemini-2.5-flash)."""
+    limpio = (modelo or "").strip()
+    if not limpio:
+        return "gemini-2.5-flash"
+    return re.sub(
+        r"gemini-(\d+\.\d+)\.(flash|pro|lite)",
+        r"gemini-\1-\2",
+        limpio,
+        flags=re.IGNORECASE,
+    )
 _PLACEHOLDERS_INVALIDOS = frozenset({
     "",
     "tu_clave_de_google_ai_studio",
@@ -98,6 +111,13 @@ def _mensaje_error_gemini(exc: Exception) -> str:
             "  • Añade en examenforge/.env: FORJAEXAMENES_GEMINI_MODEL=gemini-2.5-flash\n"
             "  • O espera ~1 minuto y vuelve a intentar.\n"
             "  • Revisa límites: https://ai.google.dev/gemini-api/docs/rate-limits"
+        )
+    if "404" in texto and "NOT_FOUND" in texto and "models/" in texto:
+        return (
+            "El nombre del modelo Gemini no es válido (404 NOT_FOUND).\n"
+            "  • Usa guiones: gemini-2.5-flash (no gemini-2.5.flash)\n"
+            "  • En Mi perfil → Guardar modelo, o en datos/gemini.json y .env\n"
+            "  • Modelos: https://ai.google.dev/gemini-api/docs/models"
         )
     return f"Error al llamar a Gemini: {texto[:500]}"
 
@@ -247,7 +267,7 @@ def generar_desde_fragmento(
     modelo: str | None = None,
 ) -> dict:
     texto_fragmento = fragmento.get("texto", "") or ""
-    modelo_efectivo = modelo or MODELO_POR_DEFECTO
+    modelo_efectivo = _normalizar_modelo(modelo or MODELO_POR_DEFECTO)
     # El cliente y el prompt se construyen una sola vez y se reutilizan en los reintentos.
     cliente = _crear_cliente()
     tipo = resolver_tipo_materia(

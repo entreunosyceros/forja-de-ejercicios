@@ -652,6 +652,8 @@ examenforge/
 | Puerto 8080 ocupado | `fuser -k 8080/tcp` o cambiar `server.port` |
 | `API_KEY_INVALID` | Clave real en `.env`; reinicia; `unset GEMINI_API_KEY` en el shell si molesta |
 | Cuota Gemini `429` | `FORJAEXAMENES_GEMINI_MODEL=gemini-2.5-flash` en `.env` |
+| Gemini `404 NOT_FOUND` (modelo) | Usa `gemini-2.5-flash` con **guiones** (no `gemini-2.5.flash`). En **Mi perfil** → **Guardar modelo** (no pide contraseña) |
+| Perfil: contraseña incorrecta al guardar clave API | Usa la contraseña **de acceso** del usuario con el que entraste (no la clave API). Por defecto: `alumno`/`practica`; si la cambiaste antes, la nueva |
 | Indexación lenta | Es normal en PDFs grandes; espera el aviso «en segundo plano» en la portada |
 | Windows: `indexador_docs.py falló (código 1)` al arrancar | Actualiza `indexador_docs.py` e `iniciar-forja.bat`; comprueba `pip install -r requirements-docs.txt`; prueba `python indexador_docs.py` en la carpeta del proyecto |
 | Ejercicios PDF piden comandos en materia no técnica | Crea `documentacion/<tema>/.forja-tipo` con `general` o `idiomas` y reindexa |

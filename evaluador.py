@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 
 from alias_comandos import contiene_termino_flexible, variantes_termino
+from retroalimentacion_criterios import enriquecer_detalle
 
 
 def _normalizar(texto: str) -> str:
@@ -44,7 +45,7 @@ def evaluar_criterio_regex(respuesta: str, criterio: dict) -> dict:
     }
     if not cumplido:
         detalle["pista"] = criterio.get("pista", esperado)
-    return detalle
+    return enriquecer_detalle(criterio, detalle)
 
 
 def evaluar_criterio_contiene_todos(respuesta: str, criterio: dict) -> dict:
@@ -84,7 +85,7 @@ def evaluar_criterio_contiene_todos(respuesta: str, criterio: dict) -> dict:
     if not cumplido:
         detalle["faltan"] = faltan
         detalle["pista"] = criterio.get("pista", f"Faltan: {', '.join(faltan)}")
-    return detalle
+    return enriquecer_detalle(criterio, detalle)
 
 
 def evaluar_criterio_contiene_alguno(respuesta: str, criterio: dict) -> dict:
@@ -115,7 +116,7 @@ def evaluar_criterio_contiene_alguno(respuesta: str, criterio: dict) -> dict:
     }
     if not cumplido:
         detalle["pista"] = criterio.get("pista", esperado)
-    return detalle
+    return enriquecer_detalle(criterio, detalle)
 
 
 def evaluar_criterio(respuesta: str, criterio: dict) -> dict:
