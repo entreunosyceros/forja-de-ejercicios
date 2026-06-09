@@ -3,37 +3,357 @@
     "prohibidas": [
       "configurar", "configuracion", "servidor", "sistema", "usar", "hacer",
       "importante", "necesario", "correcto", "apropiado", "ejemplo", "proceso",
-      "informacion", "datos", "archivo", "programa", "aplicacion", "usuario"
+      "informacion", "datos", "archivo", "programa", "aplicacion", "usuario",
+      "solucion", "respuesta", "problema", "tarea", "ejercicio", "practica",
+      "siguiente", "anterior", "primero", "segundo", "ademas", "tambien",
+      "debe", "deberia", "puede", "podria", "necesita", "requiere",
+      "verificar", "comprobar", "revisar", "analizar", "entender", "conocer",
+      "basico", "general", "principal", "completo", "adecuado", "optimo",
+      "mejor", "posible", "diferente", "mismo", "otro", "cada", "todo",
+      "documento", "texto", "contenido", "seccion", "capitulo", "apartado",
+      "herramienta", "metodo", "forma", "manera", "tipo", "clase", "objeto",
+      "funcion", "variable", "valor", "resultado", "estado", "accion",
+      "operacion", "gestion", "administracion", "mantenimiento", "desarrollo"
     ],
     "permitidas_extra": []
   },
-  "docs_docker": {
-    "prohibidas": ["contenedor", "imagen"],
-    "permitidas_extra": ["docker", "compose", "volume", "volumen"]
-  },
   "docs_*": {
     "prohibidas": [],
-    "permitidas_extra": []
+    "permitidas_extra": [
+      "docker", "compose", "git", "sql", "jdbc", "java", "linux", "bash",
+      "chmod", "chown", "systemctl", "sysctl", "vlan", "ping", "traceroute"
+    ]
+  },
+  "docs_docker": {
+    "prohibidas": [
+      "contenedor", "imagen", "dockerfile", "puerto", "servicio", "red"
+    ],
+    "permitidas_extra": [
+      "docker", "compose", "volume", "volumen", "network", "bind", "mount",
+      "dockerfile", "registry", "tag", "expose", "publish"
+    ]
+  },
+  "docs_git": {
+    "prohibidas": [
+      "repositorio", "repo", "codigo", "cambio", "version", "historial", "rama"
+    ],
+    "permitidas_extra": [
+      "git", "commit", "branch", "merge", "stash", "remote", "origin", "HEAD"
+    ]
+  },
+  "docs_redes": {
+    "prohibidas": [
+      "red", "conexion", "protocolo", "internet", "equipo", "dispositivo", "host"
+    ],
+    "permitidas_extra": [
+      "ip", "vlan", "route", "ping", "traceroute", "subnet", "gateway", "dns",
+      "tcp", "udp", "port", "firewall", "iptables", "ss", "netstat"
+    ]
+  },
+  "docs_sistemas": {
+    "prohibidas": [
+      "permiso", "directorio", "fichero", "carpeta", "usuario", "grupo", "acceso"
+    ],
+    "permitidas_extra": [
+      "chmod", "chown", "chgrp", "umask", "setfacl", "getfacl", "systemctl",
+      "journalctl", "cron", "systemd", "sudo", "passwd", "usermod", "groupmod"
+    ]
+  },
+  "docs_comandos_linux": {
+    "prohibidas": [
+      "comando", "terminal", "shell", "linea", "orden", "instruccion", "ejecutar"
+    ],
+    "permitidas_extra": [
+      "ls", "cd", "pwd", "cat", "grep", "find", "awk", "sed", "tar", "curl",
+      "wget", "ps", "kill", "top", "df", "du", "mount", "ln", "cp", "mv", "rm"
+    ]
+  },
+  "docs_forense": {
+    "prohibidas": [
+      "evidencia", "investigacion", "analisis", "caso", "prueba", "informe"
+    ],
+    "permitidas_extra": [
+      "hash", "md5", "sha256", "hexdump", "strings", "file", "stat", "dd",
+      "mount", "losetup", "journalctl", "grep", "find", "timeline"
+    ]
+  },
+  "docs_sql": {
+    "prohibidas": [
+      "tabla", "columna", "consulta", "registro", "fila", "dato", "base"
+    ],
+    "permitidas_extra": [
+      "select", "insert", "update", "delete", "join", "where", "group by",
+      "order by", "having", "index", "primary key", "foreign key", "constraint"
+    ]
+  },
+  "docs_bd": {
+    "prohibidas": [
+      "tabla", "columna", "consulta", "registro", "fila", "dato", "base"
+    ],
+    "permitidas_extra": [
+      "select", "insert", "update", "delete", "join", "where", "explain",
+      "create index", "transaction", "commit", "rollback", "jdbc"
+    ]
+  },
+  "docs_java": {
+    "prohibidas": [
+      "clase", "objeto", "metodo", "variable", "codigo", "programa", "aplicacion"
+    ],
+    "permitidas_extra": [
+      "extends", "implements", "override", "interface", "abstract", "public",
+      "private", "protected", "static", "final", "throws", "exception", "try",
+      "catch", "finally", "arraylist", "hashmap", "hashset", "preparedstatement"
+    ]
+  },
+  "docs_poo": {
+    "prohibidas": [
+      "clase", "objeto", "metodo", "variable", "herencia", "polimorfismo"
+    ],
+    "permitidas_extra": [
+      "extends", "implements", "override", "interface", "abstract", "encapsulation",
+      "getter", "setter", "constructor", "super", "this", "static", "final"
+    ]
   },
   "alias_comandos": {
-    "docker run": ["docker run", "docker container run"],
-    "docker compose up": ["docker compose up", "docker-compose up"],
-    "docker compose down": ["docker compose down", "docker-compose down"],
-    "docker ps": ["docker ps", "docker container ls"],
-    "docker logs": ["docker logs", "docker container logs"],
-    "docker exec": ["docker exec", "docker container exec"],
-    "git commit": ["git commit"],
-    "git push": ["git push"],
-    "git pull": ["git pull"],
-    "git clone": ["git clone"],
-    "SELECT": ["SELECT", "select"],
-    "INSERT": ["INSERT", "insert"],
-    "UPDATE": ["UPDATE", "update"],
-    "DELETE": ["DELETE", "delete"],
-    "CREATE TABLE": ["CREATE TABLE", "create table"],
-    "FOREIGN KEY": ["FOREIGN KEY", "foreign key"],
-    "BEGIN": ["BEGIN", "START TRANSACTION", "start transaction"],
-    "COMMIT": ["COMMIT", "commit"],
-    "ROLLBACK": ["ROLLBACK", "rollback"]
+    "docker run": [
+      "docker run", "docker container run"
+    ],
+    "docker stop": [
+      "docker stop", "docker container stop"
+    ],
+    "docker rm": [
+      "docker rm", "docker container rm"
+    ],
+    "docker ps": [
+      "docker ps", "docker container ls", "docker container ps"
+    ],
+    "docker logs": [
+      "docker logs", "docker container logs"
+    ],
+    "docker exec": [
+      "docker exec", "docker container exec"
+    ],
+    "docker inspect": [
+      "docker inspect", "docker container inspect"
+    ],
+    "docker build": [
+      "docker build", "docker image build"
+    ],
+    "docker pull": [
+      "docker pull", "docker image pull"
+    ],
+    "docker compose up": [
+      "docker compose up", "docker-compose up"
+    ],
+    "docker compose down": [
+      "docker compose down", "docker-compose down"
+    ],
+    "docker compose build": [
+      "docker compose build", "docker-compose build"
+    ],
+    "docker compose ps": [
+      "docker compose ps", "docker-compose ps"
+    ],
+    "docker network ls": [
+      "docker network ls", "docker network list"
+    ],
+    "docker volume ls": [
+      "docker volume ls", "docker volume list"
+    ],
+    "git status": [
+      "git status"
+    ],
+    "git add": [
+      "git add", "git add .", "git add -A"
+    ],
+    "git commit": [
+      "git commit", "git commit -m"
+    ],
+    "git push": [
+      "git push", "git push origin"
+    ],
+    "git pull": [
+      "git pull", "git pull origin"
+    ],
+    "git clone": [
+      "git clone"
+    ],
+    "git branch": [
+      "git branch", "git branch -a"
+    ],
+    "git checkout": [
+      "git checkout", "git switch"
+    ],
+    "git merge": [
+      "git merge"
+    ],
+    "git merge --abort": [
+      "git merge --abort"
+    ],
+    "git stash": [
+      "git stash", "git stash pop", "git stash apply"
+    ],
+    "git diff": [
+      "git diff"
+    ],
+    "git log": [
+      "git log", "git log --oneline"
+    ],
+    "git remote": [
+      "git remote", "git remote -v"
+    ],
+    "chmod": [
+      "chmod"
+    ],
+    "chown": [
+      "chown", "chown -R"
+    ],
+    "chgrp": [
+      "chgrp"
+    ],
+    "setfacl": [
+      "setfacl", "setfacl -m"
+    ],
+    "getfacl": [
+      "getfacl"
+    ],
+    "usermod": [
+      "usermod", "usermod -aG"
+    ],
+    "systemctl start": [
+      "systemctl start"
+    ],
+    "systemctl stop": [
+      "systemctl stop"
+    ],
+    "systemctl restart": [
+      "systemctl restart"
+    ],
+    "systemctl status": [
+      "systemctl status"
+    ],
+    "systemctl enable": [
+      "systemctl enable"
+    ],
+    "journalctl": [
+      "journalctl", "journalctl -u", "journalctl -xe"
+    ],
+    "sysctl -w net.ipv4.ip_forward": [
+      "sysctl -w net.ipv4.ip_forward=1", "sysctl net.ipv4.ip_forward"
+    ],
+    "ip link": [
+      "ip link", "ip link add", "ip link set"
+    ],
+    "ip addr": [
+      "ip addr", "ip address", "ip addr add"
+    ],
+    "ip route": [
+      "ip route", "ip route add", "ip r"
+    ],
+    "ip route add": [
+      "ip route add", "ip r add"
+    ],
+    "vlan": [
+      "vlan", "type vlan", "ip link add link"
+    ],
+    "ping": [
+      "ping", "ping -c"
+    ],
+    "traceroute": [
+      "traceroute", "tracepath", "tracert"
+    ],
+    "ss -tuln": [
+      "ss -tuln", "ss -lntu", "netstat -tuln", "netstat -lntu"
+    ],
+    "iptables -L": [
+      "iptables -L", "iptables -S", "iptables --list"
+    ],
+    "SELECT": [
+      "SELECT", "select"
+    ],
+    "INSERT": [
+      "INSERT", "insert"
+    ],
+    "UPDATE": [
+      "UPDATE", "update"
+    ],
+    "DELETE": [
+      "DELETE", "delete"
+    ],
+    "CREATE TABLE": [
+      "CREATE TABLE", "create table"
+    ],
+    "ALTER TABLE": [
+      "ALTER TABLE", "alter table"
+    ],
+    "DROP TABLE": [
+      "DROP TABLE", "drop table"
+    ],
+    "CREATE INDEX": [
+      "CREATE INDEX", "create index"
+    ],
+    "FOREIGN KEY": [
+      "FOREIGN KEY", "foreign key", "REFERENCES", "references"
+    ],
+    "PRIMARY KEY": [
+      "PRIMARY KEY", "primary key"
+    ],
+    "LEFT JOIN": [
+      "LEFT JOIN", "left join", "LEFT OUTER JOIN", "left outer join"
+    ],
+    "INNER JOIN": [
+      "INNER JOIN", "inner join", "JOIN", "join"
+    ],
+    "GROUP BY": [
+      "GROUP BY", "group by"
+    ],
+    "ORDER BY": [
+      "ORDER BY", "order by"
+    ],
+    "HAVING": [
+      "HAVING", "having"
+    ],
+    "WHERE": [
+      "WHERE", "where"
+    ],
+    "EXPLAIN": [
+      "EXPLAIN", "explain", "EXPLAIN ANALYZE", "explain analyze"
+    ],
+    "BEGIN": [
+      "BEGIN", "begin", "START TRANSACTION", "start transaction"
+    ],
+    "COMMIT": [
+      "COMMIT", "commit"
+    ],
+    "ROLLBACK": [
+      "ROLLBACK", "rollback"
+    ],
+    "PreparedStatement": [
+      "PreparedStatement", "preparedStatement", "prepareStatement"
+    ],
+    "executeQuery": [
+      "executeQuery"
+    ],
+    "executeUpdate": [
+      "executeUpdate"
+    ],
+    "setString": [
+      "setString", "setInt", "setObject", "setLong", "setDouble"
+    ],
+    "extends": [
+      "extends"
+    ],
+    "implements": [
+      "implements"
+    ],
+    "@Override": [
+      "@Override", "Override"
+    ],
+    "try-with-resources": [
+      "try-with-resources", "try (", "try("
+    ],
+    "throws": [
+      "throws"
+    ]
   }
 }
