@@ -17,6 +17,13 @@ from pathlib import Path
 from typing import Any
 
 from alias_comandos import variantes_termino
+from tipo_materia import (
+    es_clave_valida,
+    min_longitud_clave,
+    prohibidas_extra_tipo,
+    resolver_tipo_materia,
+    texto_enunciado_alumno,
+)
 from util_texto import sin_markdown
 
 RAIZ = Path(__file__).resolve().parent
@@ -121,6 +128,7 @@ def validar_propuesta_gemini(
     *,
     modulo: str | None = None,
     texto_fragmento: str | None = None,
+    tipo_materia: str | None = None,
 ) -> dict[str, Any]:
     """Valida el JSON intermedio que devuelve Gemini (sin regex de corrección)."""
     for campo in ("tema", "pregunta", "palabras_clave"):
@@ -136,37 +144,46 @@ def validar_propuesta_gemini(
     if not isinstance(claves, list):
         raise ValueError("palabras_clave debe ser una lista")
 
+    tipo = resolver_tipo_materia(modulo, tipo_explicito=tipo_materia)
+    min_len = min_longitud_clave(tipo)
     prohibidas, permitidas_extra = _reglas_vocabulario(modulo)
+    prohibidas = set(prohibidas) | set(prohibidas_extra_tipo(tipo))
     fragmento_lower = (texto_fragmento or "").lower()
 
     normalizadas: list[str] = []
     vistos: set[str] = set()
     for item in claves:
         texto = sin_markdown(str(item)).strip()
-        if len(texto) < MIN_LONGITUD_CLAVE or len(texto) > 120:
+        if len(texto) < min_len or len(texto) > 120:
             continue
         clave_lower = texto.lower()
         if clave_lower in vistos:
             continue
         if clave_lower in prohibidas:
             raise ValueError(f"Palabra clave demasiado genérica: «{texto}»")
+        en_fragmento = bool(fragmento_lower and clave_lower in fragmento_lower)
         if fragmento_lower and not _clave_en_fragmento(texto, fragmento_lower, permitidas_extra):
             raise ValueError(
                 f"Palabra clave «{texto}» no aparece en el fragmento de apuntes"
             )
+        if not es_clave_valida(texto, tipo, en_fragmento=en_fragmento):
+            continue
         vistos.add(clave_lower)
         normalizadas.append(texto)
 
     if len(normalizadas) < MIN_PALABRAS_CLAVE:
         raise ValueError(
-            f"Se requieren al menos {MIN_PALABRAS_CLAVE} palabras_clave distintas y técnicas"
+            f"Se requieren al menos {MIN_PALABRAS_CLAVE} palabras_clave distintas y adecuadas al material"
         )
     if len(normalizadas) > MAX_PALABRAS_CLAVE:
         normalizadas = normalizadas[:MAX_PALABRAS_CLAVE]
 
-    if not any(es_clave_tecnica(p) for p in normalizadas):
+    if not any(
+        es_clave_valida(p, tipo, en_fragmento=bool(fragmento_lower and p.lower() in fragmento_lower))
+        for p in normalizadas
+    ):
         raise ValueError(
-            "Al menos una palabra_clave debe ser técnica (comando, flag, nombre concreto, ≥6 caracteres)"
+            "Al menos una palabra_clave debe ser concreta y adecuada al tipo de materia"
         )
 
     variantes_raw = datos.get("variantes") or {}
@@ -186,6 +203,7 @@ def validar_propuesta_gemini(
         "palabras_clave": normalizadas,
         "solucion_modelo": solucion,
         "variantes": variantes,
+        "tipo_materia": tipo,
     }
 
 
@@ -239,20 +257,25 @@ def construir_escenario_desde_propuesta(
     titulo_coleccion: str = "",
     metadatos: dict[str, Any] | None = None,
     texto_fragmento: str | None = None,
+    tipo_materia: str | None = None,
 ) -> dict[str, Any]:
     """Convierte la propuesta de Gemini en un escenario verificable."""
     validada = validar_propuesta_gemini(
         propuesta,
         modulo=modulo,
         texto_fragmento=texto_fragmento,
+        tipo_materia=tipo_materia,
     )
     criterios = construir_criterios_desde_palabras_clave(
         validada["palabras_clave"],
         validada.get("variantes"),
     )
 
+    tipo = validada.get("tipo_materia") or resolver_tipo_materia(
+        modulo, tipo_explicito=tipo_materia
+    )
     titulo = _titulo_desde_propuesta(validada, titulo_coleccion)
-    enunciado = _enunciado_desde_propuesta(validada)
+    enunciado = _enunciado_desde_propuesta(validada, tipo)
     solucion = validada["solucion_modelo"] or _solucion_desde_claves(validada["palabras_clave"])
 
     escenario: dict[str, Any] = {
@@ -265,6 +288,7 @@ def construir_escenario_desde_propuesta(
             "propuesta_gemini": {
                 k: v for k, v in validada.items() if k != "variantes"
             },
+            "tipo_materia": tipo,
             "generado_con": "gemini+modelo_ejercicio",
             **(metadatos or {}),
         },
@@ -290,14 +314,10 @@ def _titulo_desde_propuesta(propuesta: dict[str, str], coleccion: str) -> str:
     return texto[:120]
 
 
-def _enunciado_desde_propuesta(propuesta: dict[str, str]) -> str:
+def _enunciado_desde_propuesta(propuesta: dict[str, str], tipo: str = "informatica") -> str:
     pregunta = propuesta["pregunta"]
-    claves = ", ".join(propuesta["palabras_clave"][:6])
-    return (
-        f"{pregunta}\n\n"
-        f"Escribe los comandos o el código en el cuadro de respuesta. "
-        f"Se comprobarán conceptos del material: {claves}."
-    )
+    claves = propuesta["palabras_clave"][:6]
+    return f"{pregunta}\n\n{texto_enunciado_alumno(tipo, claves)}"
 
 
 def _solucion_desde_claves(palabras: list[str]) -> str:

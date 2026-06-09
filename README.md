@@ -6,7 +6,7 @@
 
 > 📘 **Documentación completa del desarrollo:** Puedes consultar la arquitectura del sistema, el flujo de la IA, los endpoints de Spring Boot y las guías detalladas en nuestro portal oficial de [DeepWiki](https://deepwiki.com/entreunosyceros/forja-de-ejercicios/).
 
-Genera ejercicios prácticos al azar, permite practicar en Docker y corrige la respuesta del alumno con criterios verificables. La interfaz es **Spring Boot**; la generación y corrección las hace **Python** (`generador.py`, `evaluador.py`, `modelo_ejercicio.py`).
+Genera ejercicios prácticos al azar (informática, idiomas u otras materias desde PDF), permite practicar en Docker y corrige la respuesta del alumno con criterios verificables. La interfaz es **Spring Boot**; la generación y corrección las hace **Python** (`generador.py`, `evaluador.py`, `modelo_ejercicio.py`, `tipo_materia.py`).
 
 **Guía en la web (sin login):** con la aplicación arrancada, abre **http://localhost:8080/como-funciona** — también enlazada desde la pantalla de login.
 
@@ -432,7 +432,7 @@ Tipos de criterio soportados: `regex`, `contiene_todos`, `contiene_alguno`.
 | `poo` | POO Java (certificado) |
 | `bd_sql`, `bd_modelo`, `bd_transacciones`, `bd_jdbc`, `bd` | Bases de datos |
 | `redes`, `sistemas`, `docker`, `git` | Infraestructura |
-| `docs_*` | Apuntes indexados + Gemini (tras indexar PDFs) |
+| `docs_*` | Apuntes PDF indexados + Gemini (cualquier asignatura; ver [tipos de materia](#tipos-de-materia-apuntes-pdf)) |
 | `banco_*` | Ejercicios JSON en `banco/aprobados/` |
 
 CLI:
@@ -457,13 +457,41 @@ pip install -r requirements-docs.txt
 cp .env.example .env   # GEMINI_API_KEY desde https://aistudio.google.com/apikey
 ```
 
-Coloca PDFs en `documentacion/<tema>/` → módulo `docs_<tema>` (p. ej. `documentacion/docker/` → `docs_docker`).
+Coloca PDFs en `documentacion/<tema>/` → módulo `docs_<tema>` (p. ej. `documentacion/docker/` → `docs_docker`, `documentacion/ingles/` → `docs_ingles`).
 
-**Desde la web:** en la portada, *Apuntes del profesor* → **Subir e indexar** (alumno o profesor). Tras subir, se indexa automáticamente.
+**Desde la web:** portada → *Apuntes del profesor* → **Subir e indexar**, o botón **Actualizar apuntes** tras copiar PDFs.
 
-Indexación manual: al arrancar la web, botón **Actualizar apuntes**, o `python3 indexador_docs.py`.
+**Indexación manual:** `python3 indexador_docs.py` (también al arrancar la web si hay PDFs nuevos).
 
-Detalle de carpetas: **[documentacion/README.md](documentacion/README.md)**.
+Estructura de carpetas y subida: **[documentacion/README.md](documentacion/README.md)**.
+
+### Tipos de materia (apuntes PDF)
+
+Cada carpeta `documentacion/<tema>/` genera un módulo `docs_<tema>`. El sistema detecta el **tipo de materia** y adapta el prompt de Gemini, la validación de palabras clave y el texto del enunciado.
+
+| Tipo | Carpetas reconocidas (ejemplos) | Qué pide el ejercicio |
+|------|----------------------------------|------------------------|
+| `informatica` | `docker`, `git`, `linux`, `forense`, `sql`… | Comandos, código o pasos técnicos |
+| `idiomas` | `ingles`, `english`, `frances`, `aleman`… | Traducción, gramática, vocabulario del fragmento |
+| `general` | cualquier otra (`historia`, `arte`, `economia`…) | Respuesta escrita basada en el fragmento |
+
+**Prioridad de detección:**
+
+1. Fichero `documentacion/<tema>/.forja-tipo` (o `tipo_materia.txt`) con una línea: `informatica`, `idiomas` o `general`.
+2. Reglas en [`vocabulario_claves.json`](vocabulario_claves.json) → sección `tipos_materia` o `tipo_materia` por módulo.
+3. Por defecto: `general` (materias no listadas explícitamente como informática o idiomas).
+
+Ejemplo para un curso de inglés:
+
+```
+documentacion/ingles/
+├── .forja-tipo          # opcional; contenido: idiomas
+└── unit1-grammar.pdf
+```
+
+Tras indexar, en la portada aparece **docs_ingles**. Los ejercicios pedirán frases o traducciones (no comandos de terminal). La corrección comprueba que la respuesta incluya términos del fragmento.
+
+> Si añades PDFs o cambias `.forja-tipo`, vuelve a indexar (**Actualizar apuntes** o `python3 indexador_docs.py`) para que `indice/docs_*.json` incluya `tipo_materia`.
 
 ---
 
@@ -475,7 +503,7 @@ Detalle de carpetas: **[documentacion/README.md](documentacion/README.md)**.
 | **B — apuntes + IA** | PDF → Gemini → `modelo_ejercicio.py` | `contiene_todos` / `contiene_alguno` + alias |
 | **Banco** | `banco/aprobados/*.json` | Tipos definidos en el JSON + alias |
 
-Gemini solo propone `tema`, `pregunta`, `palabras_clave` (y opcional `variantes`). El sistema valida con [vocabulario_claves.json](vocabulario_claves.json) (listas prohibidas/permitidas) y exige que cada clave aparezca en el fragmento del PDF.
+Gemini solo propone `tema`, `pregunta`, `palabras_clave` (y opcional `variantes`). El sistema valida con [`tipo_materia.py`](tipo_materia.py) y [`vocabulario_claves.json`](vocabulario_claves.json) (prohibidas/permitidas por tipo y módulo) y exige que cada clave aparezca en el fragmento del PDF.
 
 ### Dónde se construye y envía el prompt a la IA
 
@@ -483,34 +511,35 @@ El **único fichero** que habla con la API de Gemini es [`generador_gemini.py`](
 
 | Paso | Fichero | Función / detalle |
 |------|---------|-------------------|
-| 1. Elegir fragmento PDF | [`generador_docs.py`](generador_docs.py) | `generar_ejercicio_documentacion()` — lee `indice/docs_*.json` y elige un trozo de apuntes |
-| 2. **Construir el prompt** | [`generador_gemini.py`](generador_gemini.py) | `_construir_prompt()` — metadatos del fragmento, nivel (1–3), reglas y esquema JSON esperado |
-| 3. **Llamar a Gemini** | [`generador_gemini.py`](generador_gemini.py) | `_generar_desde_fragmento_intento()` → `cliente.models.generate_content(model=…, contents=prompt, …)` |
-| 4. Validar y convertir en ejercicio | [`modelo_ejercicio.py`](modelo_ejercicio.py) | `validar_propuesta_gemini()` + `construir_escenario_desde_propuesta()` — criterios verificables |
-| 5. Orquestación CLI | [`generador.py`](generador.py) | Si el módulo empieza por `docs_`, delega en `generador_docs` |
-| 6. Orquestación web | `web/.../ServicioGenerador.java` | Ejecuta `generador.py` como subproceso; inyecta clave y modelo vía entorno |
+| 1. Indexar PDFs | [`indexador_docs.py`](indexador_docs.py) | Fragmentos en `indice/docs_*.json` con `tipo_materia` |
+| 2. Elegir fragmento | [`generador_docs.py`](generador_docs.py) | `generar_ejercicio_documentacion()` |
+| 3. Resolver tipo | [`tipo_materia.py`](tipo_materia.py) | `informatica` / `idiomas` / `general` |
+| 4. Construir prompt | [`generador_gemini.py`](generador_gemini.py) | `_construir_prompt()` — tipo, nivel (1–3), fragmento |
+| 5. Llamar a Gemini | [`generador_gemini.py`](generador_gemini.py) | `generate_content` → JSON intermedio |
+| 6. Validar y corregir | [`modelo_ejercicio.py`](modelo_ejercicio.py) + [`evaluador.py`](evaluador.py) | Criterios `contiene_todos` / `contiene_alguno` |
+| 7. Web | `ServicioGenerador.java` | Ejecuta `generador.py` como subproceso |
 
 **Flujo resumido:**
 
 ```
-Portada / ejercicio docs_*  →  ServicioGenerador (Java)
-  →  generador.py  →  generador_docs.py  →  generador_gemini.py
-       (_construir_prompt + generate_content)  →  modelo_ejercicio.py  →  evaluador.py
+PDF  →  indexador_docs.py  →  indice/docs_*.json (tipo_materia)
+Portada docs_*  →  generador_docs  →  tipo_materia  →  generador_gemini  →  modelo_ejercicio  →  evaluador
 ```
 
-- **Nivel de dificultad (1–3):** lo fija el alumno en **Perfil** (`datos/usuarios.json`); Java lo pasa a Python con `--nivel`. El prompt incluye instrucciones distintas según el nivel (`_instrucciones_nivel()` en `generador_gemini.py`).
-- **Modelo y clave API:** `datos/gemini.json` o `.env`; Java las pasa al subproceso (`FORJAEXAMENES_GEMINI_MODEL`, `GEMINI_API_KEY`).
-- **Para cambiar qué se le pide a la IA** (tono, reglas, formato JSON): edita `_construir_prompt()` en `generador_gemini.py`. La temperatura y `response_mime_type: application/json` están en `_generar_desde_fragmento_intento()`.
-- **Pre-generación:** si está activa (`forjaexamenes.precarga-ejercicios-activa`), `ServicioPrecargaEjercicios` genera ejercicios `docs_*` en segundo plano para servirlos al instante; el prompt es el mismo.
+- **Nivel (1–3):** Perfil del alumno → `--nivel` en Python (`_instrucciones_nivel()`).
+- **Tipo de materia:** carpeta, `.forja-tipo` o `vocabulario_claves.json` → prompt y validación distintos.
+- **Clave API / modelo:** `datos/gemini.json` o `.env` (`GEMINI_API_KEY`, `FORJAEXAMENES_GEMINI_MODEL`).
+- **Pre-generación:** `forjaexamenes.precarga-ejercicios-activa` — pool de ejercicios `docs_*` listos.
 
 ### Calidad de `palabras_clave`
 
 | Regla | Detalle |
 |-------|---------|
-| Mínimo | 2 claves distintas |
-| Técnica | Al menos una con comando/flag (≥6 caracteres, `-`, `/`, etc.) |
-| Prohibidas | Lista negra global + por módulo |
-| Fragmento | Cada clave debe estar en el texto indexado |
+| Mínimo | 2 claves distintas del fragmento |
+| Tipo `informatica` | Al menos una clave técnica (comando, flag, nombre de herramienta…) |
+| Tipo `idiomas` / `general` | Claves concretas del texto; longitud mínima según tipo |
+| Prohibidas | Lista global + por tipo (`tipos_materia`) + por módulo (`docs_*`) |
+| Fragmento | Cada clave debe aparecer en el texto indexado (salvo `permitidas_extra`) |
 
 ### Banco y aprobación
 
@@ -540,10 +569,10 @@ examenforge/
 ├── iniciar-forja.sh / .bat      # Arranque tras instalar
 ├── arrancar-web.sh
 ├── generador.py / evaluador.py
-├── generador_gemini.py / generador_docs.py
-├── modelo_ejercicio.py / banco_loader.py
+├── generador_gemini.py / generador_docs.py / indexador_docs.py
+├── modelo_ejercicio.py / tipo_materia.py / banco_loader.py
 ├── alias_comandos.py
-├── vocabulario_claves.json      # prohibidas, permitidas, alias_comandos
+├── vocabulario_claves.json      # tipos_materia, prohibidas, alias_comandos
 ├── documentacion/               # PDFs de entrada
 ├── indice/                      # JSON indexado
 ├── banco/
@@ -624,6 +653,8 @@ examenforge/
 | `API_KEY_INVALID` | Clave real en `.env`; reinicia; `unset GEMINI_API_KEY` en el shell si molesta |
 | Cuota Gemini `429` | `FORJAEXAMENES_GEMINI_MODEL=gemini-2.5-flash` en `.env` |
 | Indexación lenta | Es normal en PDFs grandes; espera el aviso «en segundo plano» en la portada |
+| Ejercicios PDF piden comandos en materia no técnica | Crea `documentacion/<tema>/.forja-tipo` con `general` o `idiomas` y reindexa |
+| Palabra clave rechazada en apuntes PDF | Revisa `vocabulario_claves.json` (prohibidas del módulo o del tipo) |
 | `generador.py falló` | `python3 generador.py -m poo` desde `examenforge/` |
 | `403` en `/profesor/revisar` | Entra con cuenta profesor (`profesor` / `profesor`) |
 | `403` al enviar ejercicio | Recarga la página (token CSRF en el formulario) |
@@ -643,6 +674,7 @@ examenforge/
 | Objetivo | Dónde |
 |----------|--------|
 | **Prompt enviado a Gemini** (enunciado, reglas, JSON) | `generador_gemini.py` → `_construir_prompt()` |
+| **Tipo de materia** (informática / idiomas / general) | `tipo_materia.py`, `vocabulario_claves.json` → `tipos_materia`, `.forja-tipo` en carpeta |
 | Parámetros de la llamada API (modelo, temperatura, timeout) | `generador_gemini.py` → `_generar_desde_fragmento_intento()`; timeout también en `application.properties` (`forjaexamenes.gemini-timeout-ms`) |
 | Texto de la guía pública | `templates/fragments/guia-funcionamiento.html` |
 | Vista de revisión profesor | `profesor-revisar-detalle.html`, `herramientas/revision_profesor.py` |
@@ -665,6 +697,7 @@ python3 pruebas/pruebas_evaluador_tipos.py
 python3 pruebas/pruebas_alias_comandos.py
 python3 pruebas/pruebas_banco_loader.py
 python3 pruebas/pruebas_indexador_docs.py
+python3 pruebas/pruebas_tipo_materia.py
 cd web && mvn test
 ```
 

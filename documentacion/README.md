@@ -36,6 +36,27 @@ documentacion/
 - **Subcarpetas** = capítulos (Volúmenes, Redes, Compose…).
 - **Títulos dentro del PDF** = sección (se detectan al indexar).
 
+## Tipo de materia (cualquier asignatura)
+
+Por defecto, cualquier carpeta nueva se trata como materia **general** (historia, economía, etc.).
+Algunas carpetas se reconocen automáticamente:
+
+| Tipo | Carpetas reconocidas (ejemplos) | Ejercicios generados |
+|------|----------------------------------|----------------------|
+| `informatica` | `docker`, `git`, `linux`, `forense`… | Comandos, código, pasos técnicos |
+| `idiomas` | `ingles`, `english`, `frances`… | Traducción, gramática, vocabulario |
+| `general` | cualquier otra (`historia`, `arte`…) | Respuesta escrita basada en el fragmento |
+
+Para fijar el tipo manualmente, crea en la carpeta del tema:
+
+```
+documentacion/ingles/.forja-tipo
+```
+
+Contenido del fichero (una línea): `idiomas`, `informatica` o `general`.
+
+También puedes añadir reglas en `vocabulario_claves.json` (`tipo_materia` por módulo).
+
 ## Indexar
 
 **Automático:** al arrancar la aplicación web (si hay PDFs aquí).

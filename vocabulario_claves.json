@@ -17,12 +17,52 @@
     ],
     "permitidas_extra": []
   },
+  "tipos_materia": {
+    "informatica": {
+      "requiere_clave_tecnica": true,
+      "min_longitud_clave": 2,
+      "carpetas": [
+        "docker", "git", "sql", "linux", "redes", "sistemas", "poo", "java", "bd",
+        "forense", "ansible", "kubernetes", "terraform", "comandos_linux", "jdbc",
+        "networking", "devops", "bash", "shell"
+      ],
+      "modulos": [
+        "docs_docker", "docs_git", "docs_redes", "docs_sistemas", "docs_sql",
+        "docs_bd", "docs_java", "docs_poo", "docs_forense", "docs_comandos_linux"
+      ]
+    },
+    "idiomas": {
+      "requiere_clave_tecnica": false,
+      "min_longitud_clave": 3,
+      "carpetas": [
+        "ingles", "english", "frances", "french", "aleman", "german", "deutsch",
+        "italiano", "italian", "portugues", "portuguese", "idiomas", "esl", "efl",
+        "espanol", "spanish", "chino", "japones"
+      ],
+      "prohibidas": [
+        "lesson", "unit", "chapter", "student", "teacher", "learn", "study",
+        "important", "example", "vocabulary", "grammar", "exercise", "page"
+      ]
+    },
+    "general": {
+      "default": true,
+      "requiere_clave_tecnica": false,
+      "min_longitud_clave": 4,
+      "prohibidas": [
+        "chapter", "section", "summary", "introduction", "conclusion", "overview"
+      ]
+    }
+  },
   "docs_*": {
     "prohibidas": [],
-    "permitidas_extra": [
-      "docker", "compose", "git", "sql", "jdbc", "java", "linux", "bash",
-      "chmod", "chown", "systemctl", "sysctl", "vlan", "ping", "traceroute"
-    ]
+    "permitidas_extra": []
+  },
+  "docs_ingles": {
+    "tipo_materia": "idiomas",
+    "prohibidas": [
+      "lesson", "unit", "chapter", "page", "student", "teacher", "homework"
+    ],
+    "permitidas_extra": []
   },
   "docs_docker": {
     "prohibidas": [

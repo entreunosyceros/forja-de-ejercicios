@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Arranca Spring Boot desde la raíz de examenforge (el pom.xml está en web/).
 # Sin argumentos: mvn clean spring-boot:run
+# Desarrollado por entreunosyceros - 2026
 set -euo pipefail
 RAIZ="$(cd "$(dirname "$0")" && pwd)"
 cd "$RAIZ/web"

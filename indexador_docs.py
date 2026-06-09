@@ -20,6 +20,8 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+from tipo_materia import leer_tipo_desde_carpeta, resolver_tipo_materia
+
 RAIZ = Path(__file__).resolve().parent
 CARPETA_DOCUMENTACION = RAIZ / "documentacion"
 CARPETA_INDICE = RAIZ / "indice"
@@ -193,6 +195,9 @@ def indexar_coleccion(
 
     modulo = nombre_modulo or nombre_modulo_desde_carpeta(carpeta.name)
     tema_slug = carpeta.name if modulo != "docs_general" else "general"
+    tipo_materia = leer_tipo_desde_carpeta(carpeta) or resolver_tipo_materia(
+        modulo, tema_slug=tema_slug
+    )
     chunks: list[dict] = []
     contador_fragmento = 0
 
@@ -231,6 +236,7 @@ def indexar_coleccion(
                     "id": f"{modulo}-f{contador_fragmento}",
                     "tema": tema_slug,
                     "modulo": modulo,
+                    "tipo_materia": tipo_materia,
                     "capitulo": meta_ruta["capitulo"],
                     "capitulo_slug": cap_slug,
                     "capitulo_titulo": _titulo_legible(meta_ruta["capitulo"]),
@@ -255,6 +261,7 @@ def indexar_coleccion(
     indice = {
         "modulo": modulo,
         "tema": tema_slug,
+        "tipo_materia": tipo_materia,
         "titulo_visible": titulo_visible,
         "carpeta": str(carpeta.relative_to(RAIZ)),
         "chunks": chunks,

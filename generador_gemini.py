@@ -14,6 +14,11 @@ from typing import Any
 from util_texto import sin_markdown
 
 import modelo_ejercicio
+from tipo_materia import (
+    formato_respuesta_prompt,
+    instrucciones_prompt_tipo,
+    resolver_tipo_materia,
+)
 
 MODELO_POR_DEFECTO = os.environ.get("FORJAEXAMENES_GEMINI_MODEL", "gemini-2.5-flash")
 _PLACEHOLDERS_INVALIDOS = frozenset({
@@ -136,17 +141,38 @@ def _instrucciones_nivel(nivel: int) -> str:
     return "Para nivel 2: equilibrio entre claridad y exigencia técnica."
 
 
-def _construir_prompt(fragmento: dict, nivel: int, titulo_coleccion: str) -> str:
+def _construir_prompt(
+    fragmento: dict,
+    nivel: int,
+    titulo_coleccion: str,
+    modulo: str,
+    tipo_materia: str | None = None,
+) -> str:
     nivel = max(1, min(3, nivel))
+    tipo = resolver_tipo_materia(
+        modulo,
+        tema_slug=fragmento.get("tema"),
+        tipo_explicito=tipo_materia or fragmento.get("tipo_materia"),
+    )
     pagina = fragmento.get("pagina", "")
     pagina_fin = fragmento.get("pagina_fin", pagina)
     rango_pag = str(pagina)
     if pagina_fin and pagina_fin != pagina:
         rango_pag = f"{pagina}–{pagina_fin}"
-    return f"""Eres un profesor de informática. A partir ÚNICAMENTE del fragmento de apuntes siguientes,
-crea UN ejercicio práctico para que el alumno escriba comandos o código en un cuadro de texto.
+    rol = "profesor" if tipo == "informatica" else "profesor de la asignatura"
+    formato = formato_respuesta_prompt(tipo)
+    ejemplo_claves = (
+        '"comando o concepto literal del fragmento", "otro término obligatorio"'
+        if tipo == "informatica"
+        else '"término o expresión del fragmento", "otro concepto del texto"'
+    )
+    return f"""Eres un {rol}. A partir ÚNICAMENTE del fragmento de apuntes siguientes,
+crea UN ejercicio práctico para que el alumno escriba {formato}.
+
+{instrucciones_prompt_tipo(tipo)}
 
 Colección: {titulo_coleccion}
+Módulo: {modulo}
 Tema: {fragmento.get("tema", "")}
 Capítulo: {fragmento.get("capitulo_titulo", fragmento.get("capitulo", ""))}
 Sección: {fragmento.get("seccion", "")}
@@ -161,27 +187,26 @@ Nivel de dificultad pedido: {nivel} (1=fácil y guiado, 2=intermedio, 3=exigente
 
 Responde SOLO con un objeto JSON válido (sin markdown ni comentarios), con esta forma exacta:
 {{
-  "tema": "tema corto del fragmento (ej. docker, sql, redes)",
+  "tema": "tema corto del fragmento",
   "pregunta": "enunciado claro para el alumno, en español, práctico",
   "palabras_clave": [
-    "comando o concepto literal que debe aparecer en la respuesta",
-    "otro término obligatorio"
+    {ejemplo_claves}
   ],
-  "solucion_modelo": "respuesta modelo en texto plano (comandos o código, una línea por paso)",
+  "solucion_modelo": "respuesta modelo en texto plano (una línea por paso o frase)",
   "variantes": {{
-    "nginx": ["nginx", "nginx:latest"]
+    "termino": ["variante1", "variante2"]
   }}
 }}
 
 Reglas:
-- Entre 2 y 8 palabras_clave: fragmentos literales del material (comandos, flags, nombres)
+- Entre 2 y 8 palabras_clave tomadas del fragmento (literales o expresiones que aparezcan en el texto)
 - Cada palabra_clave debe aparecer literalmente en el fragmento de apuntes
-- Evita términos genéricos (configurar, servidor, usar, sistema…)
-- variantes es opcional: sinónimos válidos por clave
+- Evita términos genéricos (configurar, servidor, usar, lesson, chapter, important…)
+- variantes es opcional: sinónimos o formas alternativas válidas por clave
 - NO inventes expresiones regulares ni criterios de corrección; solo texto que el alumno debe incluir
 - Las palabras_clave deben poder comprobarse buscando ese texto en la respuesta del alumno
 - No inventes temas que no aparezcan en el fragmento
-- La pregunta debe pedir hacer algo (comandos, código), no solo definir
+- La pregunta debe pedir aplicar el contenido del fragmento, no solo repetir el título
 - solucion_modelo y pregunta en TEXTO PLANO: sin markdown, sin ```, sin **, sin #
 """
 
@@ -225,7 +250,12 @@ def generar_desde_fragmento(
     modelo_efectivo = modelo or MODELO_POR_DEFECTO
     # El cliente y el prompt se construyen una sola vez y se reutilizan en los reintentos.
     cliente = _crear_cliente()
-    prompt = _construir_prompt(fragmento, nivel, titulo_coleccion)
+    tipo = resolver_tipo_materia(
+        modulo,
+        tema_slug=fragmento.get("tema"),
+        tipo_explicito=fragmento.get("tipo_materia"),
+    )
+    prompt = _construir_prompt(fragmento, nivel, titulo_coleccion, modulo, tipo)
     ultimo_error: Exception | None = None
     max_intentos = 3
 
@@ -233,7 +263,7 @@ def generar_desde_fragmento(
         try:
             return _generar_desde_fragmento_intento(
                 cliente, modelo_efectivo, prompt, fragmento, modulo,
-                titulo_coleccion, texto_fragmento,
+                titulo_coleccion, texto_fragmento, tipo,
             )
         except ValueError as exc:
             ultimo_error = exc
@@ -250,6 +280,7 @@ def _generar_desde_fragmento_intento(
     modulo: str,
     titulo_coleccion: str,
     texto_fragmento: str,
+    tipo_materia: str,
 ) -> dict:
     try:
         respuesta = cliente.models.generate_content(
@@ -280,12 +311,14 @@ def _generar_desde_fragmento_intento(
         datos,
         modulo=modulo,
         texto_fragmento=texto_fragmento,
+        tipo_materia=tipo_materia,
     )
     escenario = modelo_ejercicio.construir_escenario_desde_propuesta(
         propuesta,
         modulo,
         titulo_coleccion=titulo_coleccion,
         texto_fragmento=texto_fragmento,
+        tipo_materia=tipo_materia,
         metadatos={
             "fuente_fragmento": datos["_fuente"],
             "fragmento_id": datos["_fragmento_id"],
