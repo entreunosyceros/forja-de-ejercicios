@@ -20,6 +20,11 @@ IMPORTANTE: la app del profesor y la de cada alumno son instalaciones
 INDEPENDIENTES (cada uno en su PC). Publicar en tu banco local NO llega solo
 a los alumnos: debes EXPORTAR e importar vía carpeta compartida.
 
+TIP PARA EMPEZAR: haz tú mismo unos ejercicios para ver la dificultad adaptativa
+en acción (sube tras 5 aprobados seguidos, baja tras 3 suspensos). Cuando tengas
+alguno validado, exporta tu primer banco (/profesor/banco → «Descargar banco
+completo») y déjalo en la carpeta compartida para que la clase lo importe.
+
 
 QUÉ PUEDES HACER COMO PROFESOR
 ------------------------------
@@ -80,7 +85,9 @@ G) APUNTES, PERFIL Y CONFIGURACIÓN
    - Cualquier materia: informática, idiomas, historia… (módulos docs_*).
    - Opcional: documentacion/<tema>/.forja-tipo con informatica, idiomas o general.
    - Perfil: clave Gemini (pide contraseña de acceso), modelo Gemini
-     (Guardar modelo, p. ej. gemini-2.5-flash, sin contraseña), dificultad IA.
+     (Guardar modelo, p. ej. gemini-2.5-flash, sin contraseña) y dificultad de
+     ejercicios (1–3). Nota: la dificultad se adapta sola solo en cuentas de
+     alumno; como profesor mantienes el nivel que elijas a mano.
    - Exportar JSON/PDF de ejercicios individuales.
 
 

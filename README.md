@@ -4,13 +4,28 @@
 
 [![Wiki](https://img.shields.io/badge/Wiki-DeepWiki-blue?style=for-the-badge&logo=wikipedia)](https://deepwiki.com/entreunosyceros/forja-de-ejercicios/)
 
-> 📘 **Documentación completa del desarrollo:** Puedes consultar la arquitectura del sistema, el flujo de la IA, los endpoints de Spring Boot y las guías detalladas en nuestro portal oficial de [DeepWiki](https://deepwiki.com/entreunosyceros/forja-de-ejercicios/).
-
 Genera ejercicios prácticos al azar (informática, idiomas u otras materias desde PDF), permite practicar en Docker y corrige la respuesta del alumno con criterios verificables. La interfaz es **Spring Boot**; la generación y corrección las hace **Python** (`generador.py`, `evaluador.py`, `modelo_ejercicio.py`, `tipo_materia.py`).
 
-**Guía en la web:** **http://localhost:8080/como-funciona** (menú **Ayuda**). Sin sesión muestra «Entrar»; si ya estás logueado (alumno o profesor), el botón pasa a **Inicio** y vuelve a la portada.
+> 📘 **Documentación de referencia:** este `README`, las guías por rol ([alumno.txt](alumno.txt) · [profesor.txt](profesor.txt)) y la ayuda integrada en **`/como-funciona`** (menú **Ayuda**). La vista generada de la arquitectura en [DeepWiki](https://deepwiki.com/entreunosyceros/forja-de-ejercicios/) es complementaria; si no carga, usa las guías locales.
 
-**Guías por rol (texto plano):** [alumno.txt](alumno.txt) · [profesor.txt](profesor.txt)
+---
+
+## Contenido
+
+- [Instalación y arranque](#instalación-y-arranque)
+- [Prueba rápida (2 minutos)](#prueba-rápida-2-minutos)
+- [Qué hace la aplicación](#qué-hace-la-aplicación-resumen) — [Alumno](#alumno) · [Profesor](#profesor)
+- [Dificultad adaptativa](#dificultad-adaptativa)
+- [Instalaciones independientes (aula real)](#instalaciones-independientes-aula-real)
+- [Progreso y estadísticas](#progreso-y-estadísticas-portada)
+- [Compartir ejercicios del banco](#compartir-ejercicios-del-banco-carpeta-compartida)
+- [Seguimiento de alumnos (profesor)](#seguimiento-de-alumnos-profesor)
+- [Apuntes en PDF + Gemini](#apuntes-en-pdf--gemini-opcional)
+- [Arquitectura de ejercicios](#arquitectura-de-ejercicios)
+- [Configuración útil](#configuración-útil)
+- [Problemas frecuentes](#problemas-frecuentes)
+- [Pruebas](#pruebas)
+- [Licencia](#licencia)
 
 ---
 
@@ -117,6 +132,25 @@ docker exec -it forjaexamenes-practica bash
 
 ---
 
+## Prueba rápida (2 minutos)
+
+Con la web arrancada en **http://localhost:8080**:
+
+1. Inicia sesión como **alumno** (`alumno` / `practica`).
+2. En la portada, pulsa el módulo **POO** (o **«Empezar ahora»** para un ejercicio aleatorio).
+3. Lee el enunciado y escribe tu respuesta. Por ejemplo, para una clase con un mensaje:
+
+   ```java
+   System.out.println("Hola");
+   ```
+
+4. Pulsa **Enviar**. Verás la **nota (0–10)** y la **retroalimentación** con los criterios cumplidos y las pistas de los que falten.
+5. Vuelve a la portada: tu intento aparece en **«Tu progreso»** y en **«Tus estadísticas de uso»**.
+
+> Cada criterio se muestra en lenguaje claro (qué se esperaba y una pista), no como expresión regular. Repite varios ejercicios y la [dificultad se ajustará sola](#dificultad-adaptativa).
+
+---
+
 ## Datos locales (no en Git)
 
 Estos ficheros se generan al usar la app y están en `.gitignore` (no deben subirse a GitHub):
@@ -157,7 +191,9 @@ Solo se versionan los `.gitkeep` de las carpetas vacías.
 5. Aprueba o rechaza ejercicios en **su** instalación; para que los alumnos los tengan debe **exportar** el banco (`banco-forja.json`) a la carpeta compartida.
 6. Puede subir PDFs, ver la solución de referencia y exportar ejercicios para compartir.
 
-Cada alumno y el profesor suelen tener **instalaciones independientes** (distinto PC). Ver [Compartir ejercicios del banco](#compartir-ejercicios-del-banco-carpeta-compartida).
+> 💡 **TIP para el profesor:** prueba tú mismo unos ejercicios para ver la [dificultad adaptativa](#dificultad-adaptativa) en acción y, cuando tengas alguno validado, **exporta tu primer banco** (`/profesor/banco` → «Descargar banco completo») y déjalo en la carpeta compartida para que la clase lo importe.
+
+Cada alumno y el profesor suelen tener **instalaciones independientes** (distinto PC): el intercambio es manual por carpeta compartida. Ver [Instalaciones independientes (aula real)](#instalaciones-independientes-aula-real).
 
 Los módulos clásicos (`poo`, `bd_sql`, `docker`, etc.) **no necesitan** Gemini.
 
@@ -627,7 +663,9 @@ examenforge/
 
 ---
 
-## Configuración útil (`application.properties` / entorno)
+## Configuración útil
+
+Claves de `application.properties` (o variables de entorno equivalentes):
 
 | Clave | Descripción |
 |-------|-------------|

@@ -16,6 +16,17 @@ IMPORTANTE: cada alumno suele tener su PROPIA instalación en su PC. No está
 conectada con la del profesor ni con la de otros alumnos.
 
 
+PRUEBA RÁPIDA (2 minutos)
+-------------------------
+  1. Entra como alumno (alumno / practica).
+  2. En la portada pulsa POO (o «Empezar ahora» para un ejercicio aleatorio).
+  3. Lee el enunciado y escribe tu respuesta (p. ej. System.out.println("Hola");).
+  4. Pulsa Enviar: verás la nota (0–10) y la retroalimentación (qué se esperaba
+     y pistas de lo que falte).
+  5. Vuelve a la portada: tu intento sale en «Tu progreso» y «Tus estadísticas».
+  Repite varios ejercicios y la dificultad se ajustará sola (ver más abajo).
+
+
 QUÉ PUEDES HACER COMO ALUMNO
 ----------------------------
 
@@ -25,6 +36,8 @@ QUÉ PUEDES HACER COMO ALUMNO
    - Escribes tu respuesta y la envías; la app corrige (nota 0–10, aprueba ≥ 5).
    - Si fallas un criterio, verás qué se esperaba y una pista en lenguaje claro
      (no expresiones regulares técnicas).
+   - Dificultad adaptativa (1–3, todos los módulos): 5 aprobados seguidos suben
+     nivel; 3 suspensos seguidos lo bajan. También puedes fijarla en Perfil.
    - En módulos de sistemas puedes practicar en el contenedor Docker (tarjeta
      «Entorno Docker» en la portada).
    - «Limpiar entorno de práctica» vacía la carpeta datos-practica/ del host.
@@ -43,8 +56,7 @@ QUÉ PUEDES HACER COMO ALUMNO
    - Pueden ser de informática, idiomas u otras materias: la app adapta el tipo
      de ejercicio (comandos, traducción/gramática, respuesta escrita…).
    - Necesitas clave API de Gemini en Perfil (solo módulos docs_*).
-   - Dificultad (1–3): se adapta sola — 5 aprobados seguidos suben nivel,
-     3 suspensos seguidos lo bajan. También en Perfil → «Dificultad de ejercicios».
+   - La dificultad adaptativa también se aplica aquí (ver sección 1).
 
 4. SUBIR E INDEXAR APUNTES (PDF)
    - Portada → «Apuntes del profesor» → subir PDF (se crea documentacion/<tema>/).
@@ -68,7 +80,8 @@ QUÉ PUEDES HACER COMO ALUMNO
      Seguimiento de alumnos o lo consulte en Resultados (CSV).
 
 7. TU PERFIL (/perfil)
-   - Nombre, contraseña, clave Gemini, modelo Gemini, dificultad IA.
+   - Nombre, contraseña, clave Gemini, modelo Gemini y dificultad de ejercicios
+     (1–3; normalmente se ajusta sola, pero puedes fijarla a mano).
    - Modelo recomendado: gemini-2.5-flash (con guiones, no gemini-2.5.flash).
    - «Guardar modelo» no pide contraseña; guardar o cambiar la clave API sí
      (contraseña de acceso: practica si no la cambiaste).
