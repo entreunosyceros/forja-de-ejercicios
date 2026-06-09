@@ -4,6 +4,11 @@
       th:replace="~{plantilla :: plantilla(~{::section})}">
 <section class="pagina-inicio" th:attr="data-login-usuario=${loginUsuario}">
     <div class="hero hero-inicio">
+        <div class="hero-logo-banda">
+            <img class="hero-logo" th:src="@{/img/forja-de-examenes.png}"
+                 src="/img/forja-de-examenes.png"
+                 alt="Forja de ejercicios" width="640" height="320"/>
+        </div>
         <p class="eyebrow">Forja de ejercicios</p>
         <h1 class="hero-titulo" th:text="${titulo}">luego es tarde... para estudiar</h1>
         <p class="lead">

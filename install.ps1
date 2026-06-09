@@ -463,10 +463,23 @@ function Preguntar-Si {
     return ($r -match "^(s|si|S|Si|y|Y|yes|Yes)$")
 }
 
+function Format-EnvValue {
+    param([string]$Valor)
+    if ($null -eq $Valor) { return "" }
+    # En .env las barras invertidas se interpretan como escape; usar / en rutas Windows
+    if ($Valor -match '^[A-Za-z]:\\') {
+        $Valor = $Valor -replace '\\', '/'
+    }
+    if ($Valor -match '[\s#=]') {
+        return '"' + ($Valor -replace '"', '\"') + '"'
+    }
+    return $Valor
+}
+
 function Actualizar-Env {
     param([string]$Clave, [string]$Valor)
     $envFile = Join-Path $Raiz ".env"
-    $linea = "$Clave=$Valor"
+    $linea = "$Clave=$(Format-EnvValue $Valor)"
     if (Test-Path -LiteralPath $envFile) {
         $contenido = Get-Content -LiteralPath $envFile -Raw -Encoding UTF8
         $escaped = [regex]::Escape($Clave)

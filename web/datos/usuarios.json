@@ -1,0 +1,22 @@
+{
+  "usuarios" : {
+    "alumno" : {
+      "passwordHash" : "$2a$10$JGV5YeMk44U0jiAXw9JHROhs2lr13uYZv7W.XlnK76ibpKzrcGJxm",
+      "nombreVisible" : "Alumno",
+      "rol" : "alumno",
+      "nivelGemini" : 2
+    },
+    "profesor" : {
+      "passwordHash" : "$2a$10$pTsYMuIhDRUn55RL1ElwH.AR3txFlVxxEpOnWPeBhQSW4t.uGOun6",
+      "nombreVisible" : "Profesor",
+      "rol" : "profesor",
+      "nivelGemini" : 2
+    },
+    "demo" : {
+      "passwordHash" : "$2a$10$3bdItVQjePB1WElE0wAPv.CHD6rXEgHskAOztd7rmM440WKlOSnpG",
+      "nombreVisible" : "Demo",
+      "rol" : "alumno",
+      "nivelGemini" : 2
+    }
+  }
+}

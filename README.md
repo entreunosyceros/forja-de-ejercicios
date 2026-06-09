@@ -14,103 +14,7 @@ Genera ejercicios prácticos al azar, permite practicar en Docker y corrige la r
 
 ---
 
-## Instalación guiada (recomendado)
-
-Scripts que comprueban requisitos, compilan la web, instalan dependencias Python y te guían por **Gemini** y **Docker** (ambos opcionales).
-
-### Linux / macOS
-
-```bash
-cd examenforge
-chmod +x install.sh iniciar-forja.sh
-./install.sh
-```
-
-### Windows (PowerShell)
-
-```powershell
-cd examenforge
-Set-ExecutionPolicy -Scope Process Bypass
-.\install.ps1
-```
-
-El script comprueba **JDK 21**, **Maven** y **Python 3.10+**. Si faltan, intenta instalarlos (JDK/Python con **winget**; **Maven** se descarga desde Apache en `tools/apache-maven-3.9.16/` porque winget suele fallar). Si no puede, muestra qué debes instalar manualmente. Opcional: Docker Desktop, `pip install -r requirements-docs.txt` y clave Gemini.
-
-> Si PowerShell muestra *«Falta `}` en la línea 8»*, suele deberse a una copia antigua del script con caracteres especiales (`✓`, `═`). Actualiza el repositorio y usa la versión actual (solo ASCII, compatible con Windows PowerShell 5.1).
-
-El instalador:
-
-1. Comprueba JDK 21, Maven y Python.
-2. Crea carpetas locales (`datos/`, `indice/`, `banco/`, …).
-3. Ofrece instalar `requirements-docs.txt` (PDF + Gemini).
-4. Compila el JAR con Maven (usa `web\pom.xml` con ruta absoluta; no hace falta `cd web`).
-5. **Gemini (opcional):** enlace a [Google AI Studio](https://aistudio.google.com/apikey) y guardado en `datos/gemini.json`, o «configurar después» en **Perfil**.
-6. **Docker (opcional):** detecta si está instalado y ofrece `docker compose up -d --build practica`.
-7. Muestra un resumen y puede arrancar la app al terminar (con `java -jar`, sin depender del `.bat`).
-
-#### Arrancar en Windows (tras instalar)
-
-Abre **PowerShell** o **CMD** en la carpeta `examenforge` (la que contiene `install.ps1`).
-
-**Opción recomendada** — si `install.ps1` compiló correctamente:
-
-```powershell
-.\iniciar-forja.bat
-```
-
-Ese script busca el JAR en `web\target\forjaexamenes-web-1.0.0.jar` y lo ejecuta. Si no hay JAR, usa Maven local (`tools\apache-maven-*\bin\mvn.cmd` o `mvn` del PATH) con `web\pom.xml`.
-
-**Alternativa directa** (útil si el `.bat` da problemas):
-
-```powershell
-java -jar web\target\forjaexamenes-web-1.0.0.jar
-```
-
-**Sin JAR compilado** (desarrollo):
-
-```powershell
-cd web
-mvn spring-boot:run
-```
-
-O desde la raíz, si Maven está en el PATH o en `tools\`:
-
-```powershell
-mvn -f web\pom.xml spring-boot:run
-```
-
-Espera el mensaje `Started AplicacionForjaExamenes` y abre **http://localhost:8080**. **Detener:** `Ctrl+C` en la misma ventana.
-
-> El `pom.xml` está en **`web/`**, no en la raíz del proyecto. Si Maven dice *«no POM in this directory»*, indica el fichero con `-f web\pom.xml` o entra antes en `cd web`.
-
-#### Docker en Windows (opcional)
-
-Si `install.ps1` falla al instalar Docker con winget (*«El hash del instalador no coincide»*, código `-1978335215`), es un error conocido del paquete `Docker.DockerDesktop`:
-
-1. **Descarga manual:** https://www.docker.com/products/docker-desktop/
-2. **O en PowerShell normal** (no como administrador):
-   ```powershell
-   winget install Docker.DockerDesktop --ignore-security-hash
-   ```
-
-Tras instalar, abre **Docker Desktop**, espera a que esté en marcha y levanta el contenedor de práctica:
-
-```powershell
-docker compose up -d --build practica
-```
-
-La **web funciona sin Docker**; solo lo necesitas para practicar comandos reales en el contenedor (`docker`, `redes`, `sistemas`, `git`).
-
-**Arrancar tras instalar:**
-
-| Sistema | Comando principal | Alternativa |
-|---------|-------------------|-------------|
-| Linux / macOS | `./iniciar-forja.sh` | `cd web && mvn spring-boot:run` |
-| Windows | `.\iniciar-forja.bat` | `java -jar web\target\forjaexamenes-web-1.0.0.jar` |
-
----
-
-## Arranque rápido (manual)
+## Instalación y arranque
 
 ### Requisitos
 
@@ -120,6 +24,7 @@ La **web funciona sin Docker**; solo lo necesitas para practicar comandos reales
 | Maven | 3.8+ | Sí |
 | Python | 3.10+ | Sí (al crear/corregir ejercicios) |
 | pip + `requirements-docs.txt` | — | Solo si usas PDF + Gemini |
+| Docker Desktop / Docker Engine | — | No; solo para el contenedor de práctica |
 
 ```bash
 java -version
@@ -127,7 +32,55 @@ mvn -version
 python3 --version
 ```
 
-### Poner la web en marcha
+### Instalación guiada (recomendado)
+
+Los scripts comprueban requisitos, crean carpetas locales, compilan el JAR, ofrecen instalar dependencias Python y guían la configuración opcional de Gemini y Docker.
+
+| Sistema | Instalación | Arranque posterior |
+|---------|-------------|--------------------|
+| Linux / macOS | `chmod +x install.sh iniciar-forja.sh && ./install.sh` | `./iniciar-forja.sh` |
+| Windows | `Set-ExecutionPolicy -Scope Process Bypass` y después `.\install.ps1` | `.\iniciar-forja.bat` |
+
+En Windows, abre PowerShell en la carpeta `examenforge` antes de ejecutar:
+
+```powershell
+Set-ExecutionPolicy -Scope Process Bypass
+.\install.ps1
+```
+
+Notas de Windows:
+
+- Maven se descarga en `tools/apache-maven-3.9.16/` si no está instalado, porque `winget` no siempre ofrece Maven de forma fiable.
+- El instalador compila usando `web\pom.xml` con ruta absoluta; no hace falta entrar en `web\`.
+- La ruta de Python se guarda en `.env` con barras normales (`C:/Program Files/Python313/python.exe`) para evitar errores de escape.
+- Docker es opcional. Si `winget` falla por *«El hash del instalador no coincide»*, instala Docker Desktop manualmente o ejecuta `winget install Docker.DockerDesktop --ignore-security-hash` en PowerShell normal, no como administrador.
+
+### Arrancar la web
+
+Tras instalar:
+
+| Sistema | Comando recomendado | Alternativa |
+|---------|---------------------|-------------|
+| Linux / macOS | `./iniciar-forja.sh` | `cd web && mvn spring-boot:run` |
+| Windows | `.\iniciar-forja.bat` | `java -jar web\target\forjaexamenes-web-1.0.0.jar` |
+
+También puedes arrancar con Maven desde la raíz del proyecto:
+
+```bash
+mvn -f web/pom.xml spring-boot:run
+```
+
+En Windows:
+
+```powershell
+mvn -f web\pom.xml spring-boot:run
+```
+
+Espera `Started AplicacionForjaExamenes` y abre **http://localhost:8080**. **Detener:** `Ctrl+C` en la misma terminal.
+
+> El `pom.xml` está en **`web/`**, no en la raíz. Si Maven muestra *«no POM in this directory»*, usa `-f web/pom.xml` o entra antes en `cd web`.
+
+### Arranque manual sin instalador
 
 ```bash
 cd examenforge
@@ -135,7 +88,9 @@ chmod +x arrancar-web.sh    # solo la primera vez
 ./arrancar-web.sh
 ```
 
-Espera `Started AplicacionForjaExamenes` y abre **http://localhost:8080**.
+Este script arranca la web en Linux/macOS sin crear un JAR previo.
+
+### Acceso inicial
 
 | Rol | Usuario | Contraseña |
 |-----|---------|------------|
@@ -145,13 +100,9 @@ Espera `Started AplicacionForjaExamenes` y abre **http://localhost:8080**.
 
 - **Ayuda:** http://localhost:8080/como-funciona
 
-> El `pom.xml` está en **`web/`**. Usa `./arrancar-web.sh` o `cd web && mvn spring-boot:run`.
+### Contenedor de práctica
 
-**Detener:** `Ctrl+C` en la misma terminal.
-
-### Contenedor de práctica (Docker)
-
-La aplicación web se ejecuta en el host (apartado anterior). Docker sirve solo para el **entorno shell** de práctica:
+La web se ejecuta en el host. Docker sirve solo para el **entorno shell** de práctica (`docker`, `redes`, `sistemas`, `git`):
 
 ```bash
 cd examenforge
@@ -664,10 +615,11 @@ examenforge/
 
 | Síntoma | Qué hacer |
 |---------|-----------|
-| `no POM in this directory` | Linux/macOS: `./arrancar-web.sh` o `cd web` antes de `mvn`. Windows: `mvn -f web\pom.xml …` o `cd web` |
-| Windows: *«No se esperaba … en este momento»* al arrancar | Actualiza `iniciar-forja.bat` del repositorio o usa `java -jar web\target\forjaexamenes-web-1.0.0.jar` |
-| Windows: winget Docker *hash no coincide* | Instalación manual o `winget install Docker.DockerDesktop --ignore-security-hash` en PowerShell **sin** admin |
-| Windows: Maven no encuentra `pom.xml` | El proyecto Maven está en `web\`; `install.ps1` ya compila con `-f web\pom.xml` |
+| Maven no encuentra `pom.xml` | El proyecto Maven está en `web/`. Usa `mvn -f web/pom.xml ...` (`web\pom.xml` en Windows) o entra antes en `cd web`. |
+| Windows: *«No se esperaba ... en este momento»* al arrancar | Actualiza `iniciar-forja.bat` o arranca directo con `java -jar web\target\forjaexamenes-web-1.0.0.jar`. |
+| Windows: Python aparece como `C:Program FilesPython...` | En `examenforge\.env`, usa barras normales: `FORJAEXAMENES_PYTHON_INTERPRETE=C:/Program Files/Python313/python.exe`; reinicia la app. |
+| Windows: Docker falla por hash en `winget` | Instala desde Docker Desktop o ejecuta `winget install Docker.DockerDesktop --ignore-security-hash` en PowerShell normal. |
+| Logo no aparece en la portada | Actualiza el repo, confirma que existe `web/src/img/forja-de-examenes.png` y recompila el JAR. |
 | Puerto 8080 ocupado | `fuser -k 8080/tcp` o cambiar `server.port` |
 | `API_KEY_INVALID` | Clave real en `.env`; reinicia; `unset GEMINI_API_KEY` en el shell si molesta |
 | Cuota Gemini `429` | `FORJAEXAMENES_GEMINI_MODEL=gemini-2.5-flash` en `.env` |

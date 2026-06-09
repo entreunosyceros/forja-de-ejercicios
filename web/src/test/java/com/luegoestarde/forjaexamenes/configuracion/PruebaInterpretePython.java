@@ -2,16 +2,17 @@
 package com.luegoestarde.forjaexamenes.configuracion;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import org.junit.jupiter.api.Test;
 
 class PruebaInterpretePython {
 
     @Test
-    void usaValorConfigurado() {
+    void usaComandoConfiguradoSinRuta() {
         PropiedadesForjaExamenes props = new PropiedadesForjaExamenes();
-        props.setPythonInterprete("/usr/bin/python3.12");
-        assertEquals("/usr/bin/python3.12", InterpretePython.resolver(props));
+        props.setPythonInterprete("python3");
+        assertEquals("python3", InterpretePython.resolver(props));
     }
 
     @Test
@@ -21,5 +22,18 @@ class PruebaInterpretePython {
                 ? "python"
                 : "python3";
         assertEquals(esperado, InterpretePython.resolver(props));
+    }
+
+    @Test
+    void rechazaRutaWindowsCorruptaPorProperties() {
+        assertNull(InterpretePython.validarNormalizar("C:Program FilesPython313python.exe"));
+    }
+
+    @Test
+    void aceptaRutaWindowsConBarrasNormales() {
+        String python = System.getProperty("os.name", "").toLowerCase().contains("win")
+                ? "C:/Windows/System32/cmd.exe"
+                : "/bin/sh";
+        assertEquals(python, InterpretePython.validarNormalizar(python));
     }
 }
