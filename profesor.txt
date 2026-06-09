@@ -20,6 +20,11 @@ IMPORTANTE: la app del profesor y la de cada alumno son instalaciones
 INDEPENDIENTES (cada uno en su PC). Publicar en tu banco local NO llega solo
 a los alumnos: debes EXPORTAR e importar vía carpeta compartida.
 
+NOTA SOBRE LA «CARPETA COMPARTIDA»: no forma parte del programa. La creas aparte
+en el sistema operativo (recurso de red, Google Drive/OneDrive sincronizado,
+USB…). La app solo exporta ficheros .json (que guardas ahí) e importa los que tú
+seleccionas; no crea, monta ni gestiona esa carpeta.
+
 TIP PARA EMPEZAR: haz tú mismo unos ejercicios para ver la dificultad adaptativa
 en acción (sube tras 5 aprobados seguidos, baja tras 3 suspensos). Cuando tengas
 alguno validado, exporta tu primer banco (/profesor/banco → «Descargar banco

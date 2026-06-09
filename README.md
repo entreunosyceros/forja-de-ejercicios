@@ -223,6 +223,8 @@ En clase, **cada alumno y el profesor suelen tener la app en su propio PC**. No 
 
 El intercambio es manual mediante una **carpeta compartida** (red del aula, Google Drive con Drive para escritorio, USB, etc.). La app **no envía correos ni sube a la nube** por sí sola.
 
+> ℹ️ **La «carpeta compartida» no forma parte del programa.** Es una carpeta cualquiera que **tú creas en el sistema operativo** (un recurso de red SMB/NFS, una carpeta de Google Drive/OneDrive sincronizada, una memoria USB…). La Forja solo **exporta** ficheros `.json` (que guardas ahí) e **importa** ficheros que tú seleccionas desde ahí; no crea, monta ni gestiona esa carpeta. En todo el documento «carpeta compartida» se refiere a ese sitio externo de tu elección.
+
 | Qué se comparte | Sentido | Fichero típico | Quién exporta | Quién importa |
 |-----------------|---------|----------------|---------------|---------------|
 | **Ejercicios verificados** | Profesor → alumnos | `banco-forja.json` o un `.json` suelto | Profesor | Alumno (portada) |

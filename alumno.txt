@@ -15,6 +15,11 @@ ACCESO
 IMPORTANTE: cada alumno suele tener su PROPIA instalación en su PC. No está
 conectada con la del profesor ni con la de otros alumnos.
 
+NOTA SOBRE LA «CARPETA COMPARTIDA»: no forma parte del programa. Es una carpeta
+que se crea aparte en el sistema operativo (recurso de red, Google Drive/OneDrive
+sincronizado, USB…). La app solo exporta ficheros .json (que guardas ahí) e
+importa los que tú seleccionas; no crea ni gestiona esa carpeta.
+
 
 PRUEBA RÁPIDA (2 minutos)
 -------------------------
