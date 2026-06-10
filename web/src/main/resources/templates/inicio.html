@@ -51,9 +51,13 @@ docker exec -it forjaexamenes-practica bash</pre>
                     <button type="submit" class="btn btn-secondary btn-sm">Limpiar entorno de práctica</button>
                 </form>
             </div>
+            <p class="hint" th:if="${terminalPracticaDisponible}">
+                El botón abre una <strong>ventana nueva</strong> de terminal; la consola donde arrancaste la aplicación
+                puede seguir usándose con normalidad.
+            </p>
             <p class="hint" th:unless="${terminalPracticaDisponible}">
                 En este equipo no hay terminal gráfica (p. ej. servidor remoto). Copia y ejecuta los comandos de arriba
-                en tu PowerShell, Terminal o consola Linux.
+                en otra ventana de PowerShell, Terminal o consola Linux.
             </p>
             </div>
         </div>

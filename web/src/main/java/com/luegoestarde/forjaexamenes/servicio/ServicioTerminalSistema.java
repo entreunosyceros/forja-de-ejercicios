@@ -70,12 +70,28 @@ public class ServicioTerminalSistema {
         }
 
         try {
-            new ProcessBuilder(comando).start();
+            lanzarDesacoplado(comando);
         } catch (IOException e) {
             throw new IOException(
                     "No se pudo abrir la terminal. Ejecuta en " + raiz + ":\n" + SCRIPT_DOCKER, e);
         }
-        return etiquetaBoton() + " en " + raiz + " con los comandos de práctica Docker.";
+        return "Nueva ventana de " + etiquetaBoton().toLowerCase(Locale.ROOT)
+                + " en " + raiz + " con los comandos de práctica Docker.";
+    }
+
+    /** Arranca el proceso en segundo plano, sin heredar la consola de la aplicación. */
+    private void lanzarDesacoplado(List<String> comando) throws IOException {
+        List<String> efectivo = comando;
+        if (!esWindows() && ejecutableDisponible("setsid")) {
+            efectivo = new java.util.ArrayList<>();
+            efectivo.add("setsid");
+            efectivo.addAll(comando);
+        }
+        ProcessBuilder pb = new ProcessBuilder(efectivo);
+        pb.redirectOutput(ProcessBuilder.Redirect.DISCARD);
+        pb.redirectError(ProcessBuilder.Redirect.DISCARD);
+        pb.redirectInput(ProcessBuilder.Redirect.DISCARD);
+        pb.start();
     }
 
     private List<String> comandoSegunSistema(Path raiz) {
@@ -93,30 +109,50 @@ public class ServicioTerminalSistema {
 
     private List<String> comandoWindows(Path raiz) {
         String ruta = raiz.toString().replace("'", "''");
-        String script = String.format(
+        String script = scriptPowerShell(ruta);
+        if (ejecutableDisponible("wt.exe")) {
+            // Windows Terminal: pestaña nueva en ventana separada
+            return List.of(
+                    "wt.exe", "-w", "0", "new-tab", "--title", "Forja practica",
+                    "-d", raiz.toString(),
+                    "powershell.exe", "-NoExit", "-Command", script);
+        }
+        // cmd start abre SIEMPRE una consola nueva (no reutiliza la de la app)
+        return List.of(
+                "cmd.exe", "/c", "start", "\"Forja practica\"",
+                "powershell.exe", "-NoExit", "-Command", script);
+    }
+
+    static String scriptPowerShell(String rutaLiteral) {
+        String psDocker = SCRIPT_DOCKER.replace(
+                "&&", "; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; ");
+        return String.format(
                 "Set-Location -LiteralPath '%s'; "
                         + "Write-Host 'Levantando contenedor practica...' -ForegroundColor Cyan; "
                         + "%s",
-                ruta, SCRIPT_DOCKER.replace("&&", "; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; "));
-        return List.of("powershell.exe", "-NoExit", "-Command", script);
+                rutaLiteral, psDocker);
     }
 
     private List<String> comandoMac(Path raiz) {
         String ruta = raiz.toString().replace("\\", "\\\\").replace("\"", "\\\"");
         String shell = String.format("cd \\\"%s\\\" && %s", ruta, SCRIPT_DOCKER);
+        // make new window: ventana independiente de la que ejecuta la app
         String appleScript = String.format(
-                "tell application \"Terminal\" to activate%n"
-                        + "tell application \"Terminal\" to do script \"%s\"",
+                "tell application \"Terminal\"%n"
+                        + "    activate%n"
+                        + "    do script \"%s\" in (make new window)%n"
+                        + "end tell",
                 shell);
         return List.of("osascript", "-e", appleScript);
     }
 
     private List<String> comandoLinux(Path raiz) {
         String bash = scriptBash(raiz);
+        // --window / --separate fuerzan ventana nueva, no pestaña en terminal existente
         List<List<String>> candidatos = List.of(
-                List.of("gnome-terminal", "--", "bash", "-lc", bash),
-                List.of("konsole", "-e", "bash", "-lc", bash),
-                List.of("xfce4-terminal", "-e", "bash", "-lc", bash),
+                List.of("gnome-terminal", "--window", "--", "bash", "-lc", bash),
+                List.of("konsole", "--separate", "-e", "bash", "-lc", bash),
+                List.of("xfce4-terminal", "--window", "-e", "bash", "-lc", bash),
                 List.of("xterm", "-e", "bash", "-lc", bash));
         for (List<String> comando : candidatos) {
             if (ejecutableDisponible(comando.get(0))) {
