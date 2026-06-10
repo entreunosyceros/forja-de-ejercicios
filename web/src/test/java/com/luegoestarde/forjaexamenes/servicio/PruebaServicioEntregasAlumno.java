@@ -66,6 +66,7 @@ class PruebaServicioEntregasAlumno {
         assertEquals(1, comparativa.alumnos().size());
         assertEquals("María López", comparativa.alumnos().get(0).nombreEtiqueta());
         assertTrue(comparativa.modulos().contains("docker"));
+        assertEquals(8.0, comparativa.alumnos().get(0).notaMediaPorModulo().get("docker"), 0.01);
 
         servicioEntregas.renombrar("profesor", importada.getIdImportacion(), "María L. — 1º DAM");
         EntregaAlumno renombrada = servicioEntregas.obtenerImportada("profesor", importada.getIdImportacion());
@@ -73,6 +74,22 @@ class PruebaServicioEntregasAlumno {
 
         assertTrue(servicioEntregas.eliminarImportada("profesor", importada.getIdImportacion()));
         assertTrue(servicioEntregas.listarImportadas("profesor").isEmpty());
+    }
+
+    @Test
+    void eliminarTodasImportadasBorraCarpetaCompleta() throws Exception {
+        EntregaAlumno original = servicioEntregas.construirExportacion("alumno", "Alumno Demo");
+        servicioEntregas.importar("profesor", mapeador.writeValueAsBytes(original), "Uno");
+        servicioEstadisticas.registrar("alumno2", "poo", 5.0, false, 10L, "Tema", "ex2");
+        servicioEntregas.importar(
+                "profesor",
+                mapeador.writeValueAsBytes(servicioEntregas.construirExportacion("alumno2", "Otro")),
+                "Dos");
+
+        assertEquals(2, servicioEntregas.listarImportadas("profesor").size());
+        assertEquals(2, servicioEntregas.eliminarTodasImportadas("profesor"));
+        assertTrue(servicioEntregas.listarImportadas("profesor").isEmpty());
+        assertEquals(0, servicioEntregas.eliminarTodasImportadas("profesor"));
     }
 
     @Test

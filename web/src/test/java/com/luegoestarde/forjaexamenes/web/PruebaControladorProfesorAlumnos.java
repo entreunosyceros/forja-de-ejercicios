@@ -56,11 +56,19 @@ class PruebaControladorProfesorAlumnos {
         var comparativa = servicioEntregas.construirComparativa("profesor");
         org.junit.jupiter.api.Assertions.assertFalse(comparativa.modulos().isEmpty());
 
+        org.junit.jupiter.api.Assertions.assertEquals(
+                7.5, comparativa.alumnos().get(0).notaMediaPorModulo().get("bd"), 0.01);
+        org.junit.jupiter.api.Assertions.assertEquals(
+                6.0, comparativa.alumnos().get(0).notaMediaPorModulo().get("docker"), 0.01);
+
         mockMvc.perform(get("/profesor/alumnos").session(sesion))
                 .andExpect(status().isOk())
                 .andExpect(view().name("profesor-alumnos-lista"))
                 .andExpect(content().string(containsString("Nota media por módulo")))
-                .andExpect(content().string(containsString("tabla-modulos-clase")));
+                .andExpect(content().string(containsString("tabla-modulos-clase")))
+                .andExpect(content().string(containsString("7.5")))
+                .andExpect(content().string(containsString("6.0")))
+                .andExpect(content().string(containsString("Eliminar todas las entregas")));
     }
 
     private MockHttpSession sesionProfesor() throws Exception {

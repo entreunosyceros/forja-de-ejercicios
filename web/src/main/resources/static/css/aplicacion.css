@@ -538,6 +538,29 @@ textarea {
 
 .stats-modulos-wrap { margin-top: 0.5rem; }
 
+.stats-modulos-cabecera {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.stats-modulos-cabecera h3 { margin: 0; }
+
+.form-inline-accion {
+    display: inline;
+    margin: 0;
+}
+
+.acciones-revision {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
+}
+
 .stats-modulos-scroll {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;

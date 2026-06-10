@@ -68,7 +68,7 @@ public class ControladorProfesorAlumnos {
         modelo.addAttribute("entregasImportadas", servicioEntregas.listarImportadas(profesor));
         modelo.addAttribute("comparativa", comparativaVista);
         modelo.addAttribute("comparativaModulos", comparativa.modulos());
-        modelo.addAttribute("comparativaAlumnos", comparativaVista.getOrDefault("alumnos", List.of()));
+        modelo.addAttribute("comparativaAlumnos", comparativa.alumnos());
         modelo.addAttribute("comparativaJson", mapeadorJson.writeValueAsString(comparativaVista));
         modelo.addAttribute("alumnosServidor", servicioEstadisticas.listarResumenesEnServidor(
                 login -> !accesoProfesor.esProfesor(login)));
@@ -232,6 +232,23 @@ public class ControladorProfesorAlumnos {
                 flash.addFlashAttribute("mensajePerfilOk", "Entrega eliminada del panel.");
             } else {
                 flash.addFlashAttribute("errorPerfil", "No se encontró la entrega.");
+            }
+        } catch (Exception ex) {
+            flash.addFlashAttribute("errorPerfil", ex.getMessage());
+        }
+        return "redirect:/profesor/alumnos";
+    }
+
+    @PostMapping("/eliminar-todas")
+    public String eliminarTodasImportadas(RedirectAttributes flash) {
+        try {
+            String profesor = metadatosEjercicio.loginActual();
+            int borradas = servicioEntregas.eliminarTodasImportadas(profesor);
+            if (borradas > 0) {
+                flash.addFlashAttribute("mensajePerfilOk",
+                        "Se eliminaron " + borradas + " entrega(s) importada(s). Las tablas comparativas están vacías.");
+            } else {
+                flash.addFlashAttribute("mensajePerfilOk", "No había entregas importadas que eliminar.");
             }
         } catch (Exception ex) {
             flash.addFlashAttribute("errorPerfil", ex.getMessage());

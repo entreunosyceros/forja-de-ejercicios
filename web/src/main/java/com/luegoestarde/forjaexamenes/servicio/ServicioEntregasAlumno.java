@@ -240,6 +240,22 @@ public class ServicioEntregasAlumno {
         return Files.deleteIfExists(ficheroImportada(profesorLogin, id));
     }
 
+    public synchronized int eliminarTodasImportadas(String profesorLogin) throws IOException {
+        Path carpeta = carpetaImportadas(profesorLogin);
+        if (!Files.isDirectory(carpeta)) {
+            return 0;
+        }
+        int borradas = 0;
+        try (var stream = Files.list(carpeta)) {
+            for (Path fichero : stream.filter(p -> p.toString().endsWith(".json")).toList()) {
+                if (Files.deleteIfExists(fichero)) {
+                    borradas++;
+                }
+            }
+        }
+        return borradas;
+    }
+
     private List<EntregaAlumno> listarEntregasCompletasInternas(String profesorLogin) throws IOException {
         Path carpeta = carpetaImportadas(profesorLogin);
         if (!Files.isDirectory(carpeta)) {
