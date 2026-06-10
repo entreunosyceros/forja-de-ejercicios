@@ -8,6 +8,7 @@ import json
 import os
 import re
 import sys
+import time
 from pathlib import Path
 from typing import Any
 
@@ -90,8 +91,34 @@ def _obtener_api_key() -> str:
     return clave
 
 
+class ErrorGeminiTransitorio(RuntimeError):
+    """Error temporal de Gemini (p. ej. 503 por sobrecarga) que conviene reintentar."""
+
+
+def _es_error_transitorio(texto: str) -> bool:
+    """Detecta errores temporales del servidor de Gemini (no de configuración)."""
+    t = (texto or "").lower()
+    if any(codigo in texto for codigo in ("503", "502", "504")):
+        return True
+    return any(
+        marca in t
+        for marca in ("unavailable", "overloaded", "high demand", "try again later")
+    )
+
+
 def _mensaje_error_gemini(exc: Exception) -> str:
     texto = str(exc)
+    if _es_error_transitorio(texto):
+        return (
+            "El servicio de IA de Google (Gemini) está saturado ahora mismo "
+            "(error 503 «high demand»). No es un fallo de tu configuración ni de la clave API.\n"
+            "  • Espera unos segundos o minutos y vuelve a intentarlo: estos picos son temporales.\n"
+            "  • Mientras tanto puedes practicar con los módulos que NO usan IA "
+            "(poo, bd_sql, docker, redes, git…), que funcionan sin conexión a Gemini.\n"
+            "  • Profesor: si se repite, prueba otro modelo en Perfil → «Guardar modelo» "
+            "(p. ej. gemini-2.5-flash) o genera los ejercicios docs_* en horas de menor demanda.\n"
+            "  • Más info: https://ai.google.dev/gemini-api/docs/troubleshooting"
+        )
     if "API_KEY_INVALID" in texto or "API key not valid" in texto:
         return (
             "La clave GEMINI_API_KEY no es válida. Comprueba examenforge/.env:\n"
@@ -285,6 +312,12 @@ def generar_desde_fragmento(
                 cliente, modelo_efectivo, prompt, fragmento, modulo,
                 titulo_coleccion, texto_fragmento, tipo,
             )
+        except ErrorGeminiTransitorio as exc:
+            # 503/sobrecarga: el pico suele ser breve, reintenta con espera creciente.
+            ultimo_error = exc
+            if intento >= max_intentos - 1:
+                raise RuntimeError(str(exc)) from exc
+            time.sleep(min(8, 2 ** intento))
         except ValueError as exc:
             ultimo_error = exc
             if intento >= max_intentos - 1:
@@ -313,6 +346,9 @@ def _generar_desde_fragmento_intento(
         )
     except Exception as exc:
         nombre = type(exc).__name__
+        # ServerError (503/5xx) y cualquier error marcado como transitorio se reintentan.
+        if "ServerError" in nombre or _es_error_transitorio(str(exc)):
+            raise ErrorGeminiTransitorio(_mensaje_error_gemini(exc)) from exc
         if "ClientError" in nombre or "APIError" in nombre:
             raise RuntimeError(_mensaje_error_gemini(exc)) from exc
         raise

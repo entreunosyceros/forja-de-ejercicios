@@ -24,6 +24,14 @@ public final class MensajesErrorGenerador {
             return resto.substring(0, fin).strip();
         }
 
+        if (salida.contains("UNAVAILABLE") || salida.contains("503")
+                || salida.contains("overloaded") || salida.contains("high demand")) {
+            return "El servicio de IA de Google (Gemini) está saturado ahora mismo "
+                    + "(error 503). No es un fallo de tu configuración. Espera unos minutos y "
+                    + "reintenta; mientras tanto usa los módulos sin IA (poo, bd_sql, docker, "
+                    + "redes, git…). El profesor puede probar otro modelo en Perfil.";
+        }
+
         if (salida.contains("RESOURCE_EXHAUSTED") || salida.contains("API_KEY_INVALID")) {
             return "Error de la API Gemini. Revisa examenforge/.env (clave y modelo). "
                     + "Detalle en los logs de la consola.";

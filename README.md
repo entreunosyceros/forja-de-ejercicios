@@ -719,6 +719,7 @@ Claves de `application.properties` (o variables de entorno equivalentes):
 | Puerto 8080 ocupado | `fuser -k 8080/tcp` o cambiar `server.port` |
 | `API_KEY_INVALID` | Clave real en `.env`; reinicia; `unset GEMINI_API_KEY` en el shell si molesta |
 | Cuota Gemini `429` | `FORJAEXAMENES_GEMINI_MODEL=gemini-2.5-flash` en `.env` |
+| Gemini `503 UNAVAILABLE` / «high demand» | Saturación temporal del servidor de Google, no de tu configuración. La app reintenta sola con espera; si persiste, aguarda unos minutos, usa módulos sin IA (`poo`, `bd_sql`, `docker`…) o prueba otro modelo en Perfil |
 | Gemini `404 NOT_FOUND` (modelo) | Usa `gemini-2.5-flash` con **guiones** (no `gemini-2.5.flash`). En **Mi perfil** → **Guardar modelo** (no pide contraseña) |
 | Perfil: contraseña incorrecta al guardar clave API | Usa la contraseña **de acceso** del usuario con el que entraste (no la clave API). Por defecto: `alumno`/`practica`; si la cambiaste antes, la nueva |
 | Indexación lenta | Es normal en PDFs grandes; espera el aviso «en segundo plano» en la portada |

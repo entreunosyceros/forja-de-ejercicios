@@ -6,8 +6,11 @@
 <section>
     <div class="card score-fail">
         <h1>Error</h1>
-        <p th:text="${error}">Mensaje de error</p>
-        <a class="btn btn-primary" th:href="@{/}">Volver al inicio</a>
+        <p th:text="${error}" style="white-space: pre-line;">Mensaje de error</p>
+        <div class="module-buttons module-buttons-stack-sm">
+            <a th:if="${urlReintento != null}" class="btn btn-primary" th:href="${urlReintento}">Reintentar</a>
+            <a class="btn btn-secondary" th:href="@{/}">Volver al inicio</a>
+        </div>
     </div>
 </section>
 </html>
