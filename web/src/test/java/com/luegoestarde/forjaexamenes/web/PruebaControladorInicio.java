@@ -29,7 +29,8 @@ class PruebaControladorInicio {
     void indiceDevuelveOk() throws Exception {
         mockMvc.perform(get("/"))
                 .andExpect(status().isOk())
-                .andExpect(view().name("inicio"));
+                .andExpect(view().name("inicio"))
+                .andExpect(content().string(containsString("Entorno Docker")));
     }
 
     @Test

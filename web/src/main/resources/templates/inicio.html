@@ -39,10 +39,22 @@
             <pre class="code-block code-block-compact">docker compose up -d --build practica
 docker exec -it forjaexamenes-practica bash</pre>
             <p class="hint">Usuario: <code>alumno</code> / <code>practica</code> · Carpeta local: <code>datos-practica/</code></p>
-            <form method="post" th:action="@{/practica/limpiar}" class="form-inline">
-                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-                <button type="submit" class="btn btn-secondary btn-sm">Limpiar entorno de práctica</button>
-            </form>
+            <div class="form-actions form-actions-terminal">
+                <form method="post" th:action="@{/practica/abrir-terminal}" class="form-inline"
+                      th:if="${terminalPracticaDisponible}">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                    <button type="submit" class="btn btn-primary btn-sm"
+                            th:text="${terminalPracticaEtiqueta}">Abrir terminal</button>
+                </form>
+                <form method="post" th:action="@{/practica/limpiar}" class="form-inline">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                    <button type="submit" class="btn btn-secondary btn-sm">Limpiar entorno de práctica</button>
+                </form>
+            </div>
+            <p class="hint" th:unless="${terminalPracticaDisponible}">
+                En este equipo no hay terminal gráfica (p. ej. servidor remoto). Copia y ejecuta los comandos de arriba
+                en tu PowerShell, Terminal o consola Linux.
+            </p>
             </div>
         </div>
 

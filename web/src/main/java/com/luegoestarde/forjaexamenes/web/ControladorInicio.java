@@ -9,6 +9,7 @@ import com.luegoestarde.forjaexamenes.servicio.ServicioEstadisticasUsuario;
 import com.luegoestarde.forjaexamenes.servicio.ServicioSubidaDocumentacion;
 import com.luegoestarde.forjaexamenes.servicio.ServicioIndexacionDocumentacion;
 import com.luegoestarde.forjaexamenes.servicio.ServicioMetadatosEjercicio;
+import com.luegoestarde.forjaexamenes.servicio.ServicioTerminalSistema;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,6 +24,7 @@ public class ControladorInicio {
     private final ServicioBancoEjercicios servicioBanco;
     private final ServicioSubidaDocumentacion servicioSubida;
     private final PropiedadesForjaExamenes propiedades;
+    private final ServicioTerminalSistema servicioTerminal;
     private final ObjectMapper mapeadorJson = new ObjectMapper();
 
     public ControladorInicio(ServicioDocumentacion servicioDocumentacion,
@@ -31,7 +33,8 @@ public class ControladorInicio {
                              ServicioMetadatosEjercicio metadatosEjercicio,
                              ServicioBancoEjercicios servicioBanco,
                              ServicioSubidaDocumentacion servicioSubida,
-                             PropiedadesForjaExamenes propiedades) {
+                             PropiedadesForjaExamenes propiedades,
+                             ServicioTerminalSistema servicioTerminal) {
         this.servicioDocumentacion = servicioDocumentacion;
         this.servicioIndexacion = servicioIndexacion;
         this.servicioEstadisticas = servicioEstadisticas;
@@ -39,6 +42,7 @@ public class ControladorInicio {
         this.servicioBanco = servicioBanco;
         this.servicioSubida = servicioSubida;
         this.propiedades = propiedades;
+        this.servicioTerminal = servicioTerminal;
     }
 
     @GetMapping("/")
@@ -52,6 +56,8 @@ public class ControladorInicio {
         modelo.addAttribute("modulosBanco", servicioBanco.listarParaPortada());
         modelo.addAttribute("temasDocumentacion", servicioSubida.listarTemasEnDisco());
         modelo.addAttribute("subidaPdfMaxMb", propiedades.getSubidaPdfMaxMb());
+        modelo.addAttribute("terminalPracticaDisponible", servicioTerminal.disponible());
+        modelo.addAttribute("terminalPracticaEtiqueta", servicioTerminal.etiquetaBoton());
         String login = metadatosEjercicio.loginActual();
         if (login != null) {
             var stats = servicioEstadisticas.obtener(login);
