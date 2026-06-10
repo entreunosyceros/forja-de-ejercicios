@@ -17,7 +17,6 @@
           th:action="@{/profesor/preferencias/gemini-guardar-pendientes}">
         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
         <input type="hidden" name="volver" th:value="${volver}"/>
-        <input type="hidden" name="activo" value="false"/>
         <label class="opcion-toggle-profesor">
             <input type="checkbox" name="activo" value="true" th:checked="${geminiGuardarPendientes}"/>
             Guardar propuestas de IA en <code>banco/pendientes/</code>
