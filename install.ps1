@@ -497,6 +497,61 @@ function Actualizar-Env {
     }
 }
 
+function Get-WslExecutable {
+    $wsl = Get-ToolPath "wsl.exe"
+    if ($wsl) {
+        return $wsl
+    }
+    $sistema = Join-Path $env:SystemRoot "System32\wsl.exe"
+    if (Test-Path -LiteralPath $sistema) {
+        return $sistema
+    }
+    return $null
+}
+
+function Test-WslInstalled {
+    $wsl = Get-WslExecutable
+    if (-not $wsl) {
+        return $false
+    }
+    $res = Invoke-Native -FilePath $wsl -ArgumentList @("--version")
+    return ($res.ExitCode -eq 0)
+}
+
+function Show-WslInstallGuide {
+    Write-Host ""
+    Write-Host "  Docker Desktop en Windows necesita WSL 2."
+    Write-Host "  Pasos:"
+    Write-Host "    1. PowerShell como ADMINISTRADOR"
+    Write-Host "    2. wsl --install"
+    Write-Host "    3. Reinicia el PC"
+    Write-Host "    4. Abre Docker Desktop y espera a que este listo"
+    Write-Host "  Guia: https://aka.ms/wslinstall"
+    Write-Host ""
+}
+
+function Invoke-WslInstall {
+    $wsl = Get-WslExecutable
+    if (-not $wsl) {
+        Write-Warn "No se encuentra wsl.exe en el sistema."
+        return $false
+    }
+    if (-not (Test-IsAdminSession)) {
+        Write-Warn "wsl --install requiere PowerShell como administrador."
+        Show-WslInstallGuide
+        return $false
+    }
+    Write-Info "Instalando WSL (puede tardar varios minutos)..."
+    $res = Invoke-Native -FilePath $wsl -ArgumentList @("--install")
+    Write-Host $res.Output
+    if ($res.ExitCode -eq 0) {
+        Write-Ok "WSL instalado. REINICIA el PC antes de abrir Docker Desktop."
+        return $true
+    }
+    Write-Warn "wsl --install no termino correctamente. Revisa el mensaje anterior."
+    return $false
+}
+
 function Test-DockerDaemonReady {
     param([string]$DockerPath)
     if (-not $DockerPath) {
@@ -540,6 +595,14 @@ function Ensure-DockerDaemonReady {
     param([string]$DockerPath)
     if (Test-DockerDaemonReady -DockerPath $DockerPath) {
         return $true
+    }
+    if (-not (Test-WslInstalled)) {
+        Write-Warn "WSL no esta instalado. Docker Desktop no puede arrancar el motor sin WSL 2."
+        Show-WslInstallGuide
+        if (Preguntar-Si "Intentar instalar WSL ahora (admin + reinicio)?") {
+            Invoke-WslInstall | Out-Null
+        }
+        return $false
     }
     Write-Warn "Docker CLI instalado, pero el motor no responde (Docker Desktop parado o aun arrancando)."
     Write-Host "  En Windows hace falta Docker Desktop en marcha antes de docker compose."
@@ -732,9 +795,21 @@ if (Preguntar-Si "Guardar clave Gemini ahora?") {
 # Docker (opcional)
 Write-Host ""
 Write-Host "-- Docker / practica en contenedor (opcional) --"
+Write-Host "  En Windows, Docker Desktop requiere WSL 2 (Subsistema de Windows para Linux)."
 Write-Host ""
 
 $dockerOk = "no"
+if (Test-WslInstalled) {
+    Write-Ok "WSL detectado."
+} else {
+    Write-Warn "WSL no instalado o no responde (Docker Desktop lo necesita en Windows)."
+    Show-WslInstallGuide
+    if (Preguntar-Si "Intentar instalar WSL ahora (wsl --install, admin + reinicio)?") {
+        Invoke-WslInstall | Out-Null
+    }
+    $dockerOk = "requiere WSL"
+}
+
 $dockerPath = Get-ToolPath "docker"
 if (-not $dockerPath) {
     if (Preguntar-Si "Instalar Docker Desktop con winget? (opcional, tarda)") {
@@ -752,7 +827,7 @@ if ($dockerPath) {
         $dockerOk = "cli (motor parado)"
         Ensure-DockerDaemonReady -DockerPath $dockerPath | Out-Null
     }
-    if ((Test-DockerDaemonReady -DockerPath $dockerPath) -and (Preguntar-Si "Levantar contenedor de practica ahora?")) {
+    if ((Test-WslInstalled) -and (Test-DockerDaemonReady -DockerPath $dockerPath) -and (Preguntar-Si "Levantar contenedor de practica ahora?")) {
         try {
             Invoke-DockerCompose -ComposeArgs @("up", "-d", "--build", "practica")
             Write-Ok "Contenedor forjaexamenes-practica en marcha."
@@ -765,6 +840,8 @@ if ($dockerPath) {
             Write-Host "  Abre Docker Desktop, espera a que este listo y ejecuta:"
             Write-Host "    docker compose up -d --build practica"
         }
+    } elseif (-not (Test-WslInstalled)) {
+        $dockerOk = "requiere WSL"
     } elseif (-not (Test-DockerDaemonReady -DockerPath $dockerPath)) {
         Write-Host "  Cuando Docker Desktop este en marcha:"
         Write-Host "    docker compose up -d --build practica"
@@ -773,10 +850,11 @@ if ($dockerPath) {
 } else {
     [void]$manualOptional.Add(@"
 [OPCIONAL] Docker Desktop (modulos docker, redes, sistemas, git)
-  - Descarga: https://www.docker.com/products/docker-desktop/
+  - Windows: primero WSL 2 (PowerShell admin: wsl --install, reiniciar PC)
+    https://aka.ms/wslinstall
+  - Luego Docker Desktop: https://www.docker.com/products/docker-desktop/
   - Si winget falla por hash: winget install Docker.DockerDesktop --ignore-security-hash
-    (en PowerShell normal, no como administrador)
-  - Luego: docker compose up -d --build practica
+  - Cuando Docker este listo: docker compose up -d --build practica
 "@)
     Write-Warn "Docker no instalado. La web funciona; la practica en contenedor no."
 }

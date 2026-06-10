@@ -35,6 +35,7 @@ class PruebaServicioTerminalSistema {
     assertTrue(script.contains("%~dp0"));
     assertTrue(script.contains("pause"));
     assertTrue(script.contains("Docker Desktop"));
+    assertTrue(script.contains("wsl --install"));
   }
 
   @Test

@@ -142,13 +142,24 @@ public class ServicioTerminalSistema {
                     echo Instala Docker Desktop: https://docs.docker.com/desktop/setup/install/windows-install/
                     goto fin
                 )
+                wsl.exe --version >nul 2>&1
+                if errorlevel 1 (
+                    echo.
+                    echo WSL no esta instalado. Docker Desktop en Windows lo requiere.
+                    echo   1. PowerShell COMO ADMINISTRADOR: wsl --install
+                    echo   2. Reinicia el PC
+                    echo   3. Abre Docker Desktop y espera a que este listo
+                    echo   https://aka.ms/wslinstall
+                    goto fin
+                )
                 docker version >nul 2>&1
                 if errorlevel 1 (
                     echo.
-                    echo Docker no responde. En Windows suele significar que Docker Desktop no esta en marcha.
-                    echo   1. Abre "Docker Desktop" desde el menu Inicio
-                    echo   2. Espera a que el icono de la ballena deje de parpadear
-                    echo   3. Vuelve a pulsar el boton en la web o ejecuta este .bat de nuevo
+                    echo Docker no responde. Comprueba WSL y Docker Desktop:
+                    echo   1. WSL instalado: wsl --version
+                    echo   2. Abre "Docker Desktop" desde el menu Inicio
+                    echo   3. Espera a que el icono de la ballena deje de parpadear
+                    echo   4. Vuelve a pulsar el boton en la web o ejecuta este .bat de nuevo
                     goto fin
                 )
                 echo Levantando contenedor practica...

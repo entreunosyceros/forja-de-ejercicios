@@ -39,7 +39,8 @@
             <pre class="code-block code-block-compact">docker compose up -d --build practica
 docker exec -it forjaexamenes-practica bash</pre>
             <p class="hint">Usuario: <code>alumno</code> / <code>practica</code> · Carpeta local: <code>datos-practica/</code>
-                · En Windows necesitas <strong>Docker Desktop</strong> abierto y en marcha antes de usar la consola.</p>
+                · En Windows: <strong>WSL 2</strong> (<code>wsl --install</code> en PowerShell admin + reinicio) y
+                <strong>Docker Desktop</strong> en marcha.</p>
             <div class="form-actions form-actions-terminal">
                 <form method="post" th:action="@{/practica/abrir-terminal}" class="form-inline"
                       th:if="${terminalPracticaDisponible}">
