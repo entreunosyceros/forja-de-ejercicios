@@ -28,8 +28,8 @@ class PruebaServicioTerminalSistema {
   }
 
   @Test
-  void scriptPowerShellIncluyeComandosDocker(@TempDir Path tmp) {
-    String script = ServicioTerminalSistema.scriptPowerShell(tmp.toString());
+  void scriptPowerShellIncluyeComandosDocker() {
+    String script = ServicioTerminalSistema.scriptPowerShellEjecucion();
     assertTrue(script.contains("docker compose up -d --build practica"));
     assertTrue(script.contains("docker exec -it forjaexamenes-practica bash"));
   }

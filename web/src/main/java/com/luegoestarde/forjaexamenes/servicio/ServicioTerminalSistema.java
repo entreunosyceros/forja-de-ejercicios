@@ -79,10 +79,18 @@ public class ServicioTerminalSistema {
                 + " en " + raiz + " con los comandos de práctica Docker.";
     }
 
-    /** Arranca el proceso en segundo plano, sin heredar la consola de la aplicación. */
+    /**
+     * Arranca el proceso en segundo plano.
+     * En Windows no se redirigen flujos (redirectInput(DISCARD) provoca
+     * «Redirect invalid for reading: WRITE»); cmd /start ya abre ventana aparte.
+     */
     private void lanzarDesacoplado(List<String> comando) throws IOException {
+        if (esWindows()) {
+            new ProcessBuilder(comando).start();
+            return;
+        }
         List<String> efectivo = comando;
-        if (!esWindows() && ejecutableDisponible("setsid")) {
+        if (ejecutableDisponible("setsid")) {
             efectivo = new java.util.ArrayList<>();
             efectivo.add("setsid");
             efectivo.addAll(comando);
@@ -90,7 +98,6 @@ public class ServicioTerminalSistema {
         ProcessBuilder pb = new ProcessBuilder(efectivo);
         pb.redirectOutput(ProcessBuilder.Redirect.DISCARD);
         pb.redirectError(ProcessBuilder.Redirect.DISCARD);
-        pb.redirectInput(ProcessBuilder.Redirect.DISCARD);
         pb.start();
     }
 
@@ -108,29 +115,17 @@ public class ServicioTerminalSistema {
     }
 
     private List<String> comandoWindows(Path raiz) {
-        String ruta = raiz.toString().replace("'", "''");
-        String script = scriptPowerShell(ruta);
-        if (ejecutableDisponible("wt.exe")) {
-            // Windows Terminal: pestaña nueva en ventana separada
-            return List.of(
-                    "wt.exe", "-w", "0", "new-tab", "--title", "Forja practica",
-                    "-d", raiz.toString(),
-                    "powershell.exe", "-NoExit", "-Command", script);
-        }
-        // cmd start abre SIEMPRE una consola nueva (no reutiliza la de la app)
+        String script = scriptPowerShellEjecucion();
+        // cmd /c start abre SIEMPRE una ventana nueva; /D fija la carpeta del proyecto
         return List.of(
-                "cmd.exe", "/c", "start", "\"Forja practica\"",
-                "powershell.exe", "-NoExit", "-Command", script);
+                "cmd.exe", "/c", "start", "Forja practica", "/D", raiz.toString(),
+                "powershell.exe", "-NoExit", "-NoLogo", "-Command", script);
     }
 
-    static String scriptPowerShell(String rutaLiteral) {
+    static String scriptPowerShellEjecucion() {
         String psDocker = SCRIPT_DOCKER.replace(
                 "&&", "; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; ");
-        return String.format(
-                "Set-Location -LiteralPath '%s'; "
-                        + "Write-Host 'Levantando contenedor practica...' -ForegroundColor Cyan; "
-                        + "%s",
-                rutaLiteral, psDocker);
+        return "Write-Host 'Levantando contenedor practica...' -ForegroundColor Cyan; " + psDocker;
     }
 
     private List<String> comandoMac(Path raiz) {
