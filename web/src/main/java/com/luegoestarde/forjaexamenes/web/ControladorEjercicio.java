@@ -210,6 +210,21 @@ public class ControladorEjercicio {
                 .body(recurso);
     }
 
+    /** El profesor puede ajustar la solución de referencia generada por Gemini antes de exportar. */
+    @PostMapping("/{id}/solucion-referencia")
+    @ResponseBody
+    public Map<String, String> actualizarSolucionReferencia(
+            @PathVariable String id,
+            @RequestParam(required = false) String solucionReferencia) throws Exception {
+        if (!accesoProfesor.modoProfesorActivo()) {
+            throw new IllegalArgumentException("Solo el profesor puede editar la solución de referencia.");
+        }
+        Escenario escenario = obtenerEscenario(id);
+        escenario.setSolucionReferencia(solucionReferencia != null ? solucionReferencia : "");
+        almacenSesiones.guardarEscenario(escenario);
+        return Map.of("ok", "true", "mensaje", "Solución de referencia guardada.");
+    }
+
     @GetMapping("/{id}/json")
     @ResponseBody
     public ResponseEntity<byte[]> exportarJson(@PathVariable String id) throws Exception {

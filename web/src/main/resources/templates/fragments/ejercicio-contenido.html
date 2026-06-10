@@ -31,9 +31,18 @@
         <pre class="enunciado" th:text="${escenario.enunciado}">...</pre>
     </article>
 
-    <article class="card" th:if="${modoProfesor}">
-        <h2>Solución (modo profesor)</h2>
-        <pre class="solucion-profesor" th:text="${@texto.plano(escenario.solucionReferencia)}">...</pre>
+    <article class="card solucion-profesor-card" th:if="${modoProfesor}"
+             th:attr="data-action-guardar-solucion=@{/ejercicio/{id}/solucion-referencia(id=${escenario.id})}">
+        <h2>Solución de referencia (editable)</h2>
+        <p class="hint">Puedes corregir o ampliar lo que generó la IA. Al guardar, la exportación (JSON / banco)
+            usará esta versión.</p>
+        <textarea id="textarea-solucion-profesor" class="solucion-profesor-editable" rows="10"
+                  th:text="${@texto.plano(escenario.solucionReferencia)}">...</textarea>
+        <p id="mensaje-solucion-profesor" class="hint mensaje-solucion-profesor" hidden role="status"></p>
+        <div class="form-actions">
+            <button type="button" class="btn btn-secondary btn-guardar-solucion-profesor">Guardar solución</button>
+            <button type="button" class="btn btn-ghost btn-copiar-solucion-respuesta">Usar en «Tu solución»</button>
+        </div>
     </article>
 
     <article class="card">

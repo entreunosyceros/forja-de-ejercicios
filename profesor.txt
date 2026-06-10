@@ -43,7 +43,9 @@ A) PANEL RÁPIDO  (/profesor)
 B) PRACTICAR Y PREPARAR EJERCICIOS
    - Mismos módulos que el alumno desde la portada.
    - NO aparece «Descargar entrega para el profesor» (eso es solo para alumnos).
-   - Ves la solución de referencia antes y después de enviar.
+   - Ves y puedes EDITAR la solución de referencia (Gemini u otra): corrige o añade
+     comentarios, pulsa «Guardar solución» y exporta con esa versión.
+   - «Usar en Tu solución» copia la solución al cuadro de respuesta para probar la corrección.
    - Tras probar un ejercicio: «Exportar para compartir» (pantalla de ejercicio
      o resultado) → genera un .json que el alumno puede importar.
    - Revisas propuestas IA en /profesor/revisar y las apruebas en TU banco local.
