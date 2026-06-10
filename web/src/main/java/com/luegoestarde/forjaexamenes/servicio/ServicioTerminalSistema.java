@@ -2,6 +2,7 @@
 package com.luegoestarde.forjaexamenes.servicio;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -101,7 +102,7 @@ public class ServicioTerminalSistema {
         pb.start();
     }
 
-    private List<String> comandoSegunSistema(Path raiz) {
+    private List<String> comandoSegunSistema(Path raiz) throws IOException {
         if (esWindows()) {
             return comandoWindows(raiz);
         }
@@ -114,18 +115,45 @@ public class ServicioTerminalSistema {
         return null;
     }
 
-    private List<String> comandoWindows(Path raiz) {
-        String script = scriptPowerShellEjecucion();
-        // cmd /c start abre SIEMPRE una ventana nueva; /D fija la carpeta del proyecto
+    private static final String SCRIPT_PS1 = ".forja-terminal-practica.ps1";
+
+    private List<String> comandoWindows(Path raiz) throws IOException {
+        Path ps1 = escribirScriptPowerShell(raiz);
+        // Script .ps1 en disco: evita problemas de comillas con rutas C:\...
+        // cmd start abre ventana nueva; Read-Host al final deja tiempo para leer errores
         return List.of(
-                "cmd.exe", "/c", "start", "Forja practica", "/D", raiz.toString(),
-                "powershell.exe", "-NoExit", "-NoLogo", "-Command", script);
+                "cmd.exe", "/c", "start", "Forja practica",
+                "powershell.exe", "-NoExecutionPolicy", "Bypass", "-NoLogo", "-File", ps1.toString());
     }
 
-    static String scriptPowerShellEjecucion() {
-        String psDocker = SCRIPT_DOCKER.replace(
-                "&&", "; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; ");
-        return "Write-Host 'Levantando contenedor practica...' -ForegroundColor Cyan; " + psDocker;
+    private Path escribirScriptPowerShell(Path raiz) throws IOException {
+        Path ps1 = raiz.resolve(SCRIPT_PS1);
+        Files.writeString(ps1, contenidoScriptPowerShell(raiz), StandardCharsets.UTF_8);
+        return ps1.toAbsolutePath().normalize();
+    }
+
+    static String contenidoScriptPowerShell(Path raiz) {
+        String ruta = raiz.toAbsolutePath().normalize().toString().replace("'", "''");
+        return """
+                $ErrorActionPreference = 'Continue'
+                Set-Location -LiteralPath '%s'
+                Write-Host 'Levantando contenedor practica...' -ForegroundColor Cyan
+                & docker compose up -d --build practica
+                if ($LASTEXITCODE -ne 0) {
+                    Write-Host ''
+                    Write-Host 'ERROR al levantar el contenedor.' -ForegroundColor Red
+                    Write-Host 'Comprueba que Docker Desktop este en marcha.' -ForegroundColor Yellow
+                    Write-Host "Carpeta: %s"
+                    Read-Host 'Pulsa Enter para cerrar'
+                    exit $LASTEXITCODE
+                }
+                & docker exec -it forjaexamenes-practica bash
+                if ($LASTEXITCODE -ne 0) {
+                    Write-Host ''
+                    Write-Host 'No se pudo entrar al contenedor (puede que aun este arrancando).' -ForegroundColor Yellow
+                }
+                Read-Host 'Pulsa Enter para cerrar'
+                """.formatted(ruta, ruta);
     }
 
     private List<String> comandoMac(Path raiz) {
@@ -159,8 +187,13 @@ public class ServicioTerminalSistema {
 
     static String scriptBash(Path raiz) {
         String ruta = escaparComillaSimple(raiz.toAbsolutePath().normalize().toString());
-        return "cd '" + ruta + "' && echo 'Levantando contenedor practica...' && "
-                + SCRIPT_DOCKER + "; exec bash";
+        return "cd '" + ruta + "' || exit 1; "
+                + "echo 'Levantando contenedor practica...'; "
+                + "if ! docker compose up -d --build practica; then "
+                + "echo ''; echo 'ERROR al levantar el contenedor.'; "
+                + "read -r -p 'Pulsa Enter para cerrar...' _; exit 1; fi; "
+                + "docker exec -it forjaexamenes-practica bash || true; "
+                + "echo ''; read -r -p 'Pulsa Enter para cerrar...' _";
     }
 
     private static String escaparComillaSimple(String texto) {
