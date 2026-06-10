@@ -325,7 +325,9 @@ public class ControladorEjercicio {
 
     private int resolverNivelEfectivo(Optional<String> moduloOpt, Integer nivelParam) {
         String login = metadatosEjercicio.loginActual();
-        if (login != null && !login.isBlank() && !accesoProfesor.esProfesor(login)) {
+        // Cualquier usuario autenticado (alumno o profesor) usa el nivel fijado en su perfil.
+        // En alumnos, la dificultad adaptativa va actualizando ese mismo nivel guardado.
+        if (login != null && !login.isBlank()) {
             return cuentasUsuarios.obtenerNivelGemini(login);
         }
         if (nivelParam != null) {

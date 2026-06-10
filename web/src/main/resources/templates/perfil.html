@@ -114,8 +114,8 @@
         </div>
 
         <div class="card perfil-ia-card">
-            <h2>Dificultad de ejercicios con IA</h2>
-            <p class="hint">Solo afecta a los módulos <code>docs_*</code> (apuntes PDF). Los ejercicios predefinidos usan otro criterio de nivel.</p>
+            <h2>Dificultad de ejercicios</h2>
+            <p class="hint">Afecta a <strong>todos los módulos</strong>, se generen con IA o sin ella. En los alumnos, además, la dificultad se ajusta sola según las rachas de resultados.</p>
             <div th:replace="~{fragments/selector-nivel-gemini :: formulario}"></div>
             <p class="alerta-indexacion alerta-ok" th:if="${mensajeNivelGemini}" th:text="${mensajeNivelGemini}">OK</p>
             <p class="alerta-indexacion alerta-error" th:if="${errorNivelGemini}" th:text="${errorNivelGemini}">Error</p>
