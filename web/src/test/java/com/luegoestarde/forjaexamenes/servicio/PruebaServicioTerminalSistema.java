@@ -34,6 +34,7 @@ class PruebaServicioTerminalSistema {
     assertTrue(script.contains("docker exec -it forjaexamenes-practica bash"));
     assertTrue(script.contains("%~dp0"));
     assertTrue(script.contains("pause"));
+    assertTrue(script.contains("Docker Desktop"));
   }
 
   @Test

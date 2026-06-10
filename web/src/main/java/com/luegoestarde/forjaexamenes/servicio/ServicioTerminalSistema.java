@@ -135,12 +135,28 @@ public class ServicioTerminalSistema {
                 chcp 65001 >nul
                 cd /d "%~dp0"
                 title Forja - entorno practica
+                where docker >nul 2>&1
+                if errorlevel 1 (
+                    echo.
+                    echo No se encuentra el comando docker en el PATH.
+                    echo Instala Docker Desktop: https://docs.docker.com/desktop/setup/install/windows-install/
+                    goto fin
+                )
+                docker version >nul 2>&1
+                if errorlevel 1 (
+                    echo.
+                    echo Docker no responde. En Windows suele significar que Docker Desktop no esta en marcha.
+                    echo   1. Abre "Docker Desktop" desde el menu Inicio
+                    echo   2. Espera a que el icono de la ballena deje de parpadear
+                    echo   3. Vuelve a pulsar el boton en la web o ejecuta este .bat de nuevo
+                    goto fin
+                )
                 echo Levantando contenedor practica...
                 docker compose up -d --build practica
                 if errorlevel 1 (
                     echo.
-                    echo ERROR al levantar el contenedor.
-                    echo Comprueba que Docker Desktop este en marcha.
+                    echo ERROR al levantar el contenedor practica.
+                    echo Si el mensaje anterior habla de dockerDesktopLinuxEngine, Docker Desktop no esta listo.
                     goto fin
                 )
                 docker exec -it forjaexamenes-practica bash

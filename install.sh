@@ -151,9 +151,17 @@ echo ""
 
 DOCKER_OK="no"
 if command -v docker &>/dev/null; then
-    ok "Docker detectado: $(docker --version 2>&1 | head -1)"
+    ok "Docker CLI: $(docker --version 2>&1 | head -1)"
+    if docker info &>/dev/null; then
+        ok "Motor Docker en marcha."
+    else
+        aviso "Docker instalado pero el motor no responde."
+        echo "  En macOS/Windows: abre Docker Desktop y espera a que esté listo."
+        echo "  En Linux: sudo systemctl start docker"
+        DOCKER_OK="cli (motor parado)"
+    fi
     if docker compose version &>/dev/null || docker-compose --version &>/dev/null; then
-        if preguntar_si "¿Levantar el contenedor de práctica ahora (docker compose up)?"; then
+        if docker info &>/dev/null && preguntar_si "¿Levantar el contenedor de práctica ahora (docker compose up)?"; then
             if docker compose version &>/dev/null; then
                 docker compose up -d --build practica
             else
@@ -163,6 +171,8 @@ if command -v docker &>/dev/null; then
             echo "  Entrar: docker exec -it forjaexamenes-practica bash"
             echo "  Usuario: alumno / practica"
             DOCKER_OK="sí"
+        elif ! docker info &>/dev/null; then
+            echo "  Cuando el motor esté en marcha: docker compose up -d --build practica"
         else
             aviso "Docker listo. Levántalo más tarde:"
             echo "    docker compose up -d --build practica"

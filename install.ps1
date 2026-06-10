@@ -497,17 +497,82 @@ function Actualizar-Env {
     }
 }
 
+function Test-DockerDaemonReady {
+    param([string]$DockerPath)
+    if (-not $DockerPath) {
+        return $false
+    }
+    $res = Invoke-Native -FilePath $DockerPath -ArgumentList @("info")
+    return ($res.ExitCode -eq 0)
+}
+
+function Start-DockerDesktopApp {
+    $candidatos = @(
+        "$env:ProgramFiles\Docker\Docker\Docker Desktop.exe",
+        "$env:LOCALAPPDATA\Programs\Docker\Docker\Docker Desktop.exe",
+        "$env:LOCALAPPDATA\Docker\Docker Desktop.exe"
+    )
+    foreach ($ruta in $candidatos) {
+        if (Test-Path -LiteralPath $ruta) {
+            Start-Process -FilePath $ruta | Out-Null
+            return $true
+        }
+    }
+    return $false
+}
+
+function Wait-DockerDaemonReady {
+    param(
+        [string]$DockerPath,
+        [int]$MaxSeconds = 120
+    )
+    $limite = (Get-Date).AddSeconds($MaxSeconds)
+    while ((Get-Date) -lt $limite) {
+        if (Test-DockerDaemonReady -DockerPath $DockerPath) {
+            return $true
+        }
+        Start-Sleep -Seconds 3
+    }
+    return $false
+}
+
+function Ensure-DockerDaemonReady {
+    param([string]$DockerPath)
+    if (Test-DockerDaemonReady -DockerPath $DockerPath) {
+        return $true
+    }
+    Write-Warn "Docker CLI instalado, pero el motor no responde (Docker Desktop parado o aun arrancando)."
+    Write-Host "  En Windows hace falta Docker Desktop en marcha antes de docker compose."
+    if (-not (Preguntar-Si "Intentar abrir Docker Desktop y esperar hasta 2 minutos?")) {
+        return $false
+    }
+    if (-not (Start-DockerDesktopApp)) {
+        Write-Warn "No se encontro Docker Desktop. Abrelo desde el menu Inicio."
+        return $false
+    }
+    Write-Info "Esperando motor Docker..."
+    if (Wait-DockerDaemonReady -DockerPath $DockerPath) {
+        Write-Ok "Motor Docker listo."
+        return $true
+    }
+    Write-Warn "Docker Desktop aun no responde. Puedes levantar el contenedor mas tarde."
+    return $false
+}
+
 function Invoke-DockerCompose {
     param([string[]]$ComposeArgs)
     $docker = Get-ToolPath "docker"
     if (-not $docker) {
         throw "Docker no encontrado"
     }
-    $res = Invoke-Native -FilePath $docker -ArgumentList (@("compose") + $ComposeArgs)
+    if (-not (Test-DockerDaemonReady -DockerPath $docker)) {
+        throw "El motor Docker no esta en marcha. Abre Docker Desktop y espera a que este listo."
+    }
+    $res = Invoke-Native -FilePath $docker -ArgumentList (@("compose") + $ComposeArgs) -WorkingDirectory $Raiz
     if ($res.ExitCode -ne 0) {
         $legacy = Get-ToolPath "docker-compose"
         if ($legacy) {
-            $res = Invoke-Native -FilePath $legacy -ArgumentList $ComposeArgs
+            $res = Invoke-Native -FilePath $legacy -ArgumentList $ComposeArgs -WorkingDirectory $Raiz
         }
     }
     if ($res.ExitCode -ne 0) {
@@ -680,16 +745,30 @@ if (-not $dockerPath) {
 }
 if ($dockerPath) {
     $dockerVer = Invoke-Native -FilePath $dockerPath -ArgumentList @("--version")
-    Write-Ok "Docker: $($dockerVer.Output)"
-    if (Preguntar-Si "Levantar contenedor de practica ahora?") {
+    Write-Ok "Docker CLI: $($dockerVer.Output)"
+    if (Test-DockerDaemonReady -DockerPath $dockerPath) {
+        Write-Ok "Motor Docker en marcha."
+    } else {
+        $dockerOk = "cli (motor parado)"
+        Ensure-DockerDaemonReady -DockerPath $dockerPath | Out-Null
+    }
+    if ((Test-DockerDaemonReady -DockerPath $dockerPath) -and (Preguntar-Si "Levantar contenedor de practica ahora?")) {
         try {
             Invoke-DockerCompose -ComposeArgs @("up", "-d", "--build", "practica")
             Write-Ok "Contenedor forjaexamenes-practica en marcha."
+            Write-Host "  Entrar: docker exec -it forjaexamenes-practica bash"
+            Write-Host "  O usa el boton «Abrir consola de practica» en la portada."
             $dockerOk = "si"
         } catch {
-            Write-Warn "No se pudo levantar el contenedor. Abre Docker Desktop y reintenta."
+            Write-Warn "No se pudo levantar el contenedor."
             Write-Host $_.Exception.Message
+            Write-Host "  Abre Docker Desktop, espera a que este listo y ejecuta:"
+            Write-Host "    docker compose up -d --build practica"
         }
+    } elseif (-not (Test-DockerDaemonReady -DockerPath $dockerPath)) {
+        Write-Host "  Cuando Docker Desktop este en marcha:"
+        Write-Host "    docker compose up -d --build practica"
+        Write-Host "  O el boton en http://localhost:8080 (seccion Entorno Docker)."
     }
 } else {
     [void]$manualOptional.Add(@"
