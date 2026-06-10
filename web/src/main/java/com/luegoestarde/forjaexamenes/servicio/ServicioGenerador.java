@@ -19,13 +19,16 @@ public class ServicioGenerador {
 
     private final PropiedadesForjaExamenes propiedades;
     private final ServicioConfiguracionGemini configuracionGemini;
+    private final ServicioPreferenciasProfesor preferenciasProfesor;
     private final ObjectMapper mapeador;
 
     public ServicioGenerador(
             PropiedadesForjaExamenes propiedades,
-            ServicioConfiguracionGemini configuracionGemini) {
+            ServicioConfiguracionGemini configuracionGemini,
+            ServicioPreferenciasProfesor preferenciasProfesor) {
         this.propiedades = propiedades;
         this.configuracionGemini = configuracionGemini;
+        this.preferenciasProfesor = preferenciasProfesor;
         this.mapeador = MapeadorJson.snakeCase();
     }
 
@@ -101,7 +104,7 @@ public class ServicioGenerador {
         if (!modelo.isBlank()) {
             entorno.put("FORJAEXAMENES_GEMINI_MODEL", modelo);
         }
-        if (propiedades.isGeminiGuardarPendientes()) {
+        if (preferenciasProfesor.isGeminiGuardarPendientes()) {
             entorno.put("FORJAEXAMENES_GEMINI_GUARDAR_PENDIENTES", "true");
         }
         if (propiedades.isGeminiSoloAprobados()) {

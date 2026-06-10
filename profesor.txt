@@ -61,6 +61,11 @@ C) COMPARTIR EJERCICIOS CON LA CLASE (carpeta compartida)
    4. Cada alumno importa en su portada → «Importar al banco local».
    5. En su equipo ya pueden practicar esos ejercicios verificados.
 
+   Localizar los ficheros: en /profesor/banco tienes «Abrir carpeta de aprobados»
+   y «Abrir carpeta de pendientes», que abren el explorador de archivos de tu
+   sistema (Windows, macOS o Linux con escritorio) en banco/aprobados o
+   banco/pendientes.
+
    «Aprobar y publicar» en tu app solo afecta a TU instalación hasta que exportes.
 
 
@@ -83,6 +88,9 @@ E) RESULTADOS Y EXPORTAR CSV  (/profesor/resultados)
 
 F) REVISIÓN DEL BANCO IA  (/profesor/revisar)
    - Validar ejercicios generados desde apuntes antes de exportarlos.
+   - Activa o desactiva la cola de revisión desde la propia página (casilla
+     «Guardar propuestas de IA en banco/pendientes/»). Ya no hace falta editar
+     application.properties a mano.
    - Aprobar / rechazar / descargar paquete ZIP.
 
 

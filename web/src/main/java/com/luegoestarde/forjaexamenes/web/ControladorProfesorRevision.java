@@ -4,9 +4,10 @@ package com.luegoestarde.forjaexamenes.web;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.luegoestarde.forjaexamenes.configuracion.PropiedadesForjaExamenes;
 import java.util.Map;
+import com.luegoestarde.forjaexamenes.servicio.ServicioAccesoProfesor;
 import com.luegoestarde.forjaexamenes.servicio.ServicioBancoEjercicios;
+import com.luegoestarde.forjaexamenes.servicio.ServicioPreferenciasProfesor;
 import com.luegoestarde.forjaexamenes.servicio.ServicioRevisionProfesor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -24,23 +25,30 @@ public class ControladorProfesorRevision {
 
     private final ServicioBancoEjercicios servicioBanco;
     private final ServicioRevisionProfesor servicioRevision;
-    private final PropiedadesForjaExamenes propiedades;
+    private final ServicioAccesoProfesor accesoProfesor;
+    private final ServicioPreferenciasProfesor preferenciasProfesor;
     private final ObjectMapper mapeador = new ObjectMapper();
 
     public ControladorProfesorRevision(
             ServicioBancoEjercicios servicioBanco,
             ServicioRevisionProfesor servicioRevision,
-            PropiedadesForjaExamenes propiedades) {
+            ServicioAccesoProfesor accesoProfesor,
+            ServicioPreferenciasProfesor preferenciasProfesor) {
         this.servicioBanco = servicioBanco;
         this.servicioRevision = servicioRevision;
-        this.propiedades = propiedades;
+        this.accesoProfesor = accesoProfesor;
+        this.preferenciasProfesor = preferenciasProfesor;
     }
 
     @GetMapping
-    public String listar(Model modelo) throws Exception {
+    public String listar(Model modelo, RedirectAttributes flash) throws Exception {
+        if (!accesoProfesor.puedeAccederZonaProfesor()) {
+            flash.addFlashAttribute("errorPerfil", "Acceso solo para cuentas de profesor.");
+            return "redirect:/perfil";
+        }
         modelo.addAttribute("tituloPagina", "Revisar propuestas");
         modelo.addAttribute("pendientes", servicioBanco.listarPendientes());
-        modelo.addAttribute("geminiGuardarPendientes", propiedades.isGeminiGuardarPendientes());
+        modelo.addAttribute("geminiGuardarPendientes", preferenciasProfesor.isGeminiGuardarPendientes());
         return "profesor-revisar-lista";
     }
 

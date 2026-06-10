@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="panel(volver)" class="card card-config-profesor">
+    <h2>Cola de revisión (<code>banco/pendientes/</code>)</h2>
+    <p class="hint">
+        Cuando está activado, cada ejercicio generado desde apuntes (<code>docs_*</code>) con Gemini
+        se guarda automáticamente para que lo revises, apruebes o rechaces.
+    </p>
+    <p class="hint hint-warn" th:if="${!geminiGuardarPendientes}">
+        Ahora mismo está <strong>desactivado</strong>: los ejercicios nuevos no se acumulan en pendientes.
+    </p>
+    <p class="hint" th:if="${geminiGuardarPendientes}">
+        <strong>Activado</strong>: los ejercicios <code>docs_*</code> nuevos aparecerán en esta lista.
+    </p>
+    <form class="form-preferencia-profesor" method="post"
+          th:action="@{/profesor/preferencias/gemini-guardar-pendientes}">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <input type="hidden" name="volver" th:value="${volver}"/>
+        <input type="hidden" name="activo" value="false"/>
+        <label class="opcion-toggle-profesor">
+            <input type="checkbox" name="activo" value="true" th:checked="${geminiGuardarPendientes}"/>
+            Guardar propuestas de IA en <code>banco/pendientes/</code>
+        </label>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-secondary btn-sm">Guardar preferencia</button>
+        </div>
+    </form>
+</div>
+</body>
+</html>

@@ -161,6 +161,7 @@ Estos ficheros se generan al usar la app y están en `.gitignore` (no deben subi
 | `datos/entregas/<profesor>/` | Entregas JSON importadas por el profesor (carpeta compartida → panel) |
 | `datos/usuarios.json` | Perfiles, contraseñas y rol (`alumno` / `profesor`) |
 | `datos/gemini.json` | Clave API de Gemini guardada desde Perfil |
+| `datos/preferencias-profesor.json` | Preferencias del profesor (p. ej. cola `banco/pendientes/`) |
 | `datos-practica/` | Archivos del alumno en el contenedor de práctica |
 | `indice/*.json` | Índice de PDFs indexados |
 | `banco/pendientes/` | Propuestas Gemini pendientes de revisión |
@@ -346,6 +347,7 @@ Formato del paquete: `forja-banco-ejercicios` (también se acepta un ejercicio s
 | `GET /profesor/banco/exportar.json` | Descarga todo el banco aprobado (solo profesor) |
 | `GET /ejercicio/{id}/exportar-banco.json` | Un ejercicio de la sesión actual, listo para importar |
 | `POST /banco/importar` | Alumno o profesor: sube paquete o ejercicio a `banco/aprobados/` |
+| `POST /profesor/banco/abrir-carpeta` | Abre `banco/aprobados/` o `banco/pendientes/` en el explorador del SO (solo en equipos con escritorio) |
 
 Guías de rol: [alumno.txt](alumno.txt) y [profesor.txt](profesor.txt).
 
@@ -435,7 +437,7 @@ forjaexamenes.login.profesores=profesor
 
 Flujo recomendado para validar ejercicios generados desde apuntes **en el equipo del profesor** y luego compartirlos con la clase:
 
-1. Activa `forjaexamenes.gemini-guardar-pendientes=true` → cada ejercicio `docs_*` se guarda en `banco/pendientes/`.
+1. Activa la cola de revisión en **`/profesor/revisar`** o **`/profesor/banco`** (casilla «Guardar propuestas de IA en banco/pendientes/») → cada ejercicio `docs_*` se guarda en `banco/pendientes/`.
 2. Entra como **profesor** / **profesor**.
 3. Abre **Perfil → Revisar propuestas** o ve a `/profesor/revisar`.
 4. Pulsa **Revisar** en un pendiente. Verás:
@@ -616,7 +618,7 @@ Para repartir ejercicios entre equipos: exportar `forja-banco-ejercicios` (`GET 
 
 | Propiedad / variable | Efecto |
 |----------------------|--------|
-| `forjaexamenes.gemini-guardar-pendientes=true` | Guarda cada ejercicio `docs_*` en pendientes |
+| Cola de revisión IA (`banco/pendientes/`) | Actívala en **`/profesor/revisar`** o **`/profesor/banco`** (preferencia guardada en `datos/preferencias-profesor.json`). También vía `forjaexamenes.gemini-guardar-pendientes=true` en properties |
 | `forjaexamenes.gemini-solo-aprobados=true` | Solo ejercicios del banco (sin Gemini en vivo) |
 | `forjaexamenes.modo-profesor` / `FORJAEXAMENES_MODO_PROFESOR` | Solución visible antes de enviar |
 | `forjaexamenes.login.profesores` / `FORJAEXAMENES_PROFESORES` | Logins con acceso a `/profesor/**` |

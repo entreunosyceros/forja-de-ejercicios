@@ -11,10 +11,7 @@
         <p class="alerta-indexacion alerta-ok" th:if="${mensajePerfilOk}" th:text="${mensajePerfilOk}">OK</p>
         <p class="alerta-indexacion alerta-error" th:if="${errorPerfil}" th:text="${errorPerfil}">Error</p>
 
-        <p class="hint hint-warn" th:if="${!geminiGuardarPendientes}">
-            Activa <code>forjaexamenes.gemini-guardar-pendientes=true</code> para acumular propuestas en
-            <code>banco/pendientes/</code>.
-        </p>
+        <div th:replace="~{fragments/opcion-guardar-pendientes :: panel('/profesor/revisar')}"></div>
 
         <div th:if="${#lists.isEmpty(pendientes)}">
             <p>No hay propuestas pendientes de revisión.</p>

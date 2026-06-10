@@ -958,6 +958,27 @@ textarea {
     color: var(--fail, #c62828);
 }
 
+.card-config-profesor {
+    margin: 1rem 0 1.25rem;
+    padding: 1rem 1.1rem;
+    border: 1px solid var(--border, #ddd);
+    border-radius: 10px;
+    background: var(--surface, #fafafa);
+}
+
+.opcion-toggle-profesor {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin: 0.75rem 0;
+    cursor: pointer;
+    line-height: 1.4;
+}
+
+.opcion-toggle-profesor input {
+    margin-top: 0.2rem;
+}
+
 .tiempo-resultado {
     color: var(--muted);
     font-size: 0.9rem;
