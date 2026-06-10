@@ -61,6 +61,56 @@ def probar_ciclo_pendiente_aprobado():
             banco_loader.CATALOGO = orig_cat
 
 
+def probar_modulo_sin_campo_json():
+    """Ejercicios importados sin 'modulo' o con banco_aprobados deben registrarse bien."""
+    with tempfile.TemporaryDirectory() as tmp:
+        banco = Path(tmp) / "banco"
+        aprob = banco / "aprobados" / "docker"
+        aprob.mkdir(parents=True)
+
+        orig_banco = banco_loader.CARPETA_BANCO
+        orig_ap = banco_loader.APROBADOS
+        orig_pe = banco_loader.PENDIENTES
+        orig_cat = banco_loader.CATALOGO
+        try:
+            banco_loader.CARPETA_BANCO = banco
+            banco_loader.APROBADOS = banco / "aprobados"
+            banco_loader.PENDIENTES = banco / "pendientes"
+            banco_loader.CATALOGO = banco / "catalogo.json"
+
+            ruta = aprob / "sin-modulo.json"
+            ruta.write_text(
+                json.dumps({
+                    "id": "sin-modulo",
+                    "modulo": "banco_aprobados",
+                    "titulo": "Docker sin modulo",
+                    "enunciado": "docker ps",
+                    "criterios": modelo_ejercicio.construir_criterios_desde_palabras_clave(
+                        ["docker ps", "nginx"]
+                    ),
+                    "solucion_referencia": "docker ps",
+                }),
+                encoding="utf-8",
+            )
+
+            cat = banco_loader.reconstruir_catalogo()
+            modulo_cat = cat["ejercicios"][0]["modulo"]
+            assert modulo_cat == "banco_docker", modulo_cat
+
+            gens: dict = {}
+            pistas: dict = {}
+            mods = banco_loader.registrar_en_generadores(gens, pistas)
+            assert "banco_docker" in mods
+            assert "banco_aprobados" not in mods
+            escenario = gens["banco_docker"]()
+            assert escenario["id"] == "sin-modulo"
+        finally:
+            banco_loader.CARPETA_BANCO = orig_banco
+            banco_loader.APROBADOS = orig_ap
+            banco_loader.PENDIENTES = orig_pe
+            banco_loader.CATALOGO = orig_cat
+
+
 def probar_registro_generador():
     ejemplo = RAIZ / "banco" / "aprobados" / "docker" / "ejemplo.json"
     if not ejemplo.is_file():
@@ -73,5 +123,6 @@ def probar_registro_generador():
 
 if __name__ == "__main__":
     probar_ciclo_pendiente_aprobado()
+    probar_modulo_sin_campo_json()
     probar_registro_generador()
     print("OK banco_loader")

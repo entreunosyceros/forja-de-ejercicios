@@ -31,6 +31,30 @@ class PruebaServicioBancoPortable {
     }
 
     @Test
+    void importarNormalizaModuloInvalido() throws Exception {
+        String json = """
+                {
+                  "id": "mal-modulo",
+                  "modulo": "banco_aprobados",
+                  "titulo": "Docker mal etiquetado",
+                  "enunciado": "docker ps",
+                  "criterios": [{"tipo": "contiene_todos", "terminos": ["docker"], "peso": 5}]
+                }
+                """;
+        var resultado = servicioPortable.importar(json.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        assertEquals(1, resultado.importados());
+
+        Path fichero = tempDir.resolve("banco").resolve("aprobados").resolve("general").resolve("mal-modulo.json");
+        assertTrue(Files.isRegularFile(fichero));
+        String modulo = new ObjectMapper().readTree(fichero.toFile()).path("modulo").asText();
+        assertEquals("banco_general", modulo);
+
+        var catalogo = servicioBanco.listarParaPortada();
+        assertEquals(1, catalogo.size());
+        assertEquals("banco_general", catalogo.get(0).modulo());
+    }
+
+    @Test
     void exportarEImportarPaqueteEnOtroEquipo() throws Exception {
         Path origen = tempDir.resolve("banco").resolve("aprobados").resolve("docker");
         Files.createDirectories(origen);

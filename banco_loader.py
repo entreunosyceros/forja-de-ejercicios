@@ -21,6 +21,31 @@ CATALOGO = CARPETA_BANCO / "catalogo.json"
 
 MODULOS_BANCO: tuple[str, ...] = ()
 
+_SUBCARPETAS_INVALIDAS = frozenset({"aprobados", "pendientes"})
+
+
+def _resolver_modulo_banco(datos: dict[str, Any], ruta: Path) -> str:
+    """Nombre de módulo estable para catálogo y generador (prefijo banco_*)."""
+    crudo = (datos.get("modulo") or "").strip()
+    if crudo in ("", "aprobados", "banco_aprobados"):
+        crudo = ""
+    elif crudo.startswith("docs_"):
+        return crudo
+    elif crudo.startswith("banco_"):
+        return crudo
+    else:
+        return f"banco_{crudo}"
+
+    try:
+        rel = ruta.relative_to(APROBADOS)
+        if len(rel.parts) >= 2:
+            sub = rel.parts[0]
+            if sub and sub not in _SUBCARPETAS_INVALIDAS:
+                return sub if sub.startswith("banco_") else f"banco_{sub}"
+    except ValueError:
+        pass
+    return "banco_general"
+
 
 def _generar_id() -> str:
     return comun.generar_identificador()
@@ -53,12 +78,16 @@ def reconstruir_catalogo() -> dict[str, Any]:
     for ruta in listar_json_aprobados():
         try:
             datos = json.loads(ruta.read_text(encoding="utf-8"))
-            modulo = datos.get("modulo") or f"banco_{ruta.parent.name}"
+            modulo = _resolver_modulo_banco(datos, ruta)
+            try:
+                ruta_rel = str(ruta.relative_to(RAIZ))
+            except ValueError:
+                ruta_rel = str(ruta)
             entradas.append({
                 "id": datos.get("id") or ruta.stem,
                 "modulo": modulo,
                 "titulo": datos.get("titulo", ruta.stem),
-                "ruta": str(ruta.relative_to(RAIZ)),
+                "ruta": ruta_rel,
                 "origen": datos.get("parametros", {}).get("generado_con", "banco"),
             })
         except (json.JSONDecodeError, OSError, ValueError):
@@ -106,7 +135,7 @@ def ejercicios_aprobados_por_modulo(modulo: str) -> list[Path]:
     for ruta in listar_json_aprobados():
         try:
             datos = json.loads(ruta.read_text(encoding="utf-8"))
-            if datos.get("modulo") == modulo:
+            if _resolver_modulo_banco(datos, ruta) == modulo:
                 rutas.append(ruta)
         except (json.JSONDecodeError, OSError):
             continue
@@ -192,26 +221,22 @@ def registrar_en_generadores(
     for ruta in listar_json_aprobados():
         try:
             datos = json.loads(ruta.read_text(encoding="utf-8"))
-            modulo = datos.get("modulo")
-            if not modulo:
-                continue
+            modulo = _resolver_modulo_banco(datos, ruta)
             por_modulo.setdefault(modulo, []).append(ruta)
         except (json.JSONDecodeError, OSError):
             continue
 
     modulos: set[str] = set()
     for modulo, rutas in por_modulo.items():
-        clave = f"banco_{modulo}" if modulo in generadores else modulo
-
         def _fabrica(rs: list[Path] = rutas) -> dict:
             return cargar_ejercicio_aprobado(random.choice(rs))
 
-        generadores[clave] = _fabrica
-        pistas_modulo[clave] = (
+        generadores[modulo] = _fabrica
+        pistas_modulo[modulo] = (
             "Ejercicio del banco verificado del profesor. "
             "Incluye todos los comandos o conceptos del enunciado."
         )
-        modulos.add(clave)
+        modulos.add(modulo)
 
     MODULOS_BANCO = tuple(sorted(modulos))
     return MODULOS_BANCO

@@ -95,10 +95,13 @@ public class ServicioBancoPortable {
 
         for (JsonNode ejercicio : ejercicios) {
             try {
-                JsonNode limpio = limpiarParaBanco(ejercicio);
+                ObjectNode limpio = limpiarParaBanco(ejercicio);
                 validarEjercicio(limpio);
                 String id = limpio.path("id").asText("");
                 Path destino = rutaDestino(limpio);
+                limpio.put("modulo", normalizarModuloBanco(
+                        limpio.path("modulo").asText(""),
+                        destino.getParent().getFileName().toString()));
                 boolean existia = Files.isRegularFile(destino);
                 Files.createDirectories(destino.getParent());
                 mapeador.writerWithDefaultPrettyPrinter().writeValue(destino.toFile(), limpio);
@@ -154,7 +157,7 @@ public class ServicioBancoPortable {
                 "Formato no reconocido. Usa un paquete forja-banco-ejercicios o un ejercicio JSON con criterios.");
     }
 
-    private JsonNode limpiarParaBanco(JsonNode original) {
+    private ObjectNode limpiarParaBanco(JsonNode original) {
         ObjectNode nodo = original.deepCopy();
         nodo.remove("usuario");
         nodo.remove("fecha_hora");
@@ -196,12 +199,37 @@ public class ServicioBancoPortable {
     private Path rutaDestino(JsonNode ejercicio) {
         String id = ejercicio.path("id").asText("sin-id").replaceAll("[^a-zA-Z0-9_\\-]", "");
         String modulo = ejercicio.path("modulo").asText("general");
-        String sub = modulo.startsWith("docs_")
-                ? modulo.substring(5)
-                : modulo.replace("banco_", "").toLowerCase(Locale.ROOT);
-        if (sub.isBlank()) {
-            sub = "general";
-        }
+        String sub = subcarpetaDesdeModulo(modulo);
         return servicioBanco.carpetaAprobados().resolve(sub).resolve(id + ".json");
+    }
+
+    static String normalizarModuloBanco(String modulo, String subcarpeta) {
+        String limpio = modulo != null ? modulo.strip() : "";
+        if (limpio.isBlank() || "aprobados".equals(limpio) || "banco_aprobados".equals(limpio)) {
+            if (subcarpeta != null && !subcarpeta.isBlank()
+                    && !"aprobados".equals(subcarpeta) && !"general".equals(subcarpeta)) {
+                return subcarpeta.startsWith("banco_") ? subcarpeta : "banco_" + subcarpeta;
+            }
+            return "banco_general";
+        }
+        if (limpio.startsWith("docs_")) {
+            return limpio;
+        }
+        if (limpio.startsWith("banco_") && !"banco_aprobados".equals(limpio)) {
+            return limpio;
+        }
+        return "banco_" + limpio.replace("banco_", "");
+    }
+
+    private static String subcarpetaDesdeModulo(String modulo) {
+        String limpio = modulo != null ? modulo.strip() : "";
+        if (limpio.startsWith("docs_")) {
+            return limpio.substring(5);
+        }
+        String sub = limpio.replace("banco_", "").toLowerCase(Locale.ROOT);
+        if (sub.isBlank() || "aprobados".equals(sub)) {
+            return "general";
+        }
+        return sub;
     }
 }

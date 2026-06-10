@@ -169,10 +169,19 @@ public class ServicioBancoEjercicios {
             try (Stream<Path> stream = Files.walk(aprobados)) {
                 stream.filter(p -> p.toString().endsWith(".json")).forEach(p -> {
                     try {
-                        JsonNode datos = mapeador.readTree(p.toFile());
+                        ObjectNode datos = (ObjectNode) mapeador.readTree(p.toFile());
                         ObjectNode entrada = mapeador.createObjectNode();
                         entrada.put("id", datos.path("id").asText(p.getFileName().toString().replace(".json", "")));
-                        entrada.put("modulo", datos.path("modulo").asText(""));
+                        String subcarpeta = p.getParent() != null
+                                ? p.getParent().getFileName().toString()
+                                : "";
+                        String moduloNorm = ServicioBancoPortable.normalizarModuloBanco(
+                                datos.path("modulo").asText(""), subcarpeta);
+                        if (!moduloNorm.equals(datos.path("modulo").asText(""))) {
+                            datos.put("modulo", moduloNorm);
+                            mapeador.writerWithDefaultPrettyPrinter().writeValue(p.toFile(), datos);
+                        }
+                        entrada.put("modulo", moduloNorm);
                         entrada.put("titulo", datos.path("titulo").asText(p.getFileName().toString()));
                         entrada.put("ruta", banco.relativize(p.toAbsolutePath().normalize()).toString().replace('\\', '/'));
                         entrada.put("origen", datos.path("parametros").path("generado_con").asText("banco"));
