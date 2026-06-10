@@ -52,12 +52,12 @@ docker exec -it forjaexamenes-practica bash</pre>
                 </form>
             </div>
             <p class="hint" th:if="${terminalPracticaDisponible}">
-                El botón abre una <strong>ventana nueva</strong> de terminal; la consola donde arrancaste la aplicación
-                puede seguir usándose con normalidad.
+                El botón abre una <strong>ventana nueva</strong> de consola; la que usa la aplicación no se cierra.
+                Si falla, haz doble clic en <code>.forja-terminal-practica.bat</code> en la carpeta del proyecto.
             </p>
             <p class="hint" th:unless="${terminalPracticaDisponible}">
                 En este equipo no hay terminal gráfica (p. ej. servidor remoto). Copia y ejecuta los comandos de arriba
-                en otra ventana de PowerShell, Terminal o consola Linux.
+                en otra ventana de consola, PowerShell o Terminal.
             </p>
             </div>
         </div>

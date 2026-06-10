@@ -10,7 +10,7 @@ import java.util.Locale;
 import org.springframework.stereotype.Service;
 
 /**
- * Abre una terminal del sistema (PowerShell, Terminal.app, gnome-terminal…)
+ * Abre una terminal del sistema (CMD + .bat en Windows, Terminal.app en macOS, gnome-terminal…)
  * en la carpeta del proyecto con los comandos Docker de práctica.
  * Pensado para uso local; en servidores sin escritorio no habrá terminal gráfica.
  */
@@ -30,10 +30,10 @@ public class ServicioTerminalSistema {
         return System.getenv("DISPLAY") != null || System.getenv("WAYLAND_DISPLAY") != null;
     }
 
-    /** Etiqueta del botón según el sistema (PowerShell, Terminal…). */
+    /** Etiqueta del botón según el sistema (consola, Terminal…). */
     public String etiquetaBoton() {
         if (esWindows()) {
-            return "Abrir PowerShell";
+            return "Abrir consola de práctica";
         }
         if (esMac()) {
             return "Abrir Terminal";
@@ -115,45 +115,39 @@ public class ServicioTerminalSistema {
         return null;
     }
 
-    private static final String SCRIPT_PS1 = ".forja-terminal-practica.ps1";
+    static final String SCRIPT_BAT = ".forja-terminal-practica.bat";
 
     private List<String> comandoWindows(Path raiz) throws IOException {
-        Path ps1 = escribirScriptPowerShell(raiz);
-        // Script .ps1 en disco: evita problemas de comillas con rutas C:\...
-        // cmd start abre ventana nueva; Read-Host al final deja tiempo para leer errores
-        return List.of(
-                "cmd.exe", "/c", "start", "Forja practica",
-                "powershell.exe", "-NoExecutionPolicy", "Bypass", "-NoLogo", "-File", ps1.toString());
+        Path bat = escribirScriptBat(raiz);
+        // start "" "ruta.bat" abre ventana CMD nueva; el .bat usa %~dp0 (sin rutas C:\ embebidas)
+        return List.of("cmd.exe", "/c", "start", "", bat.toString());
     }
 
-    private Path escribirScriptPowerShell(Path raiz) throws IOException {
-        Path ps1 = raiz.resolve(SCRIPT_PS1);
-        Files.writeString(ps1, contenidoScriptPowerShell(raiz), StandardCharsets.UTF_8);
-        return ps1.toAbsolutePath().normalize();
+    private Path escribirScriptBat(Path raiz) throws IOException {
+        Path bat = raiz.resolve(SCRIPT_BAT);
+        Files.writeString(bat, contenidoScriptBat(), StandardCharsets.UTF_8);
+        return bat.toAbsolutePath().normalize();
     }
 
-    static String contenidoScriptPowerShell(Path raiz) {
-        String ruta = raiz.toAbsolutePath().normalize().toString().replace("'", "''");
+    static String contenidoScriptBat() {
         return """
-                $ErrorActionPreference = 'Continue'
-                Set-Location -LiteralPath '%s'
-                Write-Host 'Levantando contenedor practica...' -ForegroundColor Cyan
-                & docker compose up -d --build practica
-                if ($LASTEXITCODE -ne 0) {
-                    Write-Host ''
-                    Write-Host 'ERROR al levantar el contenedor.' -ForegroundColor Red
-                    Write-Host 'Comprueba que Docker Desktop este en marcha.' -ForegroundColor Yellow
-                    Write-Host "Carpeta: %s"
-                    Read-Host 'Pulsa Enter para cerrar'
-                    exit $LASTEXITCODE
-                }
-                & docker exec -it forjaexamenes-practica bash
-                if ($LASTEXITCODE -ne 0) {
-                    Write-Host ''
-                    Write-Host 'No se pudo entrar al contenedor (puede que aun este arrancando).' -ForegroundColor Yellow
-                }
-                Read-Host 'Pulsa Enter para cerrar'
-                """.formatted(ruta, ruta);
+                @echo off
+                chcp 65001 >nul
+                cd /d "%~dp0"
+                title Forja - entorno practica
+                echo Levantando contenedor practica...
+                docker compose up -d --build practica
+                if errorlevel 1 (
+                    echo.
+                    echo ERROR al levantar el contenedor.
+                    echo Comprueba que Docker Desktop este en marcha.
+                    goto fin
+                )
+                docker exec -it forjaexamenes-practica bash
+                :fin
+                echo.
+                pause
+                """;
     }
 
     private List<String> comandoMac(Path raiz) {
