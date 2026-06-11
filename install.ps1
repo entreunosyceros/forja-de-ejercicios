@@ -530,28 +530,6 @@ function Show-WslInstallGuide {
     Write-Host ""
 }
 
-function Invoke-WslInstall {
-    $wsl = Get-WslExecutable
-    if (-not $wsl) {
-        Write-Warn "No se encuentra wsl.exe en el sistema."
-        return $false
-    }
-    if (-not (Test-IsAdminSession)) {
-        Write-Warn "wsl --install requiere PowerShell como administrador."
-        Show-WslInstallGuide
-        return $false
-    }
-    Write-Info "Instalando WSL (puede tardar varios minutos)..."
-    $res = Invoke-Native -FilePath $wsl -ArgumentList @("--install")
-    Write-Host $res.Output
-    if ($res.ExitCode -eq 0) {
-        Write-Ok "WSL instalado. REINICIA el PC antes de abrir Docker Desktop."
-        return $true
-    }
-    Write-Warn "wsl --install no termino correctamente. Revisa el mensaje anterior."
-    return $false
-}
-
 function Test-DockerDaemonReady {
     param([string]$DockerPath)
     if (-not $DockerPath) {
@@ -595,14 +573,6 @@ function Ensure-DockerDaemonReady {
     param([string]$DockerPath)
     if (Test-DockerDaemonReady -DockerPath $DockerPath) {
         return $true
-    }
-    if (-not (Test-WslInstalled)) {
-        Write-Warn "WSL no esta instalado. Docker Desktop no puede arrancar el motor sin WSL 2."
-        Show-WslInstallGuide
-        if (Preguntar-Si "Intentar instalar WSL ahora (admin + reinicio)?") {
-            Invoke-WslInstall | Out-Null
-        }
-        return $false
     }
     Write-Warn "Docker CLI instalado, pero el motor no responde (Docker Desktop parado o aun arrancando)."
     Write-Host "  En Windows hace falta Docker Desktop en marcha antes de docker compose."
@@ -799,20 +769,20 @@ Write-Host "  En Windows, Docker Desktop requiere WSL 2 (Subsistema de Windows p
 Write-Host ""
 
 $dockerOk = "no"
-if (Test-WslInstalled) {
+$wslOk = Test-WslInstalled
+if ($wslOk) {
     Write-Ok "WSL detectado."
 } else {
-    Write-Warn "WSL no instalado o no responde (Docker Desktop lo necesita en Windows)."
+    Write-Warn "WSL no instalado (Docker Desktop en Windows lo requiere)."
     Show-WslInstallGuide
-    if (Preguntar-Si "Intentar instalar WSL ahora (wsl --install, admin + reinicio)?") {
-        Invoke-WslInstall | Out-Null
-    }
     $dockerOk = "requiere WSL"
+    Write-Host "  No instalamos WSL desde aqui (tarda, pide admin y reinicio; el script pareceria colgado)."
+    Write-Host "  La web funciona sin WSL. Para practica en contenedor: wsl --install en PowerShell admin, reinicia, abre Docker Desktop."
 }
 
 $dockerPath = Get-ToolPath "docker"
 if (-not $dockerPath) {
-    if (Preguntar-Si "Instalar Docker Desktop con winget? (opcional, tarda)") {
+    if ($wslOk -and (Preguntar-Si "Instalar Docker Desktop con winget? (opcional, tarda)")) {
         Install-DockerDesktop | Out-Null
         Refresh-SessionPath
         $dockerPath = Get-ToolPath "docker"
@@ -821,32 +791,36 @@ if (-not $dockerPath) {
 if ($dockerPath) {
     $dockerVer = Invoke-Native -FilePath $dockerPath -ArgumentList @("--version")
     Write-Ok "Docker CLI: $($dockerVer.Output)"
-    if (Test-DockerDaemonReady -DockerPath $dockerPath) {
-        Write-Ok "Motor Docker en marcha."
-    } else {
-        $dockerOk = "cli (motor parado)"
-        Ensure-DockerDaemonReady -DockerPath $dockerPath | Out-Null
-    }
-    if ((Test-WslInstalled) -and (Test-DockerDaemonReady -DockerPath $dockerPath) -and (Preguntar-Si "Levantar contenedor de practica ahora?")) {
-        try {
-            Invoke-DockerCompose -ComposeArgs @("up", "-d", "--build", "practica")
-            Write-Ok "Contenedor forjaexamenes-practica en marcha."
-            Write-Host "  Entrar: docker exec -it forjaexamenes-practica bash"
-            Write-Host "  O usa el boton «Abrir consola de practica» en la portada."
-            $dockerOk = "si"
-        } catch {
-            Write-Warn "No se pudo levantar el contenedor."
-            Write-Host $_.Exception.Message
-            Write-Host "  Abre Docker Desktop, espera a que este listo y ejecuta:"
-            Write-Host "    docker compose up -d --build practica"
+    if ($wslOk) {
+        if (Test-DockerDaemonReady -DockerPath $dockerPath) {
+            Write-Ok "Motor Docker en marcha."
+        } else {
+            $dockerOk = "cli (motor parado)"
+            Ensure-DockerDaemonReady -DockerPath $dockerPath | Out-Null
         }
-    } elseif (-not (Test-WslInstalled)) {
-        $dockerOk = "requiere WSL"
-    } elseif (-not (Test-DockerDaemonReady -DockerPath $dockerPath)) {
-        Write-Host "  Cuando Docker Desktop este en marcha:"
-        Write-Host "    docker compose up -d --build practica"
-        Write-Host "  O el boton en http://localhost:8080 (seccion Entorno Docker)."
+        if ((Test-DockerDaemonReady -DockerPath $dockerPath) -and (Preguntar-Si "Levantar contenedor de practica ahora?")) {
+            try {
+                Invoke-DockerCompose -ComposeArgs @("up", "-d", "--build", "practica")
+                Write-Ok "Contenedor forjaexamenes-practica en marcha."
+                Write-Host "  Entrar: docker exec -it forjaexamenes-practica bash"
+                Write-Host "  O usa el boton «Abrir consola de practica» en la portada."
+                $dockerOk = "si"
+            } catch {
+                Write-Warn "No se pudo levantar el contenedor."
+                Write-Host $_.Exception.Message
+                Write-Host "  Abre Docker Desktop, espera a que este listo y ejecuta:"
+                Write-Host "    docker compose up -d --build practica"
+            }
+        } elseif (-not (Test-DockerDaemonReady -DockerPath $dockerPath)) {
+            Write-Host "  Cuando Docker Desktop este en marcha:"
+            Write-Host "    docker compose up -d --build practica"
+            Write-Host "  O el boton en http://localhost:8080 (seccion Entorno Docker)."
+        }
+    } else {
+        Write-Host "  Docker CLI detectado; hace falta WSL (ver pasos arriba) antes de usarlo."
     }
+} elseif (-not $wslOk) {
+    # Sin WSL ni Docker CLI: la guia WSL ya se mostro arriba
 } else {
     [void]$manualOptional.Add(@"
 [OPCIONAL] Docker Desktop (modulos docker, redes, sistemas, git)

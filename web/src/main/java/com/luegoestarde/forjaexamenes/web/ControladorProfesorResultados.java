@@ -9,6 +9,7 @@ import com.luegoestarde.forjaexamenes.servicio.ServicioHistorialIntentos;
 import com.luegoestarde.forjaexamenes.servicio.ServicioMetadatosEjercicio;
 import com.luegoestarde.forjaexamenes.servicio.ServicioPanelProfesor;
 import com.luegoestarde.forjaexamenes.servicio.ServicioHistorialIntentos.FilaResultado;
+import com.luegoestarde.forjaexamenes.util.LenguajeResaltado;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.http.HttpHeaders;
@@ -80,7 +81,7 @@ public class ControladorProfesorResultados {
         }
         modelo.addAttribute("tituloPagina", "Intento de " + detalle.alumno());
         modelo.addAttribute("detalle", detalle);
-        modelo.addAttribute("lenguajeCodigo", lenguajeResaltado(detalle.intento().getModulo()));
+        modelo.addAttribute("lenguajeCodigo", LenguajeResaltado.porModulo(detalle.intento().getModulo()));
         return "profesor-resultado-detalle";
     }
 
@@ -113,23 +114,6 @@ public class ControladorProfesorResultados {
             }
         }
         return filas;
-    }
-
-    private static String lenguajeResaltado(String modulo) {
-        if (modulo == null || modulo.isBlank()) {
-            return "plaintext";
-        }
-        String mod = modulo.strip().toLowerCase();
-        if (mod.startsWith("bd") || mod.contains("sql")) {
-            return "sql";
-        }
-        if (mod.equals("poo") || mod.contains("java")) {
-            return "java";
-        }
-        if (mod.equals("docker") || mod.equals("git") || mod.equals("redes") || mod.equals("sistemas")) {
-            return "bash";
-        }
-        return "plaintext";
     }
 
     private static ResponseEntity<byte[]> respuestaCsv(byte[] csv, String nombre) {

@@ -6,7 +6,8 @@
     <meta name="color-scheme" content="light dark"/>
     <title th:text="${tituloPagina != null ? tituloPagina + ' — Forja de ejercicios' : 'Forja de ejercicios'}">Forja de ejercicios</title>
     <link rel="icon" type="image/png" th:href="@{/img/forja-de-examenes.png}"/>
-    <link rel="stylesheet" th:href="@{/css/aplicacion.css(v=9)}"/>
+    <link rel="stylesheet" th:href="@{/css/aplicacion.css(v=10)}"/>
+    <link rel="stylesheet" th:href="@{/vendor/highlight.github.min.css}"/>
     <meta name="forja-login-usuario" th:content="${loginUsuario}" th:if="${loginUsuario != null}"/>
 </head>
 <body th:data-login-usuario="${loginUsuario}">
@@ -72,6 +73,11 @@
 <script th:src="@{/vendor/chart.umd.min.js}"></script>
 <script th:src="@{/js/progreso.js(v=5)}"></script>
 <script th:src="@{/js/cargando.js(v=1)}"></script>
-<script th:src="@{/js/practica.js(v=5)}"></script>
+<script th:src="@{/vendor/highlight.min.js}"></script>
+<script th:src="@{/vendor/highlight-sql.min.js}"></script>
+<script th:src="@{/vendor/highlight-java.min.js}"></script>
+<script th:src="@{/vendor/highlight-bash.min.js}"></script>
+<script th:src="@{/js/editor-codigo.js(v=1)}"></script>
+<script th:src="@{/js/practica.js(v=6)}"></script>
 </body>
 </html>

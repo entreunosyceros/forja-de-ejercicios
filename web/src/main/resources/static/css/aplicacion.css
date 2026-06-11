@@ -973,6 +973,77 @@ textarea {
     resize: vertical;
 }
 
+.editor-codigo {
+    position: relative;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    margin-top: 0.5rem;
+}
+
+.solucion-profesor-card .editor-codigo {
+    border: 1px dashed var(--accent);
+}
+
+.editor-codigo-highlight,
+.editor-codigo-input {
+    margin: 0;
+    padding: 0.75rem;
+    font-family: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, monospace;
+    font-size: 0.92rem;
+    line-height: 1.45;
+    tab-size: 4;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.editor-codigo-highlight {
+    position: absolute;
+    inset: 0;
+    overflow: auto;
+    pointer-events: none;
+    border: none;
+    background: transparent;
+}
+
+.editor-codigo-highlight code {
+    display: block;
+    min-height: 100%;
+    padding: 0;
+    background: transparent !important;
+}
+
+.editor-codigo-input {
+    position: relative;
+    z-index: 1;
+    display: block;
+    width: 100%;
+    min-height: 10rem;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: transparent;
+    caret-color: var(--text);
+    resize: vertical;
+    -webkit-text-fill-color: transparent;
+}
+
+#textarea-respuesta.editor-codigo-input {
+    min-height: 14rem;
+}
+
+.solucion-profesor-editable.editor-codigo-input {
+    margin-top: 0;
+    border: none;
+    background: transparent;
+}
+
+.editor-codigo:focus-within {
+    border-color: var(--primary);
+    box-shadow: var(--ring);
+}
+
 .mensaje-solucion-profesor.ok {
     color: var(--ok, #2e7d32);
 }
@@ -2001,6 +2072,40 @@ body.carga-ia-activa {
     font-size: 0.88rem;
     line-height: 1.45;
     background: var(--bg);
+}
+
+[data-theme="oscuro"] .hljs {
+    color: var(--text);
+    background: var(--bg);
+}
+
+[data-theme="oscuro"] .hljs-comment,
+[data-theme="oscuro"] .hljs-quote {
+    color: #8b949e;
+}
+
+[data-theme="oscuro"] .hljs-keyword,
+[data-theme="oscuro"] .hljs-selector-tag,
+[data-theme="oscuro"] .hljs-subst {
+    color: #ff7b72;
+}
+
+[data-theme="oscuro"] .hljs-string,
+[data-theme="oscuro"] .hljs-doctag,
+[data-theme="oscuro"] .hljs-regexp {
+    color: #a5d6ff;
+}
+
+[data-theme="oscuro"] .hljs-title,
+[data-theme="oscuro"] .hljs-section,
+[data-theme="oscuro"] .hljs-type,
+[data-theme="oscuro"] .hljs-built_in {
+    color: #d2a8ff;
+}
+
+[data-theme="oscuro"] .hljs-number,
+[data-theme="oscuro"] .hljs-literal {
+    color: #79c0ff;
 }
 
 .profesor-check-recordar {

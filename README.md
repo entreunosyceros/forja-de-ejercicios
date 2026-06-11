@@ -138,13 +138,13 @@ Con la web arrancada en **http://localhost:8080**:
 
 1. Inicia sesión como **alumno** (`alumno` / `practica`).
 2. En la portada, pulsa el módulo **POO** (o **«Empezar ahora»** para un ejercicio aleatorio).
-3. Lee el enunciado y escribe tu respuesta. Por ejemplo, para una clase con un mensaje:
+3. Lee el enunciado y escribe tu respuesta en **«Tu solución»** (con **resaltado de sintaxis** mientras escribes). Por ejemplo, para una clase con un mensaje:
 
    ```java
    System.out.println("Hola");
    ```
 
-4. Pulsa **Enviar**. Verás la **nota (0–10)** y la **retroalimentación** con los criterios cumplidos y las pistas de los que falten.
+4. Pulsa **Enviar**. Verás la **nota (0–10)**, la **retroalimentación** con los criterios cumplidos y las pistas de los que falten, y tu respuesta mostrada con el mismo resaltado.
 5. Vuelve a la portada: tu intento aparece en **«Tu progreso»** y en **«Tus estadísticas de uso»**.
 
 > Cada criterio se muestra en lenguaje claro (qué se esperaba y una pista), no como expresión regular. Repite varios ejercicios y la [dificultad se ajustará sola](#dificultad-adaptativa).
@@ -178,7 +178,7 @@ Solo se versionan los `.gitkeep` de las carpetas vacías.
 
 1. Elige un módulo en la portada (POO, SQL, Docker, apuntes PDF…) o **importa el banco** que el profesor dejó en la carpeta compartida.
 2. La web ejecuta `generador.py` y muestra un enunciado (con nombre y fecha del alumno).
-3. Escribe la respuesta; `evaluador.py` aplica criterios y calcula la nota (0–10, aprueba ≥ 5). La dificultad se [adapta sola](#dificultad-adaptativa) según tus rachas.
+3. Escribe la respuesta en un cuadro con **resaltado de sintaxis** (Java, SQL, bash… según el módulo); `evaluador.py` aplica criterios y calcula la nota (0–10, aprueba ≥ 5). La dificultad se [adapta sola](#dificultad-adaptativa) según tus rachas.
 4. Opcional: contenedor Docker para practicar comandos reales.
 5. En la portada: progreso local y estadísticas del servidor (ver [Progreso y estadísticas](#progreso-y-estadísticas-portada)).
 6. **Entrega al profesor:** descarga un `.json` con su avance y lo deja en la carpeta compartida.
@@ -190,7 +190,7 @@ Solo se versionan los `.gitkeep` de las carpetas vacías.
 3. **Seguimiento de alumnos** en **`/profesor/alumnos`**: importa entregas JSON de la carpeta compartida (con nombre personalizado por alumno), tabla comparativa, gráficas y nota media por módulo.
 4. Revisa propuestas de la IA en **`/profesor/revisar`**: tabla comparativa, casos de prueba y paquete ZIP.
 5. Aprueba o rechaza ejercicios en **su** instalación; para que los alumnos los tengan debe **exportar** el banco (`banco-forja.json`) a la carpeta compartida.
-6. Puede subir PDFs, ver la solución de referencia y exportar ejercicios para compartir.
+6. Puede subir PDFs, ver y editar la **solución de referencia** (con resaltado de sintaxis) y exportar ejercicios para compartir.
 
 > 💡 **TIP para el profesor:** prueba tú mismo unos ejercicios para ver la [dificultad adaptativa](#dificultad-adaptativa) en acción y, cuando tengas alguno validado, **exporta tu primer banco** (`/profesor/banco` → «Descargar banco completo») y déjalo en la carpeta compartida para que la clase lo importe.
 
@@ -304,7 +304,7 @@ Ruta: **`/profesor/resultados`** (requiere rol profesor).
 | **Resultados en este servidor** | `datos/historial/*.json` | Intentos de alumnos que practican en la misma instalación |
 | **Resultados de entregas importadas** | Campo `historialIntentos` de cada entrega | Mismo detalle cuando el alumno exportó su `.json` y el profesor lo importó |
 
-En cada fila: alumno, fecha, módulo, título, nota, tiempo y enlace **Ver** (enunciado y respuesta completos).
+En cada fila: alumno, fecha, módulo, título, nota, tiempo y enlace **Ver** (enunciado y respuesta completos, con resaltado de sintaxis).
 
 ### Exportar CSV (Excel)
 
@@ -653,16 +653,18 @@ examenforge/
 │   ├── estadisticas/            # por usuario en este equipo
 │   └── entregas/<profesor>/    # entregas de alumnos importadas
 └── web/                         # Spring Boot
-    └── src/main/resources/templates/
-        ├── login.html
-        ├── inicio.html            # importar banco + entrega alumno
-        ├── como-funciona.html
-        ├── profesor-alumnos-lista.html
-        ├── profesor-alumnos-detalle.html
-        ├── profesor-revisar-lista.html
-        ├── profesor-revisar-detalle.html
-        ├── profesor-banco.html    # exportar banco completo
-        └── fragments/
+    └── src/main/resources/
+        ├── static/js/editor-codigo.js   # resaltado en «Tu solución» y solución de referencia
+        └── templates/
+            ├── login.html
+            ├── inicio.html            # importar banco + entrega alumno
+            ├── como-funciona.html
+            ├── profesor-alumnos-lista.html
+            ├── profesor-alumnos-detalle.html
+            ├── profesor-revisar-lista.html
+            ├── profesor-revisar-detalle.html
+            ├── profesor-banco.html    # exportar banco completo
+            └── fragments/
 ```
 
 ---
@@ -705,6 +707,7 @@ Claves de `application.properties` (o variables de entorno equivalentes):
 | **Seguimiento clase** | Tabla comparativa, notas por módulo y gráficas en `/profesor/alumnos` tras importar entregas. |
 | **Historial de intentos** | Tras cada corrección: `datos/historial/<login>.json` (enunciado, respuesta, nota). Panel y CSV en `/profesor/resultados`. |
 | **Revisión profesor** | Badges **PASSED** / **FAILED** y resumen «listo para aprobar» en `/profesor/revisar/{id}`. |
+| **Resaltado de sintaxis** | En ejercicios y resultados: «Tu solución» y «Solución de referencia» (profesor) con coloreado en vivo; «Tu respuesta» tras corregir; detalle en `/profesor/resultados/{login}/{intentoId}`. Lenguaje según módulo (`poo`→Java, `bd_*`→SQL, `docker`/`git`/`redes`/`sistemas`→bash). Implementado con highlight.js (`editor-codigo.js`, `LenguajeResaltado.java`). |
 | **PDFs problemáticos** | `indexador_docs.py` avisa si un PDF está corrupto o protegido con contraseña (se omite y continúa con el resto). |
 
 ---
@@ -760,6 +763,7 @@ Claves de `application.properties` (o variables de entorno equivalentes):
 | Exportar/importar banco entre PCs | `ServicioBancoPortable.java`, `ControladorBanco.java` |
 | Entregas y seguimiento alumnos | `ServicioEntregasAlumno.java`, `ControladorProfesorAlumnos.java` |
 | Dificultad adaptativa (umbrales) | `ServicioDificultadAdaptativa.java` (constantes `APROBADOS_PARA_SUBIR` / `SUSPENSOS_PARA_BAJAR`) |
+| Lenguaje del resaltado de sintaxis por módulo | `util/LenguajeResaltado.java` y `static/js/editor-codigo.js` → `resolverLenguaje()` |
 | Utilidades compartidas (evitar duplicar) | Java: `util/` (`MapeadorJson`, `FechasForja`, `RutasUsuario`) · Python: `comun.py` (`slug`, `generar_identificador`) |
 
 ---

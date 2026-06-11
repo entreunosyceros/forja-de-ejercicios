@@ -92,7 +92,9 @@
 
     <article class="card">
         <h2>Tu respuesta</h2>
-        <pre class="respuesta-alumno" th:text="${resultado.respuestaAlumno}">...</pre>
+        <pre class="code-block code-block-resaltado respuesta-alumno"><code
+                th:class="${'language-' + @lenguajeCodigo.porModulo(escenario.modulo)}"
+                th:text="${resultado.respuestaAlumno}">...</code></pre>
     </article>
 
     <article class="card solucion-profesor-card" th:if="${modoProfesor}"

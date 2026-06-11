@@ -28,8 +28,8 @@
         <ul class="guia-pasos">
             <li><strong>Portada:</strong> elige módulo (POO, SQL, Docker, apuntes del profesor, banco verificado…).</li>
             <li><strong>Apuntes PDF:</strong> sube ficheros desde la portada (<em>Subir e indexar</em>) o colócalos en <code>documentacion/</code> y pulsa <em>Actualizar apuntes</em>.</li>
-            <li><strong>Ejercicio:</strong> lees el enunciado, escribes comandos o código en un cuadro de texto.</li>
-            <li><strong>Corrección:</strong> el sistema comprueba criterios verificables y muestra nota y pistas.</li>
+            <li><strong>Ejercicio:</strong> lees el enunciado y escribes comandos o código en <strong>«Tu solución»</strong> con resaltado de sintaxis (Java, SQL, bash… según el módulo).</li>
+            <li><strong>Corrección:</strong> el sistema comprueba criterios verificables, muestra nota y pistas, y tu respuesta resaltada.</li>
             <li><strong>PDF / JSON:</strong> puedes descargar el enunciado; el profesor puede ver la solución de referencia.</li>
         </ul>
     </section>
@@ -40,7 +40,7 @@
             <li>Entras en <strong>/login</strong> con tu usuario y contraseña (demo: <code>alumno</code> / <code>practica</code>).</li>
             <li>En la portada pulsas <strong>Empezar ahora</strong>, un módulo concreto o un tema de apuntes indexados.</li>
             <li>La web ejecuta <code>generador.py</code> y muestra el ejercicio con tu <strong>nombre</strong> y la <strong>fecha de inicio</strong>.</li>
-            <li>Escribes tu respuesta y pulsas <strong>Enviar y corregir</strong> (hay temporizador orientativo, sin penalización).</li>
+            <li>Escribes tu respuesta (con coloreado de sintaxis en vivo) y pulsas <strong>Enviar y corregir</strong> (hay temporizador orientativo, sin penalización).</li>
             <li><code>evaluador.py</code> devuelve nota (0–10), criterios cumplidos o no, y enlace a apuntes si el ejercicio venía de un PDF.</li>
             <li>Puedes pedir <strong>Otro ejercicio</strong> del mismo módulo o volver al inicio; tus últimos resultados y medallas se guardan en el navegador.</li>
         </ol>
@@ -94,8 +94,10 @@
         <h2>Banco de ejercicios y modo profesor</h2>
         <p>Entra con la cuenta <strong>profesor</strong> y revisa sin JSON crudo:</p>
         <ul class="guia-pasos">
+            <li>Al practicar un ejercicio ves y puedes editar la <strong>solución de referencia</strong> con el mismo resaltado de sintaxis que el alumno en «Tu solución».</li>
             <li><code>banco/pendientes/</code> — propuestas de IA si <code>gemini-guardar-pendientes=true</code>.</li>
             <li><code>/profesor/revisar</code> — tabla comparativa, pruebas automáticas y paquete ZIP.</li>
+            <li><code>/profesor/resultados</code> — detalle de cada intento con enunciado y respuesta resaltados.</li>
             <li><code>vocabulario_claves.json</code> → <code>alias_comandos</code> (sinónimos como <code>docker container run</code>).</li>
         </ul>
         <pre class="code-block">python3 herramientas/revision_profesor.py --id &lt;id&gt;

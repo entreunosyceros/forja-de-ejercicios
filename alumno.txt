@@ -25,9 +25,11 @@ PRUEBA RÁPIDA (2 minutos)
 -------------------------
   1. Entra como alumno (alumno / practica).
   2. En la portada pulsa POO (o «Empezar ahora» para un ejercicio aleatorio).
-  3. Lee el enunciado y escribe tu respuesta (p. ej. System.out.println("Hola");).
-  4. Pulsa Enviar: verás la nota (0–10) y la retroalimentación (qué se esperaba
-     y pistas de lo que falte).
+  3. Lee el enunciado y escribe tu respuesta en «Tu solución» (p. ej.
+     System.out.println("Hola");). El código se resalta mientras escribes
+     (Java, SQL, bash… según el módulo).
+  4. Pulsa Enviar: verás la nota (0–10), la retroalimentación (qué se esperaba
+     y pistas de lo que falte) y tu respuesta con resaltado de sintaxis.
   5. Vuelve a la portada: tu intento sale en «Tu progreso» y «Tus estadísticas».
   Repite varios ejercicios y la dificultad se ajustará sola (ver más abajo).
 
@@ -38,7 +40,10 @@ QUÉ PUEDES HACER COMO ALUMNO
 1. HACER EJERCICIOS
    - En la portada elige un módulo: POO, SQL, Docker, redes, Git, etc.
    - «Empezar ahora» o «Sorpresa» lanzan un ejercicio aleatorio.
-   - Escribes tu respuesta y la envías; la app corrige (nota 0–10, aprueba ≥ 5).
+   - Escribes tu respuesta en «Tu solución» con resaltado de sintaxis en vivo
+     (Java en POO, SQL en bases de datos, bash en Docker/Git/redes/sistemas).
+   - Tras corregir, «Tu respuesta» también se muestra resaltada.
+   - La app corrige (nota 0–10, aprueba ≥ 5).
    - Si fallas un criterio, verás qué se esperaba y una pista en lenguaje claro
      (no expresiones regulares técnicas).
    - Dificultad adaptativa (1–3, todos los módulos): 5 aprobados seguidos suben

@@ -71,6 +71,9 @@
             }
             zona.outerHTML = html;
             enlazarEventos();
+            if (typeof ForjaEditorCodigo !== "undefined") {
+                ForjaEditorCodigo.inicializar(obtenerZona());
+            }
             iniciarTemporizador();
             window.scrollTo({ top: 0, behavior: "smooth" });
         } finally {
@@ -132,6 +135,9 @@
                 }
             }
             enlazarEventos();
+            if (typeof ForjaEditorCodigo !== "undefined") {
+                ForjaEditorCodigo.inicializar(nueva);
+            }
         }
         window.scrollTo({ top: 0, behavior: "smooth" });
     }
@@ -178,6 +184,9 @@
         const destino = document.getElementById("textarea-respuesta");
         if (!origen || !destino) return;
         destino.value = origen.value;
+        if (typeof ForjaEditorCodigo !== "undefined") {
+            ForjaEditorCodigo.refrescarEditor(destino);
+        }
         destino.focus();
         mostrarMensajeSolucionProfesor("Copiado a «Tu solución». Pulsa Enviar y corregir para probar.", false);
     }
@@ -227,6 +236,10 @@
 
         if (document.getElementById("temporizador") && !intervaloTemporizador) {
             iniciarTemporizador();
+        }
+
+        if (typeof ForjaEditorCodigo !== "undefined") {
+            ForjaEditorCodigo.inicializar(obtenerZona());
         }
     }
 
