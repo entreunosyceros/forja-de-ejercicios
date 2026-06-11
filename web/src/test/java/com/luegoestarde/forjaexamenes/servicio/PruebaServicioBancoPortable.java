@@ -103,10 +103,11 @@ class PruebaServicioBancoPortable {
         evalOk.setPesoObtenido(5);
         evalOk.setPesoTotal(5);
         evalOk.setNota(10.0);
-        var ok = servicioPortable.guardarEjercicioLocal(valido, evalOk);
+        var ok = servicioPortable.guardarEjercicioLocal(valido, evalOk, "docker-ps-ejemplo");
         assertEquals("aprobados", ok.destino());
+        assertEquals("docker-ps-ejemplo.json", ok.nombreArchivo());
         assertTrue(Files.isRegularFile(
-                tempDir.resolve("banco").resolve("aprobados").resolve("docker").resolve("banco-guardar-ok.json")));
+                tempDir.resolve("banco").resolve("aprobados").resolve("docker").resolve("docker-ps-ejemplo.json")));
 
         Escenario invalido = new ObjectMapper().readValue("""
                 {
@@ -125,8 +126,9 @@ class PruebaServicioBancoPortable {
         evalMal.setPesoObtenido(0);
         evalMal.setPesoTotal(5);
         evalMal.setNota(0.0);
-        var pend = servicioPortable.guardarEjercicioLocal(invalido, evalMal);
+        var pend = servicioPortable.guardarEjercicioLocal(invalido, evalMal, "nginx-incompleto");
         assertEquals("pendientes", pend.destino());
-        assertTrue(Files.isRegularFile(tempDir.resolve("banco").resolve("pendientes").resolve("banco-guardar-pend.json")));
+        assertEquals("nginx-incompleto.json", pend.nombreArchivo());
+        assertTrue(Files.isRegularFile(tempDir.resolve("banco").resolve("pendientes").resolve("nginx-incompleto.json")));
     }
 }

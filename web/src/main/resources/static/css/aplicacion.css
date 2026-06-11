@@ -1064,6 +1064,35 @@ textarea {
     color: var(--fail, #c62828);
 }
 
+.bloque-guardar-banco {
+    margin-top: 1.25rem;
+    padding-top: 1rem;
+    border-top: 1px dashed var(--border);
+}
+
+.subtitulo-guardar-banco {
+    margin: 0 0 0.5rem;
+    font-size: 1rem;
+}
+
+.label-nombre-banco {
+    display: block;
+    margin: 0.75rem 0 0.35rem;
+    font-size: 0.9rem;
+    color: var(--muted);
+}
+
+.input-nombre-banco {
+    width: 100%;
+    max-width: 32rem;
+    font-family: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, monospace;
+    font-size: 0.9rem;
+}
+
+.form-actions-guardar-banco {
+    margin-top: 0.75rem;
+}
+
 .card-config-profesor {
     margin: 1rem 0 1.25rem;
     padding: 1rem 1.1rem;

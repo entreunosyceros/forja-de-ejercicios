@@ -110,14 +110,10 @@
         <textarea id="textarea-solucion-profesor" class="solucion-profesor-editable" rows="10"
                   th:text="${@texto.plano(escenario.solucionReferencia)}">...</textarea>
         <p id="mensaje-solucion-profesor" class="hint mensaje-solucion-profesor" hidden role="status"></p>
-        <p id="mensaje-guardar-banco" class="hint mensaje-guardar-banco" hidden role="status"></p>
         <div class="form-actions">
             <button type="button" class="btn btn-secondary btn-guardar-solucion-profesor">Guardar solución</button>
-            <button type="button" class="btn btn-primary btn-guardar-banco"
-                    th:attr="data-action-guardar-banco=@{/ejercicio/{id}/guardar-banco(id=${escenario.id})}">
-                Guardar en banco
-            </button>
         </div>
+        <div th:replace="~{fragments/guardar-banco-profesor :: controles}"></div>
     </article>
 
     <div class="form-actions">
@@ -125,8 +121,11 @@
                 th:attr="data-modulo=${escenario.modulo}">Práctica infinita — otro ejercicio</button>
         <a class="btn btn-secondary" th:href="@{/ejercicio/{id}/pdf(id=${escenario.id})}">Descargar PDF</a>
         <a class="btn btn-ghost" th:href="@{/ejercicio/{id}/json(id=${escenario.id})}">Exportar JSON</a>
-        <a class="btn btn-ghost" th:if="${modoProfesor}" th:title="'Solo para otra instalación (carpeta compartida)'"
-           th:href="@{/ejercicio/{id}/exportar-banco.json(id=${escenario.id})}">Descargar .json portable</a>
+        <a class="btn btn-ghost btn-descargar-banco-portable" th:if="${modoProfesor}"
+           th:title="'Solo para otra instalación (carpeta compartida)'"
+           th:attr="data-exportar-banco=@{/ejercicio/{id}/exportar-banco.json(id=${escenario.id})}">
+            Descargar .json portable
+        </a>
         <a class="btn btn-ghost" th:href="@{/}">Inicio</a>
     </div>
 </div>

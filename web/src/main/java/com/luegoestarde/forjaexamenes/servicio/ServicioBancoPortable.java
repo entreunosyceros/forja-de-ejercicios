@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.luegoestarde.forjaexamenes.modelo.Escenario;
 import com.luegoestarde.forjaexamenes.modelo.ResultadoEvaluacion;
 import com.luegoestarde.forjaexamenes.util.MapeadorJson;
+import com.luegoestarde.forjaexamenes.util.NombresBanco;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -38,6 +39,7 @@ public class ServicioBancoPortable {
     public record ResultadoGuardadoBanco(
             String destino,
             String id,
+            String nombreArchivo,
             String rutaRelativa,
             boolean solucionValidada,
             double notaReferencia,
@@ -91,10 +93,16 @@ public class ServicioBancoPortable {
      * cumple todos los criterios; si no, en {@code banco/pendientes/} para revisión.
      */
     public synchronized ResultadoGuardadoBanco guardarEjercicioLocal(
-            Escenario escenario, ResultadoEvaluacion evaluacionReferencia) throws IOException {
+            Escenario escenario, ResultadoEvaluacion evaluacionReferencia, String nombreArchivoSolicitado)
+            throws IOException {
         ObjectNode limpio = limpiarParaBanco(mapeador.valueToTree(escenario));
         validarEjercicio(limpio);
-        String id = limpio.path("id").asText("sin-id");
+        String idSesion = limpio.path("id").asText("sin-id");
+        String nombreArchivo = NombresBanco.resolverNombreArchivo(
+                nombreArchivoSolicitado,
+                escenario.getTitulo(),
+                idSesion);
+        limpio.put("id", nombreArchivo);
         String subcarpeta = limpio.path("modulo").asText("general");
         limpio.put("modulo", normalizarModuloBanco(subcarpeta, subcarpetaDesdeModulo(subcarpeta)));
 
@@ -106,7 +114,7 @@ public class ServicioBancoPortable {
             Path destino = rutaDestino(limpio);
             Files.createDirectories(destino.getParent());
             mapeador.writerWithDefaultPrettyPrinter().writeValue(destino.toFile(), limpio);
-            Files.deleteIfExists(servicioBanco.carpetaPendientes().resolve(id + ".json"));
+            Files.deleteIfExists(servicioBanco.carpetaPendientes().resolve(nombreArchivo + ".json"));
             servicioBanco.reconstruirCatalogo();
             String relativa = servicioBanco.directorioBanco()
                     .relativize(destino.toAbsolutePath().normalize())
@@ -114,17 +122,18 @@ public class ServicioBancoPortable {
                     .replace('\\', '/');
             return new ResultadoGuardadoBanco(
                     "aprobados",
-                    id,
+                    nombreArchivo,
+                    nombreArchivo + ".json",
                     relativa,
                     true,
                     nota,
-                    "Ejercicio guardado en " + relativa + ". Ya está en tu banco local.");
+                    "Ejercicio guardado como " + nombreArchivo + ".json en " + relativa + ".");
         }
 
-        Path pendiente = servicioBanco.carpetaPendientes().resolve(id + ".json");
+        Path pendiente = servicioBanco.carpetaPendientes().resolve(nombreArchivo + ".json");
         Files.createDirectories(pendiente.getParent());
         ObjectNode wrapper = mapeador.createObjectNode();
-        wrapper.put("id", id);
+        wrapper.put("id", nombreArchivo);
         wrapper.put("creado", Instant.now().toString());
         wrapper.put("modulo", limpio.path("modulo").asText(""));
         JsonNode propuesta = limpio.path("parametros").path("propuesta_gemini");
@@ -133,15 +142,17 @@ public class ServicioBancoPortable {
         }
         wrapper.set("escenario_preview", limpio);
         mapeador.writerWithDefaultPrettyPrinter().writeValue(pendiente.toFile(), wrapper);
-        String relativa = "pendientes/" + id + ".json";
+        String relativa = "pendientes/" + nombreArchivo + ".json";
         return new ResultadoGuardadoBanco(
                 "pendientes",
-                id,
+                nombreArchivo,
+                nombreArchivo + ".json",
                 relativa,
                 false,
                 nota,
                 "La solución de referencia no cumple todos los criterios (nota "
-                        + nota + "/10). Guardado en banco/pendientes/ para revisión.");
+                        + nota + "/10). Guardado como " + nombreArchivo
+                        + ".json en banco/pendientes/ para revisión.");
     }
 
     public synchronized ResultadoImportacion importar(byte[] contenido) throws IOException {

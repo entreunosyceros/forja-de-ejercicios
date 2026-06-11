@@ -350,7 +350,7 @@ Formato del paquete: `forja-banco-ejercicios` (también se acepta un ejercicio s
 | Ruta | Efecto |
 |------|--------|
 | `GET /profesor/banco/exportar.json` | Descarga todo el banco aprobado (solo profesor) |
-| `POST /ejercicio/{id}/guardar-banco` | Profesor: guarda en `banco/aprobados/` (solución válida) o `pendientes/` |
+| `POST /ejercicio/{id}/guardar-banco` | Profesor: guarda en `banco/aprobados/` o `pendientes/` con `nombreArchivo` descriptivo (p. ej. `docker-nginx-8080.json`) |
 | `GET /ejercicio/{id}/exportar-banco.json` | Profesor: descarga portable para otra instalación (carpeta compartida) |
 | `POST /banco/importar` | Alumno o profesor: sube paquete o ejercicio a `banco/aprobados/` |
 | `POST /profesor/banco/abrir-carpeta` | Abre `banco/aprobados/` o `banco/pendientes/` en el explorador del SO (solo en equipos con escritorio) |
@@ -415,7 +415,7 @@ Formato entrega alumno: `forja-entrega-alumno`. Formato banco: `forja-banco-ejer
 | Descargar entrega para el profesor (**solo alumno**) | Portada → «Descargar entrega para el profesor» |
 | Importar banco del profesor (alumno) | Portada → «Ejercicios del banco» → «Importar al banco local» |
 | Exportar banco completo (profesor) | `/profesor/banco` → «Descargar banco completo» |
-| Guardar ejercicio en el banco (profesor) | Ejercicio o resultado → «Guardar en banco» |
+| Guardar ejercicio en el banco (profesor) | Ejercicio o resultado → nombre del fichero + «Guardar en banco» (plantilla o IA) |
 | **Revisar propuestas IA** (profesor) | `/profesor/revisar` → detalle en `/profesor/revisar/{id}` |
 | Vista rápida del banco (profesor) | `/profesor/banco` |
 | Descargar paquete de revisión (profesor) | `/profesor/revisar/{id}/paquete` (ZIP) |

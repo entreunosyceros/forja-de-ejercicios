@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="controles" class="bloque-guardar-banco">
+    <h3 class="subtitulo-guardar-banco">Guardar en el banco local</h3>
+    <p class="hint">El ejercicio (plantilla o generado por IA) se escribe en disco, no en Descargas.</p>
+    <label class="label-nombre-banco" for="input-nombre-banco">Nombre del fichero</label>
+    <input type="text" id="input-nombre-banco" name="nombreArchivo" class="input-nombre-banco"
+           maxlength="100" autocomplete="off"
+           th:value="${@nombresBanco.sugerirNombreArchivo(escenario.titulo, escenario.id)}"
+           th:attr="aria-describedby='ayuda-nombre-banco-' + ${escenario.id}"/>
+    <p class="hint" th:id="'ayuda-nombre-banco-' + ${escenario.id}">
+        Se guardará como <code>nombre.json</code> en <code>banco/aprobados/</code>
+        (si la solución de referencia pasa todos los criterios) o en <code>banco/pendientes/</code>.
+    </p>
+    <p id="mensaje-guardar-banco" class="hint mensaje-guardar-banco" hidden role="status"></p>
+    <div class="form-actions form-actions-guardar-banco">
+        <button type="button" class="btn btn-primary btn-guardar-banco"
+                th:attr="data-action-guardar-banco=@{/ejercicio/{id}/guardar-banco(id=${escenario.id})}">
+            Guardar en banco
+        </button>
+    </div>
+</div>
+</body>
+</html>

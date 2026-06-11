@@ -21,6 +21,7 @@ import com.luegoestarde.forjaexamenes.servicio.ServicioBancoPortable;
 import com.luegoestarde.forjaexamenes.servicio.ServicioBancoPortable.ResultadoGuardadoBanco;
 import com.luegoestarde.forjaexamenes.servicio.ServicioPrecargaEjercicios;
 import com.luegoestarde.forjaexamenes.util.MapeadorJson;
+import com.luegoestarde.forjaexamenes.util.NombresBanco;
 import jakarta.servlet.http.HttpServletResponse;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -245,18 +246,22 @@ public class ControladorEjercicio {
     /** Guarda el ejercicio en banco/aprobados o banco/pendientes (no descarga al navegador). */
     @PostMapping("/{id}/guardar-banco")
     @ResponseBody
-    public Map<String, Object> guardarEnBanco(@PathVariable String id) throws Exception {
+    public Map<String, Object> guardarEnBanco(
+            @PathVariable String id,
+            @RequestParam(required = false) String nombreArchivo) throws Exception {
         if (!accesoProfesor.modoProfesorActivo()) {
             throw new IllegalArgumentException("Solo el profesor puede guardar ejercicios en el banco.");
         }
         Escenario escenario = obtenerEscenario(id);
         String solucion = escenario.getSolucionReferencia() != null ? escenario.getSolucionReferencia() : "";
         ResultadoEvaluacion evalReferencia = servicioEvaluador.evaluar(escenario, solucion);
-        ResultadoGuardadoBanco guardado = servicioBancoPortable.guardarEjercicioLocal(escenario, evalReferencia);
+        ResultadoGuardadoBanco guardado =
+                servicioBancoPortable.guardarEjercicioLocal(escenario, evalReferencia, nombreArchivo);
         Map<String, Object> respuesta = new LinkedHashMap<>();
         respuesta.put("ok", true);
         respuesta.put("destino", guardado.destino());
         respuesta.put("id", guardado.id());
+        respuesta.put("nombreArchivo", guardado.nombreArchivo());
         respuesta.put("ruta", guardado.rutaRelativa());
         respuesta.put("solucionValidada", guardado.solucionValidada());
         respuesta.put("notaReferencia", guardado.notaReferencia());
@@ -266,13 +271,17 @@ public class ControladorEjercicio {
 
     /** Paquete portable para copiar a otra instalación (carpeta compartida). */
     @GetMapping("/{id}/exportar-banco.json")
-    public ResponseEntity<byte[]> exportarParaBanco(@PathVariable String id) throws Exception {
+    public ResponseEntity<byte[]> exportarParaBanco(
+            @PathVariable String id,
+            @RequestParam(required = false) String nombreArchivo) throws Exception {
         if (!accesoProfesor.modoProfesorActivo()) {
             return ResponseEntity.status(403).build();
         }
         Escenario escenario = obtenerEscenario(id);
         byte[] bytes = servicioBancoPortable.exportarEjercicio(escenario);
-        String nombre = "banco-" + escenario.getId() + ".json";
+        String slug = NombresBanco.resolverNombreArchivo(
+                nombreArchivo, escenario.getTitulo(), escenario.getId());
+        String nombre = slug + ".json";
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + nombre + "\"")
                 .contentType(MediaType.APPLICATION_JSON)

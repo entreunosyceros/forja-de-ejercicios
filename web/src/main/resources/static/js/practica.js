@@ -202,6 +202,10 @@
         }
         const csrf = obtenerTokenCsrf();
         const fd = new FormData();
+        const inputNombre = document.getElementById("input-nombre-banco");
+        if (inputNombre && inputNombre.value.trim()) {
+            fd.set("nombreArchivo", inputNombre.value.trim());
+        }
         if (csrf) fd.set(csrf.nombre, csrf.valor);
         const resp = await fetch(action, {
             method: "POST",
@@ -255,6 +259,21 @@
                 guardarEnBanco(btn).catch(function (err) {
                     mostrarMensajeGuardarBanco(err.message || String(err), true);
                 });
+            });
+        });
+        document.querySelectorAll(".btn-descargar-banco-portable").forEach(function (enlace) {
+            if (enlace.dataset.enlazado) return;
+            enlace.dataset.enlazado = "true";
+            enlace.addEventListener("click", function (ev) {
+                ev.preventDefault();
+                const base = enlace.getAttribute("data-exportar-banco");
+                if (!base) return;
+                const inputNombre = document.getElementById("input-nombre-banco");
+                const nombre = inputNombre && inputNombre.value.trim();
+                const url = nombre
+                    ? base + (base.indexOf("?") >= 0 ? "&" : "?") + "nombreArchivo=" + encodeURIComponent(nombre)
+                    : base;
+                window.location.href = url;
             });
         });
     }
