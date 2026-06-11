@@ -1001,17 +1001,22 @@ textarea {
 .editor-codigo-highlight {
     position: absolute;
     inset: 0;
-    overflow: auto;
+    overflow: hidden;
     pointer-events: none;
     border: none;
     background: transparent;
 }
 
-.editor-codigo-highlight code {
+/* Anula el padding que el tema de highlight.js (pre code.hljs / code.hljs)
+   inyecta y que desalinearía el texto resaltado respecto al textarea. */
+.editor-codigo .editor-codigo-highlight code,
+pre.editor-codigo-highlight code.hljs {
     display: block;
     min-height: 100%;
-    padding: 0;
+    margin: 0;
+    padding: 0 !important;
     background: transparent !important;
+    color: var(--text);
 }
 
 .editor-codigo-input {
@@ -1025,8 +1030,14 @@ textarea {
     background: transparent;
     color: transparent;
     caret-color: var(--text);
-    resize: vertical;
+    overflow: hidden;
+    resize: none;
     -webkit-text-fill-color: transparent;
+}
+
+.editor-codigo-input::placeholder {
+    color: var(--muted);
+    -webkit-text-fill-color: var(--muted);
 }
 
 #textarea-respuesta.editor-codigo-input {

@@ -63,7 +63,9 @@
                 <button type="submit" class="btn btn-primary">Enviar y corregir</button>
                 <button type="button" class="btn btn-secondary btn-otro-ejercicio"
                         th:attr="data-modulo=${escenario.modulo}">Otro ejercicio (mismo módulo)</button>
-                <a class="btn btn-ghost" th:href="@{/ejercicio/{id}/pdf(id=${escenario.id})}">PDF enunciado</a>
+                <a class="btn btn-ghost" th:if="${modoProfesor}"
+                   th:href="@{/ejercicio/{id}/pdf(id=${escenario.id})}"
+                   th:title="'El PDF incluye la solución de referencia'">PDF (profesor)</a>
                 <a class="btn btn-ghost" th:if="${modoProfesor}" th:href="@{/ejercicio/{id}/json(id=${escenario.id})}">JSON (profesor)</a>
                 <a class="btn btn-ghost btn-descargar-banco-portable" th:if="${modoProfesor}"
                    th:title="'Solo para otra instalación (carpeta compartida)'"

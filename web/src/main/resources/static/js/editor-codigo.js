@@ -27,17 +27,22 @@
         hljs.highlightElement(codeEl);
     }
 
-    function sincronizarAltura(wrapper, textarea, pre) {
-        const altura = Math.max(textarea.scrollHeight, textarea.offsetHeight);
-        wrapper.style.minHeight = altura + "px";
-        pre.style.minHeight = altura + "px";
+    function ajustarAltura(textarea, pre) {
+        // El textarea crece con el contenido para no tener scroll interno:
+        // así la capa de resaltado (pre con inset:0) queda siempre alineada.
+        textarea.style.height = "auto";
+        const altura = Math.max(textarea.scrollHeight, 0);
+        textarea.style.height = altura + "px";
+        if (pre) pre.style.height = altura + "px";
     }
 
     function actualizarEditor(textarea, codeEl, lenguaje) {
         const valor = textarea.value;
+        // El "\n" final evita que la última línea quede recortada en el overlay.
         codeEl.textContent = valor.length ? valor + "\n" : "";
         resaltarCodigo(codeEl, lenguaje);
-        sincronizarAltura(textarea.closest(".editor-codigo"), textarea, textarea.previousElementSibling);
+        const pre = codeEl.closest(".editor-codigo-highlight");
+        ajustarAltura(textarea, pre);
     }
 
     function envolverTextarea(textarea, lenguaje) {
@@ -67,10 +72,6 @@
         }
 
         textarea.addEventListener("input", programarActualizacion);
-        textarea.addEventListener("scroll", function () {
-            pre.scrollTop = textarea.scrollTop;
-            pre.scrollLeft = textarea.scrollLeft;
-        });
         window.addEventListener("resize", programarActualizacion);
 
         actualizarEditor(textarea, code, lenguaje);

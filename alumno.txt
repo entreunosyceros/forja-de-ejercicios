@@ -44,6 +44,8 @@ QUÉ PUEDES HACER COMO ALUMNO
      (Java en POO, SQL en bases de datos, bash en Docker/Git/redes/sistemas).
    - Tras corregir, «Tu respuesta» también se muestra resaltada.
    - La app corrige (nota 0–10, aprueba ≥ 5).
+   - El botón «Descargar PDF» aparece SOLO después de enviar a corrección
+     (el PDF incluye la solución de referencia).
    - Si fallas un criterio, verás qué se esperaba y una pista en lenguaje claro
      (no expresiones regulares técnicas).
    - Dificultad adaptativa (1–3, todos los módulos): 5 aprobados seguidos suben

@@ -206,6 +206,11 @@ public class ControladorEjercicio {
     public ResponseEntity<Resource> descargarPdf(@PathVariable String id) throws Exception {
         Escenario escenario = obtenerEscenario(id);
         ResultadoEvaluacion resultado = almacenSesiones.obtenerResultado(id).orElse(null);
+        // El PDF incluye la solución de referencia: el alumno solo puede
+        // descargarlo tras enviar la respuesta a corrección.
+        if (!accesoProfesor.modoProfesorActivo() && resultado == null) {
+            return ResponseEntity.status(403).build();
+        }
         Long tiempo = almacenSesiones.obtenerTiempoSegundos(id).orElse(null);
         Path rutaPdf = servicioPdf.generarPdf(escenario, resultado, tiempo);
         Resource recurso = new FileSystemResource(rutaPdf);
