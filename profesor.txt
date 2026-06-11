@@ -48,17 +48,21 @@ B) PRACTICAR Y PREPARAR EJERCICIOS
      solución» y exporta con esa versión.
    - «Usar en Tu solución» copia la solución al cuadro de respuesta (también
      resaltado) para probar la corrección.
-   - Tras probar un ejercicio: «Exportar para compartir» (pantalla de ejercicio
-     o resultado) → genera un .json que el alumno puede importar.
+   - Tras probar un ejercicio: «Guardar en banco» (pantalla de ejercicio o
+     resultado) → escribe el .json en banco/aprobados/ o banco/pendientes/
+     (no en Descargas). Si la solución de referencia no pasa todos los criterios,
+     va a pendientes; corrígela y vuelve a guardar o aprueba en /profesor/banco.
+   - «Descargar .json portable» solo para copiar el ejercicio a otra instalación.
    - Revisas propuestas IA en /profesor/revisar y las apruebas en TU banco local.
 
 
 C) COMPARTIR EJERCICIOS CON LA CLASE (carpeta compartida)
    1. Preparas ejercicios (pruebas, apruebas propuestas IA, etc.).
    2. Exportas:
-      - UN ejercicio: «Exportar para compartir» en el ejercicio/resultado.
+      - UN ejercicio: primero «Guardar en banco» (queda en aprobados/ o
+        pendientes/); para otra instalación, «Descargar .json portable».
       - TODO el banco: /profesor/banco → «Descargar banco completo»
-        (banco-forja.json).
+        (banco-forja.json) a la carpeta compartida.
    3. Dejas el fichero en la carpeta compartida (Drive, red del aula…).
    4. Cada alumno importa en su portada → «Importar al banco local».
    5. En su equipo ya pueden practicar esos ejercicios verificados.

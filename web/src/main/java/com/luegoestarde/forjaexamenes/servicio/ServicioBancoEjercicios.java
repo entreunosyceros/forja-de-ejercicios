@@ -8,6 +8,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.luegoestarde.forjaexamenes.configuracion.PropiedadesForjaExamenes;
 import com.luegoestarde.forjaexamenes.evento.RecursosActualizadosEvent;
 import com.luegoestarde.forjaexamenes.evento.RecursosActualizadosEvent.Tipo;
+import com.luegoestarde.forjaexamenes.modelo.Escenario;
+import com.luegoestarde.forjaexamenes.modelo.ResultadoEvaluacion;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -37,13 +39,16 @@ public class ServicioBancoEjercicios {
 
     private final PropiedadesForjaExamenes propiedades;
     private final ApplicationEventPublisher eventos;
+    private final ServicioEvaluador servicioEvaluador;
     private final ObjectMapper mapeador = new ObjectMapper();
 
     public ServicioBancoEjercicios(
             PropiedadesForjaExamenes propiedades,
-            ApplicationEventPublisher eventos) {
+            ApplicationEventPublisher eventos,
+            ServicioEvaluador servicioEvaluador) {
         this.propiedades = propiedades;
         this.eventos = eventos;
+        this.servicioEvaluador = servicioEvaluador;
     }
 
     @PostConstruct
@@ -116,7 +121,7 @@ public class ServicioBancoEjercicios {
         return Optional.of(leerPendiente(ruta));
     }
 
-    public void aprobar(String id) throws IOException {
+    public void aprobar(String id) throws Exception {
         Path origen = carpetaPendientes().resolve(id + ".json");
         if (!Files.isRegularFile(origen)) {
             throw new IllegalArgumentException("Pendiente no encontrado: " + id);
@@ -126,6 +131,7 @@ public class ServicioBancoEjercicios {
         if (escenario.isMissingNode() || !escenario.has("criterios")) {
             throw new IllegalArgumentException("El pendiente no tiene escenario válido");
         }
+        validarSolucionReferenciaCompleta(escenario);
         String modulo = escenario.path("modulo").asText("general");
         String sub = modulo.startsWith("docs_") ? modulo.substring(5) : modulo.replace("banco_", "");
         Path destinoDir = carpetaAprobados().resolve(sub);
@@ -217,6 +223,20 @@ public class ServicioBancoEjercicios {
                     })
                     .max()
                     .orElse(0L);
+        }
+    }
+
+    private void validarSolucionReferenciaCompleta(JsonNode escenarioNodo) throws Exception {
+        if (servicioEvaluador == null) {
+            return;
+        }
+        Escenario escenario = mapeador.treeToValue(escenarioNodo, Escenario.class);
+        String solucion = escenario.getSolucionReferencia() != null ? escenario.getSolucionReferencia() : "";
+        ResultadoEvaluacion evaluacion = servicioEvaluador.evaluar(escenario, solucion);
+        if (evaluacion.getPesoObtenido() < evaluacion.getPesoTotal()) {
+            throw new IllegalArgumentException(
+                    "La solución de referencia no cumple todos los criterios (nota "
+                            + evaluacion.getNota() + "/10). Corrígela antes de aprobar.");
         }
     }
 

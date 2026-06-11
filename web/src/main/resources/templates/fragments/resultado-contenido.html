@@ -101,12 +101,22 @@
              th:attr="data-action-guardar-solucion=@{/ejercicio/{id}/solucion-referencia(id=${escenario.id})}">
         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
         <h2>Solución de referencia (editable)</h2>
-        <p class="hint">Ajusta la solución antes de exportar el ejercicio al banco. Los cambios se guardan en la sesión actual.</p>
+        <p class="hint">Ajusta la solución antes de guardar el ejercicio en el banco. Los cambios se guardan en la sesión actual.</p>
+        <p class="hint hint-warn" th:if="${solucionReferenciaValida == false}">
+            La solución de referencia no cumple todos los criterios
+            <span th:if="${notaSolucionReferencia != null}">(nota <span th:text="${notaSolucionReferencia}">0</span>/10)</span>.
+            Corrígela antes de guardar en aprobados; si no, irá a pendientes.
+        </p>
         <textarea id="textarea-solucion-profesor" class="solucion-profesor-editable" rows="10"
                   th:text="${@texto.plano(escenario.solucionReferencia)}">...</textarea>
         <p id="mensaje-solucion-profesor" class="hint mensaje-solucion-profesor" hidden role="status"></p>
+        <p id="mensaje-guardar-banco" class="hint mensaje-guardar-banco" hidden role="status"></p>
         <div class="form-actions">
             <button type="button" class="btn btn-secondary btn-guardar-solucion-profesor">Guardar solución</button>
+            <button type="button" class="btn btn-primary btn-guardar-banco"
+                    th:attr="data-action-guardar-banco=@{/ejercicio/{id}/guardar-banco(id=${escenario.id})}">
+                Guardar en banco
+            </button>
         </div>
     </article>
 
@@ -115,8 +125,8 @@
                 th:attr="data-modulo=${escenario.modulo}">Práctica infinita — otro ejercicio</button>
         <a class="btn btn-secondary" th:href="@{/ejercicio/{id}/pdf(id=${escenario.id})}">Descargar PDF</a>
         <a class="btn btn-ghost" th:href="@{/ejercicio/{id}/json(id=${escenario.id})}">Exportar JSON</a>
-        <a class="btn btn-secondary" th:if="${modoProfesor}"
-           th:href="@{/ejercicio/{id}/exportar-banco.json(id=${escenario.id})}">Exportar para compartir</a>
+        <a class="btn btn-ghost" th:if="${modoProfesor}" th:title="'Solo para otra instalación (carpeta compartida)'"
+           th:href="@{/ejercicio/{id}/exportar-banco.json(id=${escenario.id})}">Descargar .json portable</a>
         <a class="btn btn-ghost" th:href="@{/}">Inicio</a>
     </div>
 </div>

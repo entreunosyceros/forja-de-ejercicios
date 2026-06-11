@@ -37,6 +37,25 @@ def probar_construccion_desde_propuesta():
     assert resultado["aprobado"]
     assert resultado["nota"] >= 7
 
+    ref = evaluador.evaluar(escenario, escenario["solucion_referencia"])
+    assert ref["peso_obtenido"] == ref["peso_total"]
+
+
+def probar_solucion_fallback_desde_claves():
+    fragmento = "docker run nginx con puerto 8080 mapeado"
+    propuesta = {
+        "tema": "docker",
+        "pregunta": "Levanta nginx con docker run publicando el puerto 8080 al 80 del host.",
+        "palabras_clave": ["docker run", "nginx"],
+        "solucion_modelo": "texto incompleto sin las claves",
+    }
+    escenario = modelo_ejercicio.construir_escenario_desde_propuesta(
+        propuesta,
+        "docs_docker",
+        texto_fragmento=fragmento,
+    )
+    assert modelo_ejercicio.solucion_referencia_completa(escenario)
+
 
 def probar_rechaza_clave_vaga():
     fragmento = "docker run nginx -p 8080:80"
@@ -91,6 +110,7 @@ def probar_variantes_contiene_alguno():
 
 if __name__ == "__main__":
     probar_construccion_desde_propuesta()
+    probar_solucion_fallback_desde_claves()
     probar_rechaza_clave_vaga()
     probar_rechaza_clave_fuera_fragmento()
     probar_variantes_contiene_alguno()

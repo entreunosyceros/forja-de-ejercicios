@@ -22,6 +22,7 @@ Genera ejercicios prácticos al azar (informática, idiomas u otras materias des
 - [Seguimiento de alumnos (profesor)](#seguimiento-de-alumnos-profesor)
 - [Apuntes en PDF + Gemini](#apuntes-en-pdf--gemini-opcional)
 - [Arquitectura de ejercicios](#arquitectura-de-ejercicios)
+- [Cuenta y perfil](#cuenta-y-perfil) — [Cambiar contraseñas por defecto](#cambiar-contraseñas-por-defecto)
 - [Configuración útil](#configuración-útil)
 - [Problemas frecuentes](#problemas-frecuentes)
 - [Pruebas](#pruebas)
@@ -112,6 +113,10 @@ Este script arranca la web en Linux/macOS sin crear un JAR previo.
 | Alumno | `alumno` | `practica` |
 | Alumno (demo) | `demo` | `demo` |
 | **Profesor** | `profesor` | `profesor` |
+
+Para **cambiar estas contraseñas antes del primer arranque**, edita
+[`web/src/main/resources/application.properties`](web/src/main/resources/application.properties)
+(o `.env` con `FORJAEXAMENES_USUARIOS`). Detalle en [Cambiar contraseñas por defecto](#cambiar-contraseñas-por-defecto).
 
 - **Ayuda:** http://localhost:8080/como-funciona
 
@@ -335,7 +340,7 @@ La app **no sincroniza** instalaciones entre profesor y alumnos. El banco local 
 | Paso | Quién | Acción |
 |------|-------|--------|
 | 1 | Profesor | Prueba ejercicios, aprueba en `/profesor/revisar` o `/profesor/banco` |
-| 2 | Profesor | Exporta: **un ejercicio** → «Exportar para compartir» en ejercicio/resultado, o **todo el banco** → `/profesor/banco` → «Descargar banco completo» (`banco-forja.json`) |
+| 2 | Profesor | **Un ejercicio** → «Guardar en banco» (escribe en `banco/aprobados/` o `pendientes/`). **Todo el banco** → `/profesor/banco` → «Descargar banco completo» (`banco-forja.json`) para la carpeta compartida |
 | 3 | Profesor | Deja el `.json` en la carpeta compartida |
 | 4 | Alumno | Portada → «Ejercicios del banco (del profesor)» → «Importar al banco local» |
 | 5 | Alumno | Practica con los botones del banco que aparecen tras importar |
@@ -345,7 +350,8 @@ Formato del paquete: `forja-banco-ejercicios` (también se acepta un ejercicio s
 | Ruta | Efecto |
 |------|--------|
 | `GET /profesor/banco/exportar.json` | Descarga todo el banco aprobado (solo profesor) |
-| `GET /ejercicio/{id}/exportar-banco.json` | Un ejercicio de la sesión actual, listo para importar |
+| `POST /ejercicio/{id}/guardar-banco` | Profesor: guarda en `banco/aprobados/` (solución válida) o `pendientes/` |
+| `GET /ejercicio/{id}/exportar-banco.json` | Profesor: descarga portable para otra instalación (carpeta compartida) |
 | `POST /banco/importar` | Alumno o profesor: sube paquete o ejercicio a `banco/aprobados/` |
 | `POST /profesor/banco/abrir-carpeta` | Abre `banco/aprobados/` o `banco/pendientes/` en el explorador del SO (solo en equipos con escritorio) |
 
@@ -409,7 +415,7 @@ Formato entrega alumno: `forja-entrega-alumno`. Formato banco: `forja-banco-ejer
 | Descargar entrega para el profesor (**solo alumno**) | Portada → «Descargar entrega para el profesor» |
 | Importar banco del profesor (alumno) | Portada → «Ejercicios del banco» → «Importar al banco local» |
 | Exportar banco completo (profesor) | `/profesor/banco` → «Descargar banco completo» |
-| Exportar un ejercicio para compartir (profesor) | Ejercicio o resultado → «Exportar para compartir» |
+| Guardar ejercicio en el banco (profesor) | Ejercicio o resultado → «Guardar en banco» |
 | **Revisar propuestas IA** (profesor) | `/profesor/revisar` → detalle en `/profesor/revisar/{id}` |
 | Vista rápida del banco (profesor) | `/profesor/banco` |
 | Descargar paquete de revisión (profesor) | `/profesor/revisar/{id}/paquete` (ZIP) |
@@ -418,18 +424,36 @@ Formato entrega alumno: `forja-entrega-alumno`. Formato banco: `forja-banco-ejer
 
 ### Usuarios y roles
 
-Usuarios por defecto en `application.properties` o `FORJAEXAMENES_USUARIOS`:
-
-```properties
-forjaexamenes.login.usuarios=alumno:practica,demo:demo,profesor:profesor
-forjaexamenes.login.profesores=profesor
-```
-
 - Los logins listados en `forjaexamenes.login.profesores` (o `FORJAEXAMENES_PROFESORES`) tienen rol **PROFESOR** y acceden a `/profesor/**`.
 - Los demás son **ALUMNO**.
-- Los datos viven en `datos/usuarios.json`. Si el fichero ya existía, al arrancar se añaden usuarios nuevos definidos en propiedades (p. ej. `profesor`).
+- Tras el primer arranque, las contraseñas quedan guardadas (cifradas) en `datos/usuarios.json`. Cambiar `application.properties` **no** actualiza cuentas que ya existen en ese fichero.
 
 `FORJAEXAMENES_MODO_PROFESOR=true` sigue siendo útil para **mostrar la solución** antes de enviar en cualquier cuenta; la **zona de revisión** (`/profesor/*`) requiere rol profesor.
+
+### Cambiar contraseñas por defecto
+
+| Situación | Qué archivo tocar | Qué hacer |
+|-----------|-------------------|-----------|
+| **Instalación nueva** (aún no existe `datos/usuarios.json`) | [`web/src/main/resources/application.properties`](web/src/main/resources/application.properties) | Edita `forjaexamenes.login.usuarios` y, si hace falta, `forjaexamenes.login.profesores`. Formato: `usuario:contraseña` separados por coma. |
+| **Misma máquina, sin tocar el JAR** | [`examenforge/.env`](.env) (créalo si no está) | Añade `FORJAEXAMENES_USUARIOS=alumno:tu_clave,demo:demo,profesor:clave_profesor` y opcionalmente `FORJAEXAMENES_PROFESORES=profesor`. Reinicia la app. Solo aplica si `datos/usuarios.json` **no** existe todavía. |
+| **La app ya se ha usado** | — (no edites `usuarios.json` a mano) | Entra en **`/perfil`** y cambia la contraseña con la actual. Es la forma habitual en producción. |
+| **Resetear todas las cuentas** | Borra `datos/usuarios.json` | Para la app, ajusta `application.properties` o `.env` como arriba y vuelve a arrancar: se regeneran los usuarios con las claves nuevas. Pierdes perfiles y estadísticas de esos logins. |
+
+Ejemplo en `application.properties` (líneas ~53–55):
+
+```properties
+forjaexamenes.login.usuarios=${FORJAEXAMENES_USUARIOS:alumno:practica,demo:demo,profesor:profesor}
+forjaexamenes.login.profesores=${FORJAEXAMENES_PROFESORES:profesor}
+```
+
+Ejemplo en `.env` en la raíz del proyecto (`examenforge/.env`):
+
+```bash
+FORJAEXAMENES_USUARIOS=alumno:mi_clase_2026,demo:demo,profesor:clave_segura
+FORJAEXAMENES_PROFESORES=profesor
+```
+
+> **Nota:** el contenedor Docker de práctica (`docker compose … practica`) usa su propio usuario `alumno`/`practica`; es independiente del login web. Para cambiarlo, edita [`docker-compose.yml`](docker-compose.yml) o la imagen del servicio `practica`.
 
 ---
 
@@ -677,7 +701,7 @@ Claves de `application.properties` (o variables de entorno equivalentes):
 |-------|-------------|
 | `forjaexamenes.raiz` | Raíz del proyecto (por defecto `../` desde `web/`) |
 | `forjaexamenes.python-interprete` | `FORJAEXAMENES_PYTHON_INTERPRETE` — `python3` o `python` (el instalador lo fija en `.env`) |
-| `forjaexamenes.login.usuarios` | `FORJAEXAMENES_USUARIOS` — `usuario:clave` separados por coma |
+| `forjaexamenes.login.usuarios` | `FORJAEXAMENES_USUARIOS` — `usuario:clave` separados por coma; ver [Cambiar contraseñas por defecto](#cambiar-contraseñas-por-defecto) |
 | `forjaexamenes.login.profesores` | `FORJAEXAMENES_PROFESORES` — logins con rol profesor |
 | `forjaexamenes.modo-profesor` | `FORJAEXAMENES_MODO_PROFESOR` — solución visible |
 | `forjaexamenes.gemini-guardar-pendientes` | Cola de revisión en `banco/pendientes/` |

@@ -59,8 +59,9 @@
             <p class="hint">
                 Cada alumno usa su propio equipo. Tras aprobar ejercicios aquí, exporta el banco completo
                 y déjalo en la <strong>carpeta compartida</strong>. Los alumnos lo importan desde la portada.
-                También puedes exportar un solo ejercicio desde la pantalla de resultado
-                («Exportar para compartir»).
+                Desde un ejercicio probado usa «Guardar en banco» (se escribe en
+                <code>banco/aprobados/</code> o <code>banco/pendientes/</code>).
+                «Descargar .json portable» solo sirve para copiar a otra instalación.
             </p>
             <p class="hint" th:if="${totalBancoAprobados > 0}">
                 Ejercicios aprobados en este equipo: <strong th:text="${totalBancoAprobados}">0</strong>

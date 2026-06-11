@@ -26,6 +26,8 @@ from tipo_materia import (
 )
 from util_texto import sin_markdown
 
+import evaluador
+
 RAIZ = Path(__file__).resolve().parent
 RUTA_VOCABULARIO = RAIZ / "vocabulario_claves.json"
 
@@ -92,6 +94,45 @@ def _clave_en_fragmento(clave: str, texto_fragmento: str, permitidas_extra: froz
     if not texto_fragmento:
         return True
     return clave.lower() in texto_fragmento.lower()
+
+
+def _palabras_clave_desde_escenario(escenario: dict[str, Any]) -> list[str]:
+    params = escenario.get("parametros") or {}
+    propuesta = params.get("propuesta_gemini") or {}
+    claves = propuesta.get("palabras_clave")
+    if isinstance(claves, list) and claves:
+        return [str(c).strip() for c in claves if str(c).strip()]
+    extraidas: list[str] = []
+    for crit in escenario.get("criterios") or []:
+        for termino in crit.get("terminos") or []:
+            texto = str(termino).strip()
+            if texto and texto not in extraidas:
+                extraidas.append(texto)
+    return extraidas
+
+
+def solucion_referencia_completa(escenario: dict[str, Any], solucion: str | None = None) -> bool:
+    """True si la solución cumple todos los criterios del escenario."""
+    texto = (solucion if solucion is not None else escenario.get("solucion_referencia")) or ""
+    resultado = evaluador.evaluar(escenario, texto)
+    return resultado.get("peso_obtenido") == resultado.get("peso_total")
+
+
+def asegurar_solucion_referencia(escenario: dict[str, Any]) -> None:
+    """Ajusta o valida la solución de referencia para que pase todos los criterios."""
+    if solucion_referencia_completa(escenario):
+        return
+    claves = _palabras_clave_desde_escenario(escenario)
+    if claves:
+        candidata = _solucion_desde_claves(claves)
+        if solucion_referencia_completa(escenario, candidata):
+            escenario["solucion_referencia"] = candidata
+            return
+    resultado = evaluador.evaluar(escenario, escenario.get("solucion_referencia") or "")
+    raise ValueError(
+        "La solución de referencia no cumple todos los criterios "
+        f"(nota {resultado.get('nota', 0)}/10). Revísala antes de publicar el ejercicio."
+    )
 
 
 def validar_escenario_verificable(datos: dict[str, Any]) -> None:
@@ -303,6 +344,7 @@ def construir_escenario_desde_propuesta(
         },
     }
     validar_escenario_verificable(escenario)
+    asegurar_solucion_referencia(escenario)
     return escenario
 
 
@@ -330,7 +372,7 @@ def _enunciado_desde_propuesta(propuesta: dict[str, str], tipo: str = "informati
 
 
 def _solucion_desde_claves(palabras: list[str]) -> str:
-    return "\n".join(f"# {p}" for p in palabras)
+    return "\n".join(p.strip() for p in palabras if p and str(p).strip())
 
 
 def _distribuir_pesos(cantidad: int) -> list[int]:

@@ -178,10 +178,19 @@ def cargar_pendiente(eid: str) -> dict[str, Any]:
 
 
 def aprobar_pendiente(eid: str, subcarpeta: str | None = None) -> Path:
+    import evaluador
+    import modelo_ejercicio
+
     datos = cargar_pendiente(eid)
     escenario = datos.get("escenario_preview") or {}
     if not escenario.get("criterios"):
         raise ValueError("El pendiente no tiene escenario válido")
+    if not modelo_ejercicio.solucion_referencia_completa(escenario):
+        resultado = evaluador.evaluar(escenario, escenario.get("solucion_referencia") or "")
+        raise ValueError(
+            "La solución de referencia no cumple todos los criterios "
+            f"(nota {resultado.get('nota', 0)}/10). Corrígela antes de aprobar."
+        )
     modulo = escenario.get("modulo", "general")
     carpeta = APROBADOS / (subcarpeta or modulo.replace("docs_", ""))
     carpeta.mkdir(parents=True, exist_ok=True)

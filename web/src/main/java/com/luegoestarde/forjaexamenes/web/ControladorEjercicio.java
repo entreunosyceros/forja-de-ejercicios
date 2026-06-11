@@ -18,6 +18,7 @@ import com.luegoestarde.forjaexamenes.servicio.ServicioHistorialIntentos;
 import com.luegoestarde.forjaexamenes.servicio.ServicioMetadatosEjercicio;
 import com.luegoestarde.forjaexamenes.servicio.ServicioPdf;
 import com.luegoestarde.forjaexamenes.servicio.ServicioBancoPortable;
+import com.luegoestarde.forjaexamenes.servicio.ServicioBancoPortable.ResultadoGuardadoBanco;
 import com.luegoestarde.forjaexamenes.servicio.ServicioPrecargaEjercicios;
 import com.luegoestarde.forjaexamenes.util.MapeadorJson;
 import jakarta.servlet.http.HttpServletResponse;
@@ -130,13 +131,15 @@ public class ControladorEjercicio {
                                         String capitulo, String seccion, Model modelo) throws Exception {
         Escenario escenario = crearYGuardarEscenario(modulo, sorpresa, nivel, capitulo, seccion);
         modelo.addAttribute("escenario", escenario);
+        adjuntarEstadoSolucionReferencia(escenario, modelo);
     }
 
     @GetMapping("/{id}")
-    public String ver(@PathVariable String id, Model modelo) {
+    public String ver(@PathVariable String id, Model modelo) throws Exception {
         Escenario escenario = obtenerEscenario(id);
         modelo.addAttribute("escenario", escenario);
         almacenSesiones.obtenerResultado(id).ifPresent(r -> modelo.addAttribute("resultado", r));
+        adjuntarEstadoSolucionReferencia(escenario, modelo);
         return "ejercicio";
     }
 
@@ -163,6 +166,7 @@ public class ControladorEjercicio {
         Escenario escenario = obtenerEscenario(id);
         modelo.addAttribute("escenario", escenario);
         modelo.addAttribute("resultado", resultado);
+        adjuntarEstadoSolucionReferencia(escenario, modelo);
         long tiempoEfectivo = tiempoSegundos != null
                 ? tiempoSegundos
                 : almacenSesiones.obtenerTiempoSegundos(id).orElse(0L);
@@ -180,12 +184,13 @@ public class ControladorEjercicio {
     @GetMapping("/{id}/resultado")
     public String resultado(@PathVariable String id,
                             @RequestParam(required = false) Long tiempoSegundos,
-                            Model modelo) {
+                            Model modelo) throws Exception {
         Escenario escenario = obtenerEscenario(id);
         ResultadoEvaluacion resultado = almacenSesiones.obtenerResultado(id)
                 .orElseThrow(() -> new IllegalArgumentException("Sin corrección para: " + id));
         modelo.addAttribute("escenario", escenario);
         modelo.addAttribute("resultado", resultado);
+        adjuntarEstadoSolucionReferencia(escenario, modelo);
         if (tiempoSegundos != null) {
             modelo.addAttribute("tiempoSegundos", tiempoSegundos);
         } else if (resultado.getTiempoSegundos() != null) {
@@ -237,9 +242,34 @@ public class ControladorEjercicio {
                 .body(bytes);
     }
 
-    /** Paquete listo para importar en otro equipo (banco/aprobados/). */
+    /** Guarda el ejercicio en banco/aprobados o banco/pendientes (no descarga al navegador). */
+    @PostMapping("/{id}/guardar-banco")
+    @ResponseBody
+    public Map<String, Object> guardarEnBanco(@PathVariable String id) throws Exception {
+        if (!accesoProfesor.modoProfesorActivo()) {
+            throw new IllegalArgumentException("Solo el profesor puede guardar ejercicios en el banco.");
+        }
+        Escenario escenario = obtenerEscenario(id);
+        String solucion = escenario.getSolucionReferencia() != null ? escenario.getSolucionReferencia() : "";
+        ResultadoEvaluacion evalReferencia = servicioEvaluador.evaluar(escenario, solucion);
+        ResultadoGuardadoBanco guardado = servicioBancoPortable.guardarEjercicioLocal(escenario, evalReferencia);
+        Map<String, Object> respuesta = new LinkedHashMap<>();
+        respuesta.put("ok", true);
+        respuesta.put("destino", guardado.destino());
+        respuesta.put("id", guardado.id());
+        respuesta.put("ruta", guardado.rutaRelativa());
+        respuesta.put("solucionValidada", guardado.solucionValidada());
+        respuesta.put("notaReferencia", guardado.notaReferencia());
+        respuesta.put("mensaje", guardado.mensaje());
+        return respuesta;
+    }
+
+    /** Paquete portable para copiar a otra instalación (carpeta compartida). */
     @GetMapping("/{id}/exportar-banco.json")
     public ResponseEntity<byte[]> exportarParaBanco(@PathVariable String id) throws Exception {
+        if (!accesoProfesor.modoProfesorActivo()) {
+            return ResponseEntity.status(403).build();
+        }
         Escenario escenario = obtenerEscenario(id);
         byte[] bytes = servicioBancoPortable.exportarEjercicio(escenario);
         String nombre = "banco-" + escenario.getId() + ".json";
@@ -392,5 +422,20 @@ public class ControladorEjercicio {
     private Escenario obtenerEscenario(String id) {
         return almacenSesiones.obtenerEscenario(id, metadatosEjercicio.loginActual())
                 .orElseThrow(() -> new IllegalArgumentException("Ejercicio no encontrado: " + id));
+    }
+
+    private void adjuntarEstadoSolucionReferencia(Escenario escenario, Model modelo) {
+        if (!accesoProfesor.modoProfesorActivo()) {
+            return;
+        }
+        try {
+            String solucion = escenario.getSolucionReferencia() != null ? escenario.getSolucionReferencia() : "";
+            ResultadoEvaluacion evaluacion = servicioEvaluador.evaluar(escenario, solucion);
+            modelo.addAttribute("solucionReferenciaValida",
+                    evaluacion.getPesoObtenido() >= evaluacion.getPesoTotal());
+            modelo.addAttribute("notaSolucionReferencia", evaluacion.getNota());
+        } catch (Exception ignored) {
+            modelo.addAttribute("solucionReferenciaValida", false);
+        }
     }
 }

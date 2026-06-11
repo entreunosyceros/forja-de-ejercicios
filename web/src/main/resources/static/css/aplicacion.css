@@ -1052,6 +1052,18 @@ textarea {
     color: var(--fail, #c62828);
 }
 
+.mensaje-guardar-banco.ok {
+    color: var(--ok, #2e7d32);
+}
+
+.mensaje-guardar-banco.warn {
+    color: #b26a00;
+}
+
+.mensaje-guardar-banco.error {
+    color: var(--fail, #c62828);
+}
+
 .card-config-profesor {
     margin: 1rem 0 1.25rem;
     padding: 1rem 1.1rem;

@@ -156,10 +156,19 @@
         msg.classList.add(esError ? "error" : "ok");
     }
 
-    async function guardarSolucionProfesor() {
-        const card = document.querySelector(".solucion-profesor-card");
+    function mostrarMensajeGuardarBanco(texto, esError) {
+        const msg = document.getElementById("mensaje-guardar-banco");
+        if (!msg) return;
+        msg.textContent = texto;
+        msg.hidden = !texto;
+        msg.classList.remove("ok", "error", "warn");
+        msg.classList.add(esError ? "error" : "ok");
+    }
+
+    async function sincronizarSolucionProfesorEnSesion() {
         const textarea = document.getElementById("textarea-solucion-profesor");
-        if (!card || !textarea) return;
+        const card = document.querySelector(".solucion-profesor-card");
+        if (!textarea || !card) return;
         const action = card.getAttribute("data-action-guardar-solucion");
         if (!action) return;
         const csrf = obtenerTokenCsrf();
@@ -173,10 +182,43 @@
         });
         if (!resp.ok) {
             const detalle = await resp.text();
-            throw new Error(detalle || "No se pudo guardar la solución");
+            throw new Error(detalle || "No se pudo guardar la solución de referencia");
+        }
+    }
+
+    async function guardarSolucionProfesor() {
+        await sincronizarSolucionProfesorEnSesion();
+        mostrarMensajeSolucionProfesor("Solución guardada.", false);
+    }
+
+    async function guardarEnBanco(btn) {
+        const action = btn.getAttribute("data-action-guardar-banco");
+        if (!action) return;
+        try {
+            await sincronizarSolucionProfesorEnSesion();
+        } catch (err) {
+            mostrarMensajeGuardarBanco(err.message || String(err), true);
+            return;
+        }
+        const csrf = obtenerTokenCsrf();
+        const fd = new FormData();
+        if (csrf) fd.set(csrf.nombre, csrf.valor);
+        const resp = await fetch(action, {
+            method: "POST",
+            body: fd,
+            headers: { "X-Requested-With": "XMLHttpRequest" },
+        });
+        if (!resp.ok) {
+            const detalle = await resp.text();
+            throw new Error(detalle || "No se pudo guardar en el banco");
         }
         const datos = await resp.json();
-        mostrarMensajeSolucionProfesor(datos.mensaje || "Solución guardada.", false);
+        const esPendiente = datos.destino === "pendientes";
+        mostrarMensajeGuardarBanco(datos.mensaje || "Guardado en el banco.", esPendiente);
+        if (esPendiente) {
+            const msg = document.getElementById("mensaje-guardar-banco");
+            if (msg) msg.classList.replace("ok", "warn");
+        }
     }
 
     function copiarSolucionARespuesta() {
@@ -205,6 +247,15 @@
             if (btn.dataset.enlazado) return;
             btn.dataset.enlazado = "true";
             btn.addEventListener("click", copiarSolucionARespuesta);
+        });
+        document.querySelectorAll(".btn-guardar-banco").forEach(function (btn) {
+            if (btn.dataset.enlazado) return;
+            btn.dataset.enlazado = "true";
+            btn.addEventListener("click", function () {
+                guardarEnBanco(btn).catch(function (err) {
+                    mostrarMensajeGuardarBanco(err.message || String(err), true);
+                });
+            });
         });
     }
 

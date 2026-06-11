@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.luegoestarde.forjaexamenes.modelo.Escenario;
+import com.luegoestarde.forjaexamenes.modelo.ResultadoEvaluacion;
 import com.luegoestarde.forjaexamenes.util.MapeadorJson;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -33,6 +34,14 @@ public class ServicioBancoPortable {
             int actualizados,
             int omitidos,
             List<String> detalles) {}
+
+    public record ResultadoGuardadoBanco(
+            String destino,
+            String id,
+            String rutaRelativa,
+            boolean solucionValidada,
+            double notaReferencia,
+            String mensaje) {}
 
     private final ServicioBancoEjercicios servicioBanco;
     private final ObjectMapper mapeador;
@@ -75,6 +84,64 @@ public class ServicioBancoPortable {
     public byte[] exportarEjercicio(Escenario escenario) throws IOException {
         JsonNode nodo = mapeador.valueToTree(escenario);
         return escribirPaquete(List.of(limpiarParaBanco(nodo)));
+    }
+
+    /**
+     * Guarda el ejercicio en disco: {@code banco/aprobados/} si la solución de referencia
+     * cumple todos los criterios; si no, en {@code banco/pendientes/} para revisión.
+     */
+    public synchronized ResultadoGuardadoBanco guardarEjercicioLocal(
+            Escenario escenario, ResultadoEvaluacion evaluacionReferencia) throws IOException {
+        ObjectNode limpio = limpiarParaBanco(mapeador.valueToTree(escenario));
+        validarEjercicio(limpio);
+        String id = limpio.path("id").asText("sin-id");
+        String subcarpeta = limpio.path("modulo").asText("general");
+        limpio.put("modulo", normalizarModuloBanco(subcarpeta, subcarpetaDesdeModulo(subcarpeta)));
+
+        boolean valida = evaluacionReferencia != null
+                && evaluacionReferencia.getPesoObtenido() >= evaluacionReferencia.getPesoTotal();
+        double nota = evaluacionReferencia != null ? evaluacionReferencia.getNota() : 0.0;
+
+        if (valida) {
+            Path destino = rutaDestino(limpio);
+            Files.createDirectories(destino.getParent());
+            mapeador.writerWithDefaultPrettyPrinter().writeValue(destino.toFile(), limpio);
+            Files.deleteIfExists(servicioBanco.carpetaPendientes().resolve(id + ".json"));
+            servicioBanco.reconstruirCatalogo();
+            String relativa = servicioBanco.directorioBanco()
+                    .relativize(destino.toAbsolutePath().normalize())
+                    .toString()
+                    .replace('\\', '/');
+            return new ResultadoGuardadoBanco(
+                    "aprobados",
+                    id,
+                    relativa,
+                    true,
+                    nota,
+                    "Ejercicio guardado en " + relativa + ". Ya está en tu banco local.");
+        }
+
+        Path pendiente = servicioBanco.carpetaPendientes().resolve(id + ".json");
+        Files.createDirectories(pendiente.getParent());
+        ObjectNode wrapper = mapeador.createObjectNode();
+        wrapper.put("id", id);
+        wrapper.put("creado", Instant.now().toString());
+        wrapper.put("modulo", limpio.path("modulo").asText(""));
+        JsonNode propuesta = limpio.path("parametros").path("propuesta_gemini");
+        if (propuesta.isObject()) {
+            wrapper.set("propuesta", propuesta);
+        }
+        wrapper.set("escenario_preview", limpio);
+        mapeador.writerWithDefaultPrettyPrinter().writeValue(pendiente.toFile(), wrapper);
+        String relativa = "pendientes/" + id + ".json";
+        return new ResultadoGuardadoBanco(
+                "pendientes",
+                id,
+                relativa,
+                false,
+                nota,
+                "La solución de referencia no cumple todos los criterios (nota "
+                        + nota + "/10). Guardado en banco/pendientes/ para revisión.");
     }
 
     public synchronized ResultadoImportacion importar(byte[] contenido) throws IOException {
