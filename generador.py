@@ -18,10 +18,6 @@ def _generar_identificador() -> str:
     return comun.generar_identificador()
 
 
-def _elegir_vlan() -> int:
-    return random.choice([10, 20, 30, 40, 50, 100])
-
-
 def generar_redes() -> dict:
     v1, v2 = random.sample([10, 20, 30, 40, 50, 100], 2)
     puerto = random.randint(8000, 9999)

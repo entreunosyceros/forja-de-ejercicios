@@ -1,9 +1,9 @@
 # Desarrollado por entreunosyceros - 2026
 # Instalador Forja de ejercicios (Windows / PowerShell 5.1+)
 #
-# Abrir PowerShell en la carpeta examenforge y ejecutar:
-#   Set-ExecutionPolicy -Scope Process Bypass
-#   .\install.ps1
+# Windows (recomendado): doble clic en install.bat o, en cmd/PowerShell:
+#   .\install.bat
+# Alternativa: powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1
 #
 # Requisitos que el script intenta instalar automaticamente:
 #   - JDK 21 (winget), Maven 3.9+ (descarga Apache / choco / winget), Python 3.10+ (winget)
@@ -363,7 +363,7 @@ function Start-ForjaApplication {
     $webDir = Join-Path $Raiz "web"
     $pomFile = Join-Path $webDir "pom.xml"
     if (-not $MavenPath -or -not (Test-Path -LiteralPath $pomFile)) {
-        Write-Err "No hay JAR compilado. Vuelve a ejecutar install.ps1."
+        Write-Err "No hay JAR compilado. Vuelve a ejecutar install.bat (o install.ps1)."
         return $false
     }
     Write-Info "Arrancando con Maven spring-boot:run..."
@@ -466,7 +466,7 @@ function Ensure-Maven {
 
     [void]$ManualSteps.Add(@"
 [OBLIGATORIO] Apache Maven 3.8+
-  Opcion A (recomendada): vuelve a ejecutar install.ps1 y acepta instalar Maven.
+  Opcion A (recomendada): vuelve a ejecutar install.bat y acepta instalar Maven.
            Se descargara en examenforge\tools\apache-maven-3.9.16\
   Opcion B: choco install maven
   Opcion C: https://maven.apache.org/download.cgi
@@ -735,7 +735,7 @@ function Show-ManualChecklist {
             Write-Host ""
         }
     }
-    Write-Host "Cuando termines, vuelve a ejecutar: .\install.ps1"
+    Write-Host "Cuando termines, vuelve a ejecutar: .\install.bat"
     Write-Host ""
 }
 

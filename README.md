@@ -55,14 +55,15 @@ Los scripts comprueban requisitos, crean carpetas locales, compilan el JAR, ofre
 | Sistema | Instalación | Arranque posterior |
 |---------|-------------|--------------------|
 | Linux / macOS | `chmod +x install.sh iniciar-forja.sh && ./install.sh` | `./iniciar-forja.sh` |
-| Windows | `Set-ExecutionPolicy -Scope Process Bypass` y después `.\install.ps1` | `.\iniciar-forja.bat` |
+| Windows | `.\install.bat` (doble clic o desde cmd/PowerShell) | `.\iniciar-forja.bat` |
 
-En Windows, abre PowerShell en la carpeta `examenforge` antes de ejecutar:
+En Windows, en la carpeta `examenforge`:
 
-```powershell
-Set-ExecutionPolicy -Scope Process Bypass
-.\install.ps1
+```bat
+install.bat
 ```
+
+`install.bat` lanza PowerShell con `-ExecutionPolicy Bypass` solo para esa ejecución; no hace falta `Set-ExecutionPolicy` manual. Si prefieres PowerShell directamente: `powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1`
 
 Notas de Windows:
 
@@ -654,7 +655,7 @@ Para repartir ejercicios entre equipos: exportar `forja-banco-ejercicios` (`GET 
 ```
 examenforge/
 ├── alumno.txt / profesor.txt    # Guías por rol (instalaciones independientes)
-├── install.sh / install.ps1     # Instalación guiada (Linux/macOS / Windows)
+├── install.sh / install.bat / install.ps1   # Instalación guiada (Linux/macOS / Windows)
 ├── iniciar-forja.sh / .bat      # Arranque tras instalar
 ├── arrancar-web.sh
 ├── generador.py / evaluador.py

@@ -32,14 +32,6 @@ public class ServicioGenerador {
         this.mapeador = MapeadorJson.snakeCase();
     }
 
-    public Escenario generar(Optional<String> modulo) throws Exception {
-        return generar(modulo, 2);
-    }
-
-    public Escenario generar(Optional<String> modulo, int nivel) throws Exception {
-        return generar(modulo, nivel, Optional.empty(), Optional.empty());
-    }
-
     public Escenario generar(
             Optional<String> modulo,
             int nivel,

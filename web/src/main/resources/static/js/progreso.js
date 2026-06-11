@@ -42,7 +42,6 @@ const Progreso = (function () {
         return defecto;
     }
 
-    const MODULOS_BD = ["bd", "bd_sql", "bd_modelo", "bd_transacciones", "bd_jdbc"];
     const MODULOS_SISTEMAS = ["redes", "sistemas", "docker"];
 
     const MEDALLAS = [

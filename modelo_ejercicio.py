@@ -34,7 +34,6 @@ RUTA_VOCABULARIO = RAIZ / "vocabulario_claves.json"
 CAMPOS_OBLIGATORIOS = ("titulo", "enunciado", "criterios", "solucion_referencia")
 MIN_PALABRAS_CLAVE = 2
 MAX_PALABRAS_CLAVE = 8
-MIN_LONGITUD_CLAVE = 2
 
 PROHIBIDAS_GLOBAL = frozenset({
     "configurar", "configuracion", "servidor", "sistema", "usar", "hacer",
@@ -74,18 +73,6 @@ def _reglas_vocabulario(modulo: str | None) -> tuple[frozenset[str], frozenset[s
             permitidas_extra.update(x.lower() for x in wildcard.get("permitidas_extra") or [])
 
     return frozenset(prohibidas), frozenset(permitidas_extra)
-
-
-def es_clave_tecnica(palabra: str) -> bool:
-    """Al menos un indicador de término técnico (comando, flag, etc.)."""
-    p = palabra.strip()
-    if len(p) >= 6:
-        return True
-    if re.search(r"[-/.#\\]|^\d|:\d", p):
-        return True
-    if " " in p and len(p) >= 4:
-        return True
-    return False
 
 
 def _clave_en_fragmento(clave: str, texto_fragmento: str, permitidas_extra: frozenset[str]) -> bool:
@@ -346,14 +333,6 @@ def construir_escenario_desde_propuesta(
     validar_escenario_verificable(escenario)
     asegurar_solucion_referencia(escenario)
     return escenario
-
-
-def cargar_desde_json(ruta: Path | str) -> dict[str, Any]:
-    """Carga un ejercicio del banco."""
-    path = Path(ruta)
-    datos = json.loads(path.read_text(encoding="utf-8"))
-    validar_escenario_verificable(datos)
-    return datos
 
 
 def _titulo_desde_propuesta(propuesta: dict[str, str], coleccion: str) -> str:

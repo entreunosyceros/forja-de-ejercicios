@@ -75,11 +75,3 @@ def contiene_termino_flexible(respuesta: str, termino: str) -> bool:
     return any(v.lower() in respuesta_norm for v in variantes_termino(termino))
 
 
-def ampliar_terminos_criterio(terminos: list[str]) -> list[str]:
-    """Une términos del criterio con alias (útil para contiene_alguno automático)."""
-    salida: list[str] = []
-    for t in terminos:
-        for v in variantes_termino(t):
-            if v.lower() not in {x.lower() for x in salida}:
-                salida.append(v)
-    return salida

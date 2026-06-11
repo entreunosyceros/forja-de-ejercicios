@@ -113,14 +113,6 @@ public class ServicioBancoEjercicios {
         return lista;
     }
 
-    public Optional<PendienteBanco> obtenerPendiente(String id) throws IOException {
-        Path ruta = carpetaPendientes().resolve(id + ".json");
-        if (!Files.isRegularFile(ruta)) {
-            return Optional.empty();
-        }
-        return Optional.of(leerPendiente(ruta));
-    }
-
     public void aprobar(String id) throws Exception {
         Path origen = carpetaPendientes().resolve(id + ".json");
         if (!Files.isRegularFile(origen)) {

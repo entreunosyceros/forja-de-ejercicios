@@ -3,10 +3,6 @@
     const raiz = document.documentElement;
     const botones = document.querySelectorAll(".btn-tema");
 
-    function temaActual() {
-        return raiz.getAttribute("data-theme") === "oscuro" ? "oscuro" : "claro";
-    }
-
     function aplicar(tema) {
         const elegido = tema === "oscuro" ? "oscuro" : "claro";
         raiz.setAttribute("data-theme", elegido);

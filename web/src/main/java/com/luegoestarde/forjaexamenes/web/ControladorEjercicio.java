@@ -293,25 +293,6 @@ public class ControladorEjercicio {
                 .body(bytes);
     }
 
-    @GetMapping("/api/modulos")
-    @ResponseBody
-    public List<String> listarModulos() {
-        return modulosParaSorpresa();
-    }
-
-    @GetMapping("/api/modulos-documentacion")
-    @ResponseBody
-    public List<ServicioDocumentacion.ModuloDocumentacion> listarModulosDocumentacion() {
-        return servicioDocumentacion.listarModulosIndexados();
-    }
-
-    @GetMapping("/api/modulos-documentacion/{modulo}/secciones")
-    @ResponseBody
-    public List<ServicioDocumentacion.SeccionDocumentacion> listarSeccionesDocumentacion(
-            @PathVariable String modulo) {
-        return servicioDocumentacion.listarSecciones(modulo);
-    }
-
     private List<String> modulosParaSorpresa() {
         List<String> lista = new ArrayList<>(MODULOS_SORPRESA);
         if (servicioDocumentacion.geminiConfigurado()) {

@@ -81,11 +81,6 @@
         }
     }
 
-    function extraerTexto(selector, raiz) {
-        const el = (raiz || document).querySelector(selector);
-        return el ? el.textContent.trim() : "";
-    }
-
     function registrarDesdeResultado(zona) {
         if (typeof Progreso === "undefined" || !zona) return;
         const res = Progreso.registrarDesdeZona(zona);

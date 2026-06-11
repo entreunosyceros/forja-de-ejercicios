@@ -3,7 +3,6 @@
 """Pruebas de banco_loader y cola de aprobación."""
 
 import json
-import shutil
 import sys
 import tempfile
 from pathlib import Path

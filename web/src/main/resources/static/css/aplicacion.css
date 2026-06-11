@@ -455,23 +455,6 @@ textarea {
     line-height: 1.5;
 }
 
-.compare-table {
-    width: 100%;
-    border-collapse: collapse;
-    background: var(--surface);
-    border-radius: var(--radius);
-    overflow: hidden;
-    box-shadow: var(--shadow);
-}
-
-.compare-table th, .compare-table td {
-    padding: 0.75rem 1rem;
-    border: 1px solid var(--border);
-    text-align: left;
-}
-
-.compare-table th { background: var(--bg); }
-
 .panel-estadisticas-usuario {
     margin-top: 0.5rem;
     margin-bottom: 2rem;
@@ -1495,51 +1478,6 @@ body.carga-ia-activa {
     max-height: min(200px, 40vw);
 }
 
-.compare-table-wrap {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    margin-bottom: 2rem;
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-}
-
-@media (max-width: 520px) {
-    .compare-table {
-        min-width: 0;
-    }
-
-    .compare-table thead {
-        display: none;
-    }
-
-    .compare-table tbody tr {
-        display: block;
-        margin-bottom: 0.75rem;
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        overflow: hidden;
-    }
-
-    .compare-table td {
-        display: block;
-        border: none;
-        border-bottom: 1px solid var(--border);
-        padding: 0.65rem 1rem;
-    }
-
-    .compare-table td:last-child {
-        border-bottom: none;
-        background: color-mix(in srgb, var(--primary) 8%, var(--surface));
-        font-weight: 600;
-    }
-
-    .compare-table td:first-child::before {
-        content: "Antes: ";
-        font-weight: 600;
-        color: var(--muted);
-    }
-}
-
 /* ——— Perfil + guía ——— */
 .perfil-layout {
     display: grid;
@@ -1778,8 +1716,6 @@ body.carga-ia-activa {
     margin-top: 0.75rem;
 }
 
-.celda-ok { color: var(--ok, #0a7a3e); font-weight: 600; }
-.celda-fail { color: var(--fail, #b42318); font-weight: 600; }
 .celda-alias { font-size: 0.82rem; max-width: 14rem; }
 .prueba-respuesta {
     display: block;

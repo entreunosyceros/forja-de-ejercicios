@@ -100,15 +100,6 @@ def reconstruir_catalogo() -> dict[str, Any]:
     return catalogo
 
 
-def cargar_catalogo() -> dict[str, Any]:
-    if CATALOGO.is_file():
-        try:
-            return json.loads(CATALOGO.read_text(encoding="utf-8"))
-        except json.JSONDecodeError:
-            pass
-    return reconstruir_catalogo()
-
-
 def _preparar_escenario(datos: dict[str, Any], ruta: Path | None = None) -> dict[str, Any]:
     escenario = dict(datos)
     modelo_ejercicio.validar_escenario_verificable(escenario)
@@ -212,13 +203,6 @@ def rechazar_pendiente(eid: str) -> None:
         ruta.unlink()
 
 
-def _fabrica_banco(ruta: Path) -> Callable[[], dict]:
-    def generar() -> dict:
-        return cargar_ejercicio_aprobado(ruta)
-
-    return generar
-
-
 def registrar_en_generadores(
     generadores: dict[str, Callable[[], dict]],
     pistas_modulo: dict[str, str],
@@ -249,19 +233,3 @@ def registrar_en_generadores(
 
     MODULOS_BANCO = tuple(sorted(modulos))
     return MODULOS_BANCO
-
-
-def listar_entradas_portada() -> list[dict[str, str]]:
-    catalogo = cargar_catalogo()
-    vistos: set[str] = set()
-    salida: list[dict[str, str]] = []
-    for ej in catalogo.get("ejercicios") or []:
-        modulo = ej.get("modulo", "")
-        if modulo in vistos:
-            continue
-        vistos.add(modulo)
-        salida.append({
-            "modulo": modulo,
-            "titulo": ej.get("titulo", modulo),
-        })
-    return salida

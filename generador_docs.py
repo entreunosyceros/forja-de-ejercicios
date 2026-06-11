@@ -44,10 +44,6 @@ def cargar_indice(modulo: str, carpeta_indice: Path = CARPETA_INDICE) -> dict:
         return json.load(archivo)
 
 
-def listar_secciones(modulo: str, carpeta_indice: Path = CARPETA_INDICE) -> list[dict]:
-    return cargar_indice(modulo, carpeta_indice).get("secciones") or []
-
-
 def seleccionar_fragmento(
     chunks: list[dict],
     capitulo: str | None = None,

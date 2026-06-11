@@ -12,10 +12,6 @@ from alias_comandos import contiene_termino_flexible, variantes_termino
 from retroalimentacion_criterios import enriquecer_detalle
 
 
-def _normalizar(texto: str) -> str:
-    return texto.lower()
-
-
 def _contiene_termino(respuesta: str, termino: str) -> bool:
     return contiene_termino_flexible(respuesta, termino)
 

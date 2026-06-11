@@ -6,9 +6,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.springframework.stereotype.Service;
-import org.springframework.web.util.UriUtils;
-
-import java.nio.charset.StandardCharsets;
 
 @Service
 public class ServicioApuntesPdf {
@@ -46,17 +43,5 @@ public class ServicioApuntesPdf {
             throw new IllegalArgumentException("Solo se permiten archivos PDF");
         }
         return archivo;
-    }
-
-    /**
-     * URL para abrir el PDF en el navegador; {@code #page=N} lo interpreta Chrome/Firefox/Edge.
-     */
-    public String urlVerPdf(String fuente, Integer pagina) {
-        String encoded = UriUtils.encodePath(fuente, StandardCharsets.UTF_8);
-        StringBuilder url = new StringBuilder("/ejercicio/apuntes/archivo?fuente=").append(encoded);
-        if (pagina != null && pagina > 0) {
-            url.append("#page=").append(pagina);
-        }
-        return url.toString();
     }
 }

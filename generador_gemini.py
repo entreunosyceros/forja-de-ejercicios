@@ -161,19 +161,6 @@ def _extraer_json(texto: str) -> dict[str, Any]:
     return json.loads(texto[inicio : fin + 1])
 
 
-def _validar_escenario(datos: dict[str, Any], modulo: str) -> dict[str, Any]:
-    """Compatibilidad: valida escenario completo ya construido (banco / tests)."""
-    modelo_ejercicio.validar_escenario_verificable(datos)
-    return {
-        "modulo": modulo,
-        "titulo": sin_markdown(str(datos["titulo"]))[:120],
-        "enunciado": sin_markdown(str(datos["enunciado"])),
-        "criterios": datos["criterios"],
-        "solucion_referencia": sin_markdown(str(datos["solucion_referencia"])),
-        "parametros": datos.get("parametros") or {},
-    }
-
-
 def _instrucciones_nivel(nivel: int) -> str:
     if nivel <= 1:
         return (

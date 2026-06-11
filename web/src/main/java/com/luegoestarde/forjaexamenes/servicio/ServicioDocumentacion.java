@@ -71,14 +71,6 @@ public class ServicioDocumentacion {
         return listarModulosIndexados().stream().map(ModuloDocumentacion::id).toList();
     }
 
-    public List<SeccionDocumentacion> listarSecciones(String moduloId) {
-        return listarModulosIndexados().stream()
-                .filter(m -> m.id().equals(moduloId))
-                .findFirst()
-                .map(ModuloDocumentacion::secciones)
-                .orElse(List.of());
-    }
-
     public boolean geminiConfigurado() {
         return configuracionGemini.estaConfigurado();
     }

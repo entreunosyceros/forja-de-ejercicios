@@ -82,10 +82,6 @@ public class ServicioHistorialIntentos {
         guardar(login, historial);
     }
 
-    public HistorialUsuario obtener(String login) {
-        return cargar(login);
-    }
-
     public List<IntentoHistorial> listarIntentos(String login) {
         return cargar(login).getIntentos();
     }

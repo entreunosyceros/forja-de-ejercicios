@@ -28,7 +28,7 @@ if not defined MVN (
 
 if not defined MVN (
     echo [X] No hay JAR compilado ni Maven en el PATH.
-    echo     Ejecuta install.ps1 para compilar e instalar Maven.
+    echo     Ejecuta install.bat para compilar e instalar Maven.
     exit /b 1
 )
 

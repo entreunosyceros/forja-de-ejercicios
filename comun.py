@@ -11,8 +11,6 @@ from __future__ import annotations
 import re
 import uuid
 
-RAIZ_NOMBRE = "forjaexamenes"
-
 
 def slug(texto: str, defecto: str = "") -> str:
     """Convierte un texto en un identificador seguro (minúsculas, guiones bajos).
