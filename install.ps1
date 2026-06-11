@@ -90,6 +90,50 @@ function Invoke-Native {
     return [PSCustomObject]@{
         ExitCode = $proc.ExitCode
         Output   = ($stdout + $stderr).Trim()
+        TimedOut = $false
+    }
+}
+
+function Invoke-NativeWithTimeout {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$FilePath,
+        [string[]]$ArgumentList = @(),
+        [string]$WorkingDirectory = $null,
+        [int]$TimeoutSeconds = 15
+    )
+    $psi = New-Object System.Diagnostics.ProcessStartInfo
+    if ($WorkingDirectory -and (Test-Path -LiteralPath $WorkingDirectory)) {
+        $psi.WorkingDirectory = $WorkingDirectory
+    }
+    $ext = [System.IO.Path]::GetExtension($FilePath).ToLowerInvariant()
+    if ($ext -eq ".cmd" -or $ext -eq ".bat") {
+        $psi.FileName = $env:ComSpec
+        $psi.Arguments = "/c `"$FilePath`" $(Format-ProcessArguments $ArgumentList)"
+    } else {
+        $psi.FileName = $FilePath
+        $psi.Arguments = Format-ProcessArguments $ArgumentList
+    }
+    $psi.RedirectStandardOutput = $true
+    $psi.RedirectStandardError = $true
+    $psi.UseShellExecute = $false
+    $psi.CreateNoWindow = $true
+    $proc = [System.Diagnostics.Process]::Start($psi)
+    $timedOut = -not $proc.WaitForExit([Math]::Max(1, $TimeoutSeconds) * 1000)
+    if ($timedOut) {
+        try { $proc.Kill() } catch { }
+        return [PSCustomObject]@{
+            ExitCode = -1
+            Output   = "timeout tras ${TimeoutSeconds}s"
+            TimedOut = $true
+        }
+    }
+    $stdout = $proc.StandardOutput.ReadToEnd()
+    $stderr = $proc.StandardError.ReadToEnd()
+    return [PSCustomObject]@{
+        ExitCode = $proc.ExitCode
+        Output   = ($stdout + $stderr).Trim()
+        TimedOut = $false
     }
 }
 
@@ -509,12 +553,29 @@ function Get-WslExecutable {
     return $null
 }
 
+function Test-WslRegistryHint {
+    $lxss = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Lxss"
+    if (-not (Test-Path -LiteralPath $lxss)) {
+        return $false
+    }
+    $subs = Get-ChildItem -LiteralPath $lxss -ErrorAction SilentlyContinue
+    return ($null -ne $subs -and $subs.Count -gt 0)
+}
+
 function Test-WslInstalled {
     $wsl = Get-WslExecutable
     if (-not $wsl) {
         return $false
     }
-    $res = Invoke-Native -FilePath $wsl -ArgumentList @("--version")
+    if (Test-WslRegistryHint) {
+        return $true
+    }
+    Write-Info "Comprobando WSL (max. 12 s; en equipos sin WSL puede tardar un poco)..."
+    $res = Invoke-NativeWithTimeout -FilePath $wsl -ArgumentList @("--version") -TimeoutSeconds 12
+    if ($res.TimedOut) {
+        Write-Warn "WSL no respondio a tiempo (normal si no esta instalado)."
+        return $false
+    }
     return ($res.ExitCode -eq 0)
 }
 
@@ -531,11 +592,21 @@ function Show-WslInstallGuide {
 }
 
 function Test-DockerDaemonReady {
-    param([string]$DockerPath)
+    param(
+        [string]$DockerPath,
+        [int]$TimeoutSeconds = 10,
+        [switch]$Quiet
+    )
     if (-not $DockerPath) {
         return $false
     }
-    $res = Invoke-Native -FilePath $DockerPath -ArgumentList @("info")
+    if (-not $Quiet) {
+        Write-Info "Comprobando motor Docker (max. ${TimeoutSeconds} s)..."
+    }
+    $res = Invoke-NativeWithTimeout -FilePath $DockerPath -ArgumentList @("info") -TimeoutSeconds $TimeoutSeconds
+    if ($res.TimedOut -and -not $Quiet) {
+        Write-Warn "El motor Docker no respondio a tiempo (Docker Desktop parado o arrancando)."
+    }
     return ($res.ExitCode -eq 0)
 }
 
@@ -559,13 +630,20 @@ function Wait-DockerDaemonReady {
         [string]$DockerPath,
         [int]$MaxSeconds = 120
     )
-    $limite = (Get-Date).AddSeconds($MaxSeconds)
-    while ((Get-Date) -lt $limite) {
-        if (Test-DockerDaemonReady -DockerPath $DockerPath) {
+    $transcurrido = 0
+    while ($transcurrido -lt $MaxSeconds) {
+        $pct = [int](100 * $transcurrido / $MaxSeconds)
+        Write-Progress -Activity "Esperando Docker Desktop" `
+            -Status "Comprobando motor... ($transcurrido s / $MaxSeconds s)" `
+            -PercentComplete $pct
+        if (Test-DockerDaemonReady -DockerPath $DockerPath -TimeoutSeconds 5 -Quiet) {
+            Write-Progress -Activity "Esperando Docker Desktop" -Completed
             return $true
         }
         Start-Sleep -Seconds 3
+        $transcurrido += 3
     }
+    Write-Progress -Activity "Esperando Docker Desktop" -Completed
     return $false
 }
 
@@ -601,16 +679,41 @@ function Invoke-DockerCompose {
     if (-not (Test-DockerDaemonReady -DockerPath $docker)) {
         throw "El motor Docker no esta en marcha. Abre Docker Desktop y espera a que este listo."
     }
-    $res = Invoke-Native -FilePath $docker -ArgumentList (@("compose") + $ComposeArgs) -WorkingDirectory $Raiz
-    if ($res.ExitCode -ne 0) {
-        $legacy = Get-ToolPath "docker-compose"
-        if ($legacy) {
-            $res = Invoke-Native -FilePath $legacy -ArgumentList $ComposeArgs -WorkingDirectory $Raiz
+    Write-Info "Construyendo y levantando contenedor (primera vez: varios minutos; se muestra la salida de Docker)..."
+    Write-Host ""
+    Push-Location -LiteralPath $Raiz
+    try {
+        $composeOk = $false
+        $composeArgsFlat = @("compose") + $ComposeArgs
+        & $docker @composeArgsFlat 2>&1 | ForEach-Object {
+            $linea = $_.ToString()
+            if ($linea) {
+                Write-Host "  $linea"
+            }
         }
+        if ($LASTEXITCODE -eq 0) {
+            $composeOk = $true
+        }
+        if (-not $composeOk) {
+            $legacy = Get-ToolPath "docker-compose"
+            if ($legacy) {
+                Write-Info "Reintentando con docker-compose..."
+                & $legacy @ComposeArgs 2>&1 | ForEach-Object {
+                    $linea = $_.ToString()
+                    if ($linea) {
+                        Write-Host "  $linea"
+                    }
+                }
+                $composeOk = ($LASTEXITCODE -eq 0)
+            }
+        }
+        if (-not $composeOk) {
+            throw "docker compose fallo (codigo $LASTEXITCODE)"
+        }
+    } finally {
+        Pop-Location
     }
-    if ($res.ExitCode -ne 0) {
-        throw $res.Output
-    }
+    Write-Host ""
 }
 
 function Show-ManualChecklist {
@@ -766,6 +869,7 @@ if (Preguntar-Si "Guardar clave Gemini ahora?") {
 Write-Host ""
 Write-Host "-- Docker / practica en contenedor (opcional) --"
 Write-Host "  En Windows, Docker Desktop requiere WSL 2 (Subsistema de Windows para Linux)."
+Write-Host "  (Comprobaciones rapidas; no bloquea la instalacion si Docker no esta listo.)"
 Write-Host ""
 
 $dockerOk = "no"
@@ -789,29 +893,41 @@ if (-not $dockerPath) {
     }
 }
 if ($dockerPath) {
+    Write-Info "Comprobando Docker CLI..."
     $dockerVer = Invoke-Native -FilePath $dockerPath -ArgumentList @("--version")
     Write-Ok "Docker CLI: $($dockerVer.Output)"
     if ($wslOk) {
-        if (Test-DockerDaemonReady -DockerPath $dockerPath) {
+        $motorListo = Test-DockerDaemonReady -DockerPath $dockerPath
+        if ($motorListo) {
             Write-Ok "Motor Docker en marcha."
         } else {
             $dockerOk = "cli (motor parado)"
-            Ensure-DockerDaemonReady -DockerPath $dockerPath | Out-Null
+            Write-Warn "Docker instalado pero el motor no responde."
+            Write-Host "  Abre Docker Desktop y espera a que este listo cuando quieras practicar en contenedor."
         }
-        if ((Test-DockerDaemonReady -DockerPath $dockerPath) -and (Preguntar-Si "Levantar contenedor de practica ahora?")) {
-            try {
-                Invoke-DockerCompose -ComposeArgs @("up", "-d", "--build", "practica")
-                Write-Ok "Contenedor forjaexamenes-practica en marcha."
-                Write-Host "  Entrar: docker exec -it forjaexamenes-practica bash"
-                Write-Host "  O usa el boton «Abrir consola de practica» en la portada."
-                $dockerOk = "si"
-            } catch {
-                Write-Warn "No se pudo levantar el contenedor."
-                Write-Host $_.Exception.Message
-                Write-Host "  Abre Docker Desktop, espera a que este listo y ejecuta:"
-                Write-Host "    docker compose up -d --build practica"
+        if (Preguntar-Si "Levantar contenedor de practica ahora?") {
+            if (-not $motorListo) {
+                $motorListo = Ensure-DockerDaemonReady -DockerPath $dockerPath
             }
-        } elseif (-not (Test-DockerDaemonReady -DockerPath $dockerPath)) {
+            if ($motorListo) {
+                try {
+                    Invoke-DockerCompose -ComposeArgs @("up", "-d", "--build", "practica")
+                    Write-Ok "Contenedor forjaexamenes-practica en marcha."
+                    Write-Host "  Entrar: docker exec -it forjaexamenes-practica bash"
+                    Write-Host "  O usa el boton «Abrir consola de practica» en la portada."
+                    $dockerOk = "si"
+                } catch {
+                    Write-Warn "No se pudo levantar el contenedor."
+                    Write-Host $_.Exception.Message
+                    Write-Host "  Abre Docker Desktop, espera a que este listo y ejecuta:"
+                    Write-Host "    docker compose up -d --build practica"
+                }
+            } else {
+                Write-Host "  Cuando Docker Desktop este en marcha:"
+                Write-Host "    docker compose up -d --build practica"
+                Write-Host "  O el boton en http://localhost:8080 (seccion Entorno Docker)."
+            }
+        } elseif (-not $motorListo) {
             Write-Host "  Cuando Docker Desktop este en marcha:"
             Write-Host "    docker compose up -d --build practica"
             Write-Host "  O el boton en http://localhost:8080 (seccion Entorno Docker)."
