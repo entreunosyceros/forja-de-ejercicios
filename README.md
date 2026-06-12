@@ -3,6 +3,7 @@
 <img width="768" height="419" alt="forja-de-examenes" src="https://github.com/user-attachments/assets/7afefe21-33a0-4796-8376-8ce24c1ba2b2" />
 
 [![Wiki](https://img.shields.io/badge/Wiki-DeepWiki-blue?style=for-the-badge&logo=wikipedia)](https://deepwiki.com/entreunosyceros/forja-de-ejercicios/)
+![Version: 1.0.0](https://img.shields.io/badge/version-1.0.0-brightgreen)
 
 Genera ejercicios prácticos al azar (informática, idiomas u otras materias desde PDF), permite practicar en Docker y corrige la respuesta del alumno con criterios verificables. La interfaz es **Spring Boot**; la generación y corrección las hace **Python** (`generador.py`, `evaluador.py`, `modelo_ejercicio.py`, `tipo_materia.py`).
 
@@ -824,8 +825,17 @@ cd web && mvn test
 
 ---
 
-## Licencia
+## Licencia y agradecimientos
 
-Creado por entreunosyceros con ☕ y 🚬 para el ICFT0112
+Creado por entreunosyceros con ☕ y 🚬 para el ICFT0112.
+
+Este proyecto no habría sido posible sin el increíble trabajo de las comunidades de código abierto que mantienen las herramientas y bibliotecas que utiliza:
+
+- [Spring Boot](https://spring.io/projects/spring-boot) — framework web.
+- [Thymeleaf](https://www.thymeleaf.org/) — motor de plantillas.
+- [Python](https://www.python.org/) y sus bibliotecas: `pypdf`, `google-genai`, `rapidfuzz`, etc.
+- [SQLite](https://www.sqlite.org/) — base de datos ligera.
+- [Docker](https://www.docker.com/) — contenedor de práctica.
+- [Highlight.js](https://highlightjs.org/) — resaltado de sintaxis en el navegador.
 
 Ver [LICENSE](LICENSE).
