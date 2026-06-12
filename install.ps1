@@ -866,7 +866,9 @@ if (Preguntar-Si "Guardar clave Gemini ahora?") {
             actualizadoEn  = (Get-Date).ToString("o")
         }
         $cfg | ConvertTo-Json | Set-Content -Path (Join-Path $Raiz "datos\gemini.json") -Encoding UTF8
-        Write-Ok "Clave guardada en datos\gemini.json"
+        Actualizar-Env "GEMINI_API_KEY" $geminiPlain
+        Actualizar-Env "FORJAEXAMENES_GEMINI_MODEL" $geminiModel
+        Write-Ok "Clave guardada en datos\gemini.json y .env"
         $geminiOk = "si"
     }
 }

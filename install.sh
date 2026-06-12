@@ -131,7 +131,9 @@ cfg = {
 }
 Path("datos/gemini.json").write_text(json.dumps(cfg, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 PY
-        ok "Clave guardada en datos/gemini.json"
+        actualizar_env "GEMINI_API_KEY" "$GEMINI_KEY"
+        actualizar_env "FORJAEXAMENES_GEMINI_MODEL" "$GEMINI_MODEL"
+        ok "Clave guardada en datos/gemini.json y .env"
         GEMINI_OK="sí"
     else
         aviso "Clave vacía; puedes configurarla en Perfil más tarde."
