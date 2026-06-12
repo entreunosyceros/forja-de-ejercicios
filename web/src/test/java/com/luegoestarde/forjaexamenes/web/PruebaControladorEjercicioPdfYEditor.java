@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.regex.Matcher;
@@ -35,7 +36,7 @@ class PruebaControladorEjercicioPdfYEditor {
         MockHttpSession sesion = sesion("alumno", "practica");
         mockMvc.perform(get("/ejercicio/nuevo").param("modulo", "poo").session(sesion))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("editor-codigo.js?v=2")))
+                .andExpect(content().string(containsString("editor-codigo.js?v=3")))
                 .andExpect(content().string(containsString("highlight.min.js")))
                 .andExpect(content().string(containsString("highlight.github.min.css")))
                 .andExpect(content().string(containsString("id=\"textarea-respuesta\"")));
@@ -73,6 +74,33 @@ class PruebaControladorEjercicioPdfYEditor {
         mockMvc.perform(get("/ejercicio/" + id + "/pdf").session(sesion))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Content-Type", containsString("pdf")));
+    }
+
+    @Test
+    void profesorPuedeGuardarSolucionReferenciaYEnBanco() throws Exception {
+        MockHttpSession sesion = sesion("profesor", "profesor");
+        String id = idDesdeNuevoEjercicio(sesion, "poo");
+        mockMvc.perform(post("/ejercicio/" + id + "/solucion-referencia").session(sesion).with(csrf())
+                        .param("solucionReferencia", "class Test { public static void main(String[] a) {} }")
+                        .header("X-Requested-With", "XMLHttpRequest"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.ok").value("true"));
+        mockMvc.perform(post("/ejercicio/" + id + "/guardar-banco").session(sesion).with(csrf())
+                        .param("nombreArchivo", "poo-prueba-banco")
+                        .header("X-Requested-With", "XMLHttpRequest"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.ok").value(true))
+                .andExpect(jsonPath("$.nombreArchivo").exists());
+    }
+
+    @Test
+    void solucionReferenciaSinCsrfDevuelve403() throws Exception {
+        MockHttpSession sesion = sesion("profesor", "profesor");
+        String id = idDesdeNuevoEjercicio(sesion, "poo");
+        mockMvc.perform(post("/ejercicio/" + id + "/solucion-referencia").session(sesion)
+                        .param("solucionReferencia", "class Test {}")
+                        .header("X-Requested-With", "XMLHttpRequest"))
+                .andExpect(status().isForbidden());
     }
 
     @Test

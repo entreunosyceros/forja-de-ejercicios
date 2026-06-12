@@ -137,9 +137,53 @@
         window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
+    function leerCsrfDesdeCookie() {
+        const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]*)/);
+        return match ? decodeURIComponent(match[1]) : null;
+    }
+
     function obtenerTokenCsrf() {
-        const input = document.querySelector('input[name="_csrf"]');
-        return input ? { nombre: input.name, valor: input.value } : null;
+        const meta = document.querySelector('meta[name="_csrf"]');
+        const metaHeader = document.querySelector('meta[name="_csrf_header"]');
+        if (meta && meta.content) {
+            return {
+                nombre: "_csrf",
+                valor: meta.content,
+                header: metaHeader && metaHeader.content ? metaHeader.content : "X-XSRF-TOKEN",
+            };
+        }
+        const enZona = document.querySelector("#zona-practica input[name='_csrf']");
+        const input = enZona || document.querySelector("input[name='_csrf']");
+        if (input) {
+            return {
+                nombre: input.name,
+                valor: input.value,
+                header: "X-XSRF-TOKEN",
+            };
+        }
+        const desdeCookie = leerCsrfDesdeCookie();
+        if (desdeCookie) {
+            return { nombre: "_csrf", valor: desdeCookie, header: "X-XSRF-TOKEN" };
+        }
+        return null;
+    }
+
+    function cabecerasAjaxConCsrf(csrf) {
+        const headers = { "X-Requested-With": "XMLHttpRequest" };
+        if (csrf && csrf.header) {
+            headers[csrf.header] = csrf.valor;
+        }
+        return headers;
+    }
+
+    function mensajeErrorHttp(resp, detalle, accion) {
+        if (resp.status === 403) {
+            return "Sesión o token de seguridad caducado. Recarga la página (F5) e inténtalo de nuevo.";
+        }
+        if (detalle && detalle.trim().startsWith("{")) {
+            return "No se pudo " + accion + " (" + resp.status + ").";
+        }
+        return detalle || ("No se pudo " + accion + " (" + resp.status + ")");
     }
 
     function mostrarMensajeSolucionProfesor(texto, esError) {
@@ -173,11 +217,12 @@
         const resp = await fetch(action, {
             method: "POST",
             body: fd,
-            headers: { "X-Requested-With": "XMLHttpRequest" },
+            headers: cabecerasAjaxConCsrf(csrf),
+            credentials: "same-origin",
         });
         if (!resp.ok) {
             const detalle = await resp.text();
-            throw new Error(detalle || "No se pudo guardar la solución de referencia");
+            throw new Error(mensajeErrorHttp(resp, detalle, "guardar la solución de referencia"));
         }
     }
 
@@ -205,11 +250,12 @@
         const resp = await fetch(action, {
             method: "POST",
             body: fd,
-            headers: { "X-Requested-With": "XMLHttpRequest" },
+            headers: cabecerasAjaxConCsrf(csrf),
+            credentials: "same-origin",
         });
         if (!resp.ok) {
             const detalle = await resp.text();
-            throw new Error(detalle || "No se pudo guardar en el banco");
+            throw new Error(mensajeErrorHttp(resp, detalle, "guardar en el banco"));
         }
         const datos = await resp.json();
         const esPendiente = datos.destino === "pendientes";

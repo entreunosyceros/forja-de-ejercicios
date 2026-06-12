@@ -9,6 +9,8 @@
     <link rel="stylesheet" th:href="@{/css/aplicacion.css(v=13)}"/>
     <link rel="stylesheet" th:href="@{/vendor/highlight.github.min.css}"/>
     <meta name="forja-login-usuario" th:content="${loginUsuario}" th:if="${loginUsuario != null}"/>
+    <meta name="_csrf" th:content="${_csrf.token}" th:if="${_csrf != null}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" th:if="${_csrf != null}"/>
 </head>
 <body th:data-login-usuario="${loginUsuario}">
 <a class="skip-link" href="#contenido-principal">Saltar al contenido</a>
@@ -78,6 +80,6 @@
 <script th:src="@{/vendor/highlight-java.min.js}"></script>
 <script th:src="@{/vendor/highlight-bash.min.js}"></script>
 <script th:src="@{/js/editor-codigo.js(v=3)}"></script>
-<script th:src="@{/js/practica.js(v=8)}"></script>
+<script th:src="@{/js/practica.js(v=9)}"></script>
 </body>
 </html>

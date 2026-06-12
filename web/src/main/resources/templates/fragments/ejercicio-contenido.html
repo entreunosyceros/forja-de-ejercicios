@@ -33,6 +33,7 @@
 
     <article class="card solucion-profesor-card" th:if="${modoProfesor}"
              th:attr="data-action-guardar-solucion=@{/ejercicio/{id}/solucion-referencia(id=${escenario.id})}">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
         <h2>Solución de referencia (editable)</h2>
         <p class="hint">Puedes corregir o ampliar lo que generó la IA. Al guardar, «Guardar en banco» usará esta versión.</p>
         <p class="hint hint-warn" th:if="${solucionReferenciaValida == false}">
