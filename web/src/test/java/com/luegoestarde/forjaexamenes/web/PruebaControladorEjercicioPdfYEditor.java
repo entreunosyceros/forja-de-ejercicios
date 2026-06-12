@@ -36,7 +36,7 @@ class PruebaControladorEjercicioPdfYEditor {
         MockHttpSession sesion = sesion("alumno", "practica");
         mockMvc.perform(get("/ejercicio/nuevo").param("modulo", "poo").session(sesion))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("editor-codigo.js?v=3")))
+                .andExpect(content().string(containsString("editor-codigo.js?v=4")))
                 .andExpect(content().string(containsString("highlight.min.js")))
                 .andExpect(content().string(containsString("highlight.github.min.css")))
                 .andExpect(content().string(containsString("id=\"textarea-respuesta\"")));

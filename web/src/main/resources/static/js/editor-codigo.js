@@ -15,7 +15,17 @@
     }
 
     function obtenerModulo(raiz) {
-        const zona = (raiz || document).querySelector("#zona-practica");
+        // "raiz" puede ser el propio #zona-practica (práctica infinita AJAX):
+        // querySelector solo busca descendientes, así que hay que comprobarlo primero.
+        let zona = null;
+        if (raiz && raiz.matches && raiz.matches("#zona-practica")) {
+            zona = raiz;
+        } else if (raiz && raiz.querySelector) {
+            zona = raiz.querySelector("#zona-practica");
+        }
+        if (!zona) {
+            zona = document.querySelector("#zona-practica");
+        }
         return zona ? zona.getAttribute("data-modulo") : null;
     }
 
