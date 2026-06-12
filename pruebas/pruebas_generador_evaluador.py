@@ -63,6 +63,23 @@ def probar_evaluador_nota_maxima():
     assert resultado["detalles"][0]["cumplido"] is True
 
 
+def probar_aplicar_nivel_sin_duplicar_prefijo():
+    sys.path.insert(0, str(RAIZ))
+    import generador
+
+    base = {
+        "modulo": "poo",
+        "titulo": "Test",
+        "enunciado": "Implementa la interfaz.",
+        "criterios": [{"tipo": "contiene_todos", "terminos": ["implements"], "peso": 1}],
+    }
+    una_vez = generador._aplicar_nivel(dict(base), 2)
+    assert una_vez["enunciado"].count("[Nivel intermedio]") == 1
+    dos_veces = generador._aplicar_nivel(dict(una_vez), 2)
+    assert dos_veces["enunciado"].count("[Nivel intermedio]") == 1
+    assert "Implementa la interfaz." in dos_veces["enunciado"]
+
+
 def probar_evaluador_respuesta_vacia():
     generacion = ejecutar([PYTHON, "generador.py", "-m", "git"])
     escenario = json.loads(generacion.stdout)
@@ -79,6 +96,7 @@ def probar_evaluador_respuesta_vacia():
 if __name__ == "__main__":
     probar_generador_todos_modulos()
     probar_poo_variantes()
+    probar_aplicar_nivel_sin_duplicar_prefijo()
     probar_evaluador_nota_maxima()
     probar_evaluador_respuesta_vacia()
     print("OK: todas las pruebas Python pasaron")

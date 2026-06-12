@@ -9,6 +9,7 @@ import com.luegoestarde.forjaexamenes.modelo.Escenario;
 import com.luegoestarde.forjaexamenes.modelo.ResultadoEvaluacion;
 import com.luegoestarde.forjaexamenes.util.MapeadorJson;
 import com.luegoestarde.forjaexamenes.util.NombresBanco;
+import com.luegoestarde.forjaexamenes.util.TextoPlano;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -241,7 +242,10 @@ public class ServicioBancoPortable {
         nodo.remove("fecha_hora");
         nodo.remove("usuario_acceso");
         nodo.remove("generado_en");
-        nodo.remove("dificultad");
+
+        if (nodo.has("enunciado")) {
+            nodo.put("enunciado", TextoPlano.quitarDecoracionNivel(nodo.path("enunciado").asText("")));
+        }
 
         if (!nodo.has("id") || nodo.path("id").asText("").isBlank()) {
             nodo.put("id", "banco-" + UUID.randomUUID().toString().substring(0, 8));

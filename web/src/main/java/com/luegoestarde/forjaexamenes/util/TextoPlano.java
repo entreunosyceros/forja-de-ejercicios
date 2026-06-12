@@ -19,6 +19,11 @@ public final class TextoPlano {
     private static final Pattern LISTA = Pattern.compile("(?m)^[\\*\\-\\+]\\s+");
     private static final Pattern LISTA_NUM = Pattern.compile("(?m)^\\d+\\.\\s+");
     private static final Pattern LINEAS_VACIAS = Pattern.compile("\\n{3,}");
+    private static final Pattern PREFIJO_NIVEL = Pattern.compile(
+            "^\\[(?:Nivel principiante[^\\]]*|Nivel intermedio|Nivel avanzado[^\\]]*)\\]\\s*\\n?",
+            Pattern.CASE_INSENSITIVE | Pattern.MULTILINE);
+    private static final Pattern PISTA_GENERAL_NIVEL =
+            Pattern.compile("\\n*💡 Pista general:.*\\z", Pattern.DOTALL);
 
     private TextoPlano() {}
 
@@ -44,5 +49,22 @@ public final class TextoPlano {
         t = LISTA_NUM.matcher(t).replaceAll("");
         t = LINEAS_VACIAS.matcher(t).replaceAll("\n\n");
         return t.strip();
+    }
+
+    /** Quita prefijos de dificultad incrustados en el enunciado (evita duplicados al reutilizar banco). */
+    public static String quitarDecoracionNivel(String enunciado) {
+        if (enunciado == null || enunciado.isBlank()) {
+            return "";
+        }
+        String texto = enunciado.replace("\r\n", "\n").replace('\r', '\n');
+        while (true) {
+            String sinPrefijo = PREFIJO_NIVEL.matcher(texto).replaceFirst("");
+            if (sinPrefijo.equals(texto)) {
+                break;
+            }
+            texto = sinPrefijo;
+        }
+        texto = PISTA_GENERAL_NIVEL.matcher(texto).replaceAll("");
+        return texto.strip();
     }
 }

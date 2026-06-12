@@ -23,4 +23,18 @@ class PruebaTextoPlano {
         assertFalse(salida.contains("```"));
         assertFalse(salida.contains("**"));
     }
+
+    @Test
+    void quitaDecoracionNivelDuplicada() {
+        String entrada = """
+                [Nivel intermedio]
+
+                [Nivel intermedio]
+
+                Enunciado real del ejercicio.
+                """;
+        String salida = TextoPlano.quitarDecoracionNivel(entrada);
+        assertFalse(salida.contains("[Nivel intermedio]"));
+        assertTrue(salida.contains("Enunciado real del ejercicio."));
+    }
 }

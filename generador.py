@@ -5,6 +5,7 @@
 import argparse
 import json
 import random
+import re
 import sys
 from datetime import datetime, timezone
 
@@ -496,6 +497,25 @@ def _enriquecer_criterios(escenario: dict) -> None:
         aplicar_retroalimentacion_a_criterio(criterio)
 
 
+_PREFIJO_NIVEL = re.compile(
+    r"^\[(?:Nivel principiante[^\]]*|Nivel intermedio|Nivel avanzado[^\]]*)\]\s*\n*",
+    re.IGNORECASE,
+)
+_PISTA_GENERAL_NIVEL = re.compile(r"\n*💡 Pista general:.*\Z", re.DOTALL)
+
+
+def _quitar_decoracion_nivel(enunciado: str) -> str:
+    """Quita prefijos de dificultad y pistas ya incrustados (p. ej. ejercicios del banco)."""
+    texto = enunciado or ""
+    while True:
+        sin_prefijo = _PREFIJO_NIVEL.sub("", texto, count=1)
+        if sin_prefijo == texto:
+            break
+        texto = sin_prefijo
+    texto = _PISTA_GENERAL_NIVEL.sub("", texto)
+    return texto.strip()
+
+
 def _aplicar_nivel(escenario: dict, nivel: int) -> dict:
     nivel = max(1, min(3, nivel))
     escenario["dificultad"] = nivel
@@ -503,21 +523,22 @@ def _aplicar_nivel(escenario: dict, nivel: int) -> dict:
     criterios = escenario.get("criterios", [])
     modulo = escenario.get("modulo", "")
     pista_general = PISTAS_MODULO.get(modulo, "Lee el enunciado e incluye los pasos básicos.")
+    enunciado_base = _quitar_decoracion_nivel(str(escenario.get("enunciado", "")))
 
     if nivel == 1:
         escenario["enunciado"] = (
             "[Nivel principiante — menos criterios, más ayuda]\n\n"
-            + escenario["enunciado"]
+            + enunciado_base
             + f"\n\n💡 Pista general: {pista_general}"
         )
         if len(criterios) > 2:
             escenario["criterios"] = sorted(criterios, key=lambda c: c.get("peso", 1))[:2]
     elif nivel == 3:
         escenario["enunciado"] = (
-            "[Nivel avanzado — sin pistas extra]\n\n" + escenario["enunciado"]
+            "[Nivel avanzado — sin pistas extra]\n\n" + enunciado_base
         )
     else:
-        escenario["enunciado"] = "[Nivel intermedio]\n\n" + escenario["enunciado"]
+        escenario["enunciado"] = "[Nivel intermedio]\n\n" + enunciado_base
 
     return escenario
 

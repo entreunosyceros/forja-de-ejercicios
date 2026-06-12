@@ -2,6 +2,7 @@
 package com.luegoestarde.forjaexamenes.servicio;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -130,5 +131,30 @@ class PruebaServicioBancoPortable {
         assertEquals("pendientes", pend.destino());
         assertEquals("nginx-incompleto.json", pend.nombreArchivo());
         assertTrue(Files.isRegularFile(tempDir.resolve("banco").resolve("pendientes").resolve("nginx-incompleto.json")));
+    }
+
+    @Test
+    void guardarEnBancoQuitaPrefijoNivelDelEnunciado() throws Exception {
+        Escenario conPrefijo = new ObjectMapper().readValue("""
+                {
+                  "id": "banco-prefijo",
+                  "modulo": "poo",
+                  "titulo": "Interfaces",
+                  "dificultad": 2,
+                  "enunciado": "[Nivel intermedio]\\n\\nImplementa Imprimible.",
+                  "criterios": [{"tipo": "contiene_todos", "terminos": ["implements"], "peso": 5}],
+                  "solucion_referencia": "class Pedido implements Imprimible {}"
+                }
+                """, Escenario.class);
+        ResultadoEvaluacion evalOk = new ResultadoEvaluacion();
+        evalOk.setPesoObtenido(5);
+        evalOk.setPesoTotal(5);
+        evalOk.setNota(10.0);
+        servicioPortable.guardarEjercicioLocal(conPrefijo, evalOk, "poo-interfaces");
+        String guardado = Files.readString(
+                tempDir.resolve("banco").resolve("aprobados").resolve("poo").resolve("poo-interfaces.json"));
+        assertFalse(guardado.contains("[Nivel intermedio]"));
+        assertTrue(guardado.contains("Implementa Imprimible."));
+        assertTrue(guardado.contains("\"dificultad\" : 2"));
     }
 }
