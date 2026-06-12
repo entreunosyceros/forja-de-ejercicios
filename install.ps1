@@ -1,9 +1,15 @@
 # Desarrollado por entreunosyceros - 2026
 # Instalador Forja de ejercicios (Windows / PowerShell 5.1+)
 #
-# Windows (recomendado): doble clic en install.bat o, en cmd/PowerShell:
-#   .\install.bat
-# Alternativa: powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1
+# Formas de ejecutarlo en Windows:
+#   1) RECOMENDADA: doble clic en install.bat (o ".\install.bat" en cmd/PowerShell).
+#      No hay que tocar la politica de ejecucion: el .bat ya aplica -ExecutionPolicy Bypass.
+#   2) PowerShell directo, en una sola linea (sin cambiar la politica global):
+#        powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1
+#   3) PowerShell directo con ".\install.ps1": ANTES hay que habilitar la ejecucion
+#      en esa sesion, porque por defecto Windows bloquea los scripts .ps1:
+#        Set-ExecutionPolicy -Scope Process Bypass
+#        .\install.ps1
 #
 # Requisitos que el script intenta instalar automaticamente:
 #   - JDK 21 (winget), Maven 3.9+ (descarga Apache / choco / winget), Python 3.10+ (winget)

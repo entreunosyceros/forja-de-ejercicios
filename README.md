@@ -57,13 +57,28 @@ Los scripts comprueban requisitos, crean carpetas locales, compilan el JAR, ofre
 | Linux / macOS | `chmod +x install.sh iniciar-forja.sh && ./install.sh` | `./iniciar-forja.sh` |
 | Windows | `.\install.bat` (doble clic o desde cmd/PowerShell) | `.\iniciar-forja.bat` |
 
-En Windows, en la carpeta `examenforge`:
+#### Windows: cómo lanzar el instalador
+
+En la carpeta `examenforge` tienes dos formas (elige una):
+
+**Opción A — recomendada (sin tocar nada):** doble clic en `install.bat`, o desde cmd/PowerShell:
 
 ```bat
 install.bat
 ```
 
-`install.bat` lanza PowerShell con `-ExecutionPolicy Bypass` solo para esa ejecución; no hace falta `Set-ExecutionPolicy` manual. Si prefieres PowerShell directamente: `powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1`
+`install.bat` arranca PowerShell con `-ExecutionPolicy Bypass` **solo para esa ejecución**, así que **no** necesitas escribir `Set-ExecutionPolicy`.
+
+**Opción B — ejecutar `install.ps1` directamente:** Windows bloquea los scripts `.ps1` por defecto, así que **antes** hay que habilitar la ejecución en esa sesión de PowerShell:
+
+```powershell
+Set-ExecutionPolicy -Scope Process Bypass
+.\install.ps1
+```
+
+> `-Scope Process` solo afecta a la ventana de PowerShell actual; no cambia la configuración del sistema. Equivale a la línea única `powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1`.
+
+En resumen: con `install.bat` no hace falta `Set-ExecutionPolicy`; si ejecutas `install.ps1` a mano, sí.
 
 Notas de Windows:
 
