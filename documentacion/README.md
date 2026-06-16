@@ -1,5 +1,7 @@
 # Apuntes del profesor (PDF)
 
+> **Nota:** esta carpeta (`documentacion/`) es donde van los **PDF de apuntes**. La documentación del proyecto está en [`doc_app/`](../doc_app/README.md).
+
 ## Flujo
 
 ```

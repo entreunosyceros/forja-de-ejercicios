@@ -1,0 +1,48 @@
+name: Pregunta o ayuda
+description: Dudas de instalación, uso en el aula o configuración
+title: "[Pregunta]: "
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Para dudas de uso revisa primero:
+        - [README](https://github.com/entreunosyceros/forja-de-ejercicios/blob/main/README.md)
+        - [Documentación (doc_app)](https://github.com/entreunosyceros/forja-de-ejercicios/blob/main/doc_app/README.md)
+        - [Problemas frecuentes](https://github.com/entreunosyceros/forja-de-ejercicios/blob/main/doc_app/problemas-frecuentes.md)
+        - Ayuda integrada en la web: `/como-funciona`
+
+        Si es un fallo reproducible, usa la plantilla **Informe de error**.
+
+  - type: dropdown
+    id: tema
+    attributes:
+      label: Tema
+      options:
+        - Instalación (Linux / macOS / Windows)
+        - Arranque y puerto 8080
+        - Cuentas y contraseñas
+        - Gemini / clave API / PDF
+        - Banco y carpeta compartida (aula)
+        - Docker de práctica
+        - Uso como alumno
+        - Uso como profesor
+        - Otro
+    validations:
+      required: true
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Tu pregunta
+      description: Sé concreto/a: sistema operativo, pasos que ya probaste y mensaje de error si lo hay
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Confirmación
+      options:
+        - label: He revisado la documentación enlazada arriba
+          required: true

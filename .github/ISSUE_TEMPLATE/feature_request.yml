@@ -1,0 +1,72 @@
+name: Solicitud de mejora
+description: Proponer una nueva función o mejora en Forja de ejercicios
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Describe el problema o la necesidad antes que la solución concreta. Así es más fácil valorar la propuesta.
+        Documentación del proyecto: [doc_app/README.md](https://github.com/entreunosyceros/forja-de-ejercicios/blob/main/doc_app/README.md).
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Área
+      options:
+        - Generación de ejercicios (plantillas / generador.py)
+        - Corrección / criterios / alias de comandos
+        - Apuntes PDF + Gemini (docs_*)
+        - Banco de ejercicios / revisión profesor
+        - Seguimiento de alumnos / entregas / CSV
+        - Interfaz web (portada, ejercicio, perfil)
+        - Dificultad adaptativa / estadísticas
+        - Docker de práctica
+        - Instalación / arranque (scripts)
+        - Documentación (README, doc_app, ayuda web)
+        - Otro
+    validations:
+      required: true
+
+  - type: dropdown
+    id: rol
+    attributes:
+      label: Rol principal afectado
+      options:
+        - Alumno
+        - Profesor
+        - Ambos
+        - Desarrollador / mantenedor
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: ¿Qué problema o necesidad quieres resolver?
+      placeholder: "Ej.: Tras importar el banco del profesor, el alumno no ve los ejercicios en la portada hasta reiniciar la app."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Solución propuesta (opcional)
+      description: Cómo imaginas que debería funcionar
+    validations:
+      required: false
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternativas consideradas
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Alcance
+      options:
+        - label: Estoy dispuesto/a a contribuir con un PR si la propuesta encaja
+          required: false
