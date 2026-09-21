@@ -12,7 +12,6 @@ Orígenes soportados (misma salida):
 from __future__ import annotations
 
 import json
-import re
 from pathlib import Path
 from typing import Any
 
@@ -31,7 +30,6 @@ import criterios
 
 RAIZ = Path(__file__).resolve().parent
 RUTA_VOCABULARIO = RAIZ / "vocabulario_claves.json"
-RUTA_ESQUEMA = RAIZ / "esquema_escenario.json"
 
 CAMPOS_OBLIGATORIOS = ("titulo", "enunciado", "criterios", "solucion_referencia")
 MIN_PALABRAS_CLAVE = 2
@@ -360,10 +358,6 @@ def _enunciado_desde_propuesta(propuesta: dict[str, str], tipo: str = "informati
     pregunta = propuesta["pregunta"]
     claves = propuesta["palabras_clave"][:6]
     return f"{pregunta}\n\n{texto_enunciado_alumno(tipo, claves)}"
-
-
-def _solucion_desde_claves(palabras: list[str]) -> str:
-    return "\n".join(p.strip() for p in palabras if p and str(p).strip())
 
 
 def _distribuir_pesos(cantidad: int) -> list[int]:

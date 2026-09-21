@@ -16,8 +16,6 @@ import generador_gemini
 RAIZ = Path(__file__).resolve().parent
 CARPETA_INDICE = RAIZ / "indice"
 
-MODULOS_DOCS: tuple[str, ...] = ()
-
 
 def _generar_identificador() -> str:
     return comun.generar_identificador()
@@ -163,7 +161,6 @@ def registrar_modulos_documentacion(
     pistas_modulo: dict[str, str],
     carpeta_indice: Path = CARPETA_INDICE,
 ) -> tuple[str, ...]:
-    global MODULOS_DOCS
     modulos = listar_modulos_indexados(carpeta_indice)
     for modulo in modulos:
         generadores[modulo] = _fabrica_generador(modulo)
@@ -171,5 +168,4 @@ def registrar_modulos_documentacion(
             "Repasa el fragmento de tus apuntes indicado al final si suspendes; "
             "solo usa lo que el profesor explicó en ese material."
         )
-    MODULOS_DOCS = tuple(modulos)
-    return MODULOS_DOCS
+    return tuple(modulos)

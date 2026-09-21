@@ -19,38 +19,6 @@ def _generar_identificador() -> str:
     return comun.generar_identificador()
 
 
-def generar_redes() -> dict:
-    v1, v2 = random.sample([10, 20, 30, 40, 50, 100], 2)
-    puerto = random.randint(8000, 9999)
-    return {
-        "id": _generar_identificador(),
-        "modulo": "redes",
-        "titulo": f"VLAN {v1} no comunica con VLAN {v2}",
-        "enunciado": (
-            f"En el switch del aula, la VLAN {v1} (192.168.{v1}.0/24) no puede "
-            f"comunicar con la VLAN {v2} (192.168.{v2}.0/24). El servicio en "
-            f"puerto {puerto} tampoco responde entre subredes.\n\n"
-            "Indica los comandos que ejecutarías para diagnosticar y habilitar "
-            "el enrutamiento entre VLANs (ip route, vlan, sysctl, etc.)."
-        ),
-        "parametros": {"vlan_a": v1, "vlan_b": v2, "puerto": puerto},
-        "criterios": [
-            {"tipo": "regex", "patron": r"(vlan|ip\s+link)", "peso": 1},
-            {"tipo": "regex", "patron": rf"vlan.*{re.escape(str(v1))}|{re.escape(str(v1))}.*vlan", "peso": 2},
-            {"tipo": "regex", "patron": rf"vlan.*{re.escape(str(v2))}|{re.escape(str(v2))}.*vlan", "peso": 2},
-            {"tipo": "regex", "patron": r"ip\s+route|ip\s+routing|sysctl.*ip_forward", "peso": 3},
-        ],
-        "solucion_referencia": (
-            f"ip link add link eth0 name eth0.{v1} type vlan id {v1}\n"
-            f"ip link add link eth0 name eth0.{v2} type vlan id {v2}\n"
-            f"ip addr add 192.168.{v1}.1/24 dev eth0.{v1}\n"
-            f"ip addr add 192.168.{v2}.1/24 dev eth0.{v2}\n"
-            "sysctl -w net.ipv4.ip_forward=1\n"
-            f"ip route add 192.168.{v2}.0/24 via 192.168.{v1}.1"
-        ),
-    }
-
-
 def generar_sistemas() -> dict:
     usuario = random.choice(["alumno", "estudiante", "user01", "dev"])
     ruta = random.choice(["/var/www/html", "/var/www", "/srv/app", "/opt/web"])
@@ -84,69 +52,6 @@ def generar_sistemas() -> dict:
             f"sudo chown -R {usuario}:www-data {ruta}\n"
             f"sudo chmod -R {perm} {ruta}\n"
             f"sudo setfacl -R -m u:{usuario}:rwx {ruta}"
-        ),
-    }
-
-
-def generar_bd() -> dict:
-    tabla = random.choice(["pedidos", "clientes", "facturas", "logs"])
-    columna = random.choice(["fecha", "email", "estado", "codigo"])
-    segundos = random.choice([8, 10, 12, 15])
-    return {
-        "id": _generar_identificador(),
-        "modulo": "bd",
-        "titulo": f"La consulta sobre '{tabla}' tarda {segundos} segundos",
-        "enunciado": (
-            f"La consulta `SELECT * FROM {tabla} WHERE {columna} = ?` tarda "
-            f"{segundos} segundos con 2 millones de filas. El DBA sospecha "
-            "falta de índice.\n\n"
-            "Escribe los comandos SQL para analizar (EXPLAIN) y optimizar "
-            "(CREATE INDEX) la consulta."
-        ),
-        "parametros": {"tabla": tabla, "columna": columna, "segundos": segundos},
-        "criterios": [
-            {"tipo": "regex", "patron": r"EXPLAIN", "peso": 3, "banderas": "i"},
-            {
-                "tipo": "regex",
-                "patron": (
-                    rf"CREATE\s+INDEX\s+\S+\s+ON\s+{re.escape(tabla)}"
-                    rf"|CREATE\s+INDEX[\s\S]{{0,40}}\({re.escape(columna)}\)"
-                ),
-                "peso": 4,
-                "banderas": "i",
-            },
-            {"tipo": "regex", "patron": re.escape(tabla), "peso": 1, "banderas": "i"},
-        ],
-        "solucion_referencia": (
-            f"EXPLAIN SELECT * FROM {tabla} WHERE {columna} = 'valor';\n"
-            f"CREATE INDEX idx_{tabla}_{columna} ON {tabla}({columna});"
-        ),
-    }
-
-
-def generar_docker() -> dict:
-    contenedor = random.choice(["api-web", "backend", "nginx-app", "worker"])
-    puerto = random.randint(3000, 9000)
-    return {
-        "id": _generar_identificador(),
-        "modulo": "docker",
-        "titulo": f"El contenedor '{contenedor}' no arranca",
-        "enunciado": (
-            f"El contenedor '{contenedor}' (puerto {puerto}) sale con estado "
-            "Exited (1). docker-compose.yml está en /home/alumno/practica.\n\n"
-            "Indica la secuencia de comandos para diagnosticar logs y "
-            "reconstruir/levantar el servicio."
-        ),
-        "parametros": {"contenedor": contenedor, "puerto": puerto},
-        "criterios": [
-            {"tipo": "regex", "patron": r"docker\s+logs", "peso": 3, "banderas": "i"},
-            {"tipo": "regex", "patron": r"docker(-compose)?\s+(ps|inspect)", "peso": 2, "banderas": "i"},
-            {"tipo": "regex", "patron": r"docker-compose\s+up.*--build|docker\s+compose\s+up.*--build", "peso": 4, "banderas": "i"},
-        ],
-        "solucion_referencia": (
-            f"docker logs {contenedor}\n"
-            f"docker-compose ps\n"
-            "docker-compose up -d --build"
         ),
     }
 
@@ -499,36 +404,6 @@ def generar_bd_jdbc() -> dict:
             f"  ps.setString(1, valor);\n"
             f"  ResultSet rs = ps.executeQuery();\n"
             f"}}"
-        ),
-    }
-
-
-def generar_git() -> dict:
-    archivo = random.choice(["Main.java", "App.java", "config.yml", "index.html"])
-    rama = random.choice(["feature/login", "feature/api", "hotfix/permisos"])
-    return {
-        "id": _generar_identificador(),
-        "modulo": "git",
-        "titulo": f"Conflicto de merge en {archivo}",
-        "enunciado": (
-            f"Tras `git merge {rama}` hay conflictos en '{archivo}'. "
-            "El merge debe completarse o abortarse de forma controlada.\n\n"
-            "Escribe los comandos git para revisar el estado, resolver o "
-            "abortar el merge y dejar el repositorio limpio."
-        ),
-        "parametros": {"archivo": archivo, "rama": rama},
-        "criterios": [
-            {"tipo": "regex", "patron": r"git\s+status", "peso": 2, "banderas": "i"},
-            {"tipo": "regex", "patron": r"git\s+merge\s+--abort|git\s+add|git\s+commit", "peso": 3, "banderas": "i"},
-            {"tipo": "regex", "patron": re.escape(archivo), "peso": 1, "banderas": "i"},
-        ],
-        "solucion_referencia": (
-            "git status\n"
-            "# Opción A: abortar\n"
-            "git merge --abort\n"
-            "# Opción B: resolver\n"
-            f"git add {archivo}\n"
-            'git commit -m "Resuelve conflicto en merge"'
         ),
     }
 

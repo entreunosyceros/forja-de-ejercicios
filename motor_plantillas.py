@@ -42,10 +42,6 @@ def _cargar_plantillas() -> dict[str, dict[str, Any]]:
     return cargadas
 
 
-def modulos_plantilla() -> tuple[str, ...]:
-    return tuple(sorted(_cargar_plantillas().keys()))
-
-
 def _elegir_variables(plantilla: dict[str, Any], rng: random.Random) -> dict[str, Any]:
     variables_raw = plantilla.get("variables") or {}
     elegidas: dict[str, Any] = {}

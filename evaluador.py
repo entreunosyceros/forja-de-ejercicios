@@ -8,11 +8,6 @@ import sys
 from pathlib import Path
 
 import criterios
-from criterios import (  # noqa: F401 — API pública usada por otros módulos
-    banderas_regex,
-    es_obligatorio,
-    peso_criterio,
-)
 
 TOPE_NOTA_OBLIGATORIO_FALLIDO = 4.0
 
@@ -37,7 +32,7 @@ def evaluar(escenario: dict, respuesta: str) -> dict:
     criterios.normalizar_banderas_en_escenario(escenario)
     lista = escenario.get("criterios", [])
     detalles = [evaluar_criterio(respuesta, c) for c in lista]
-    peso_total = sum(peso_criterio(c) for c in lista) or 1
+    peso_total = sum(criterios.peso_criterio(c) for c in lista) or 1
     peso_obtenido = sum(float(d.get("peso_parcial", 0)) for d in detalles)
     nota_elementos = round(10 * peso_obtenido / peso_total, 1)
     nota_elementos = min(10.0, max(0.0, nota_elementos))

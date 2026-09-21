@@ -10,6 +10,14 @@ examenes/paquetes/
 .DS_Store
 __pycache__/
 *.pyc
+.pytest_cache/
+.hypothesis/
+.coverage
+.coverage.*
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+*.log
 
 # Claves API (Gemini) y secretos 
 .env
@@ -32,6 +40,8 @@ indice/*.json
 !**/datos/estadisticas/.gitkeep
 **/datos/historial/**
 !**/datos/historial/.gitkeep
+**/datos/entregas/**
+!**/datos/entregas/.gitkeep
 **/datos/tmp/**
 !**/datos/tmp/.gitkeep
 !**/datos/.gitkeep
@@ -42,6 +52,10 @@ banco/pendientes/
 !banco/.gitkeep
 tools/
 !tools/.gitkeep
+
+# Copias obsoletas: el runtime usa banco/ y datos/ en la raíz del proyecto.
+web/banco/
+web/datos/
 
 # Entorno virtual Python del instalador
 .venv/
