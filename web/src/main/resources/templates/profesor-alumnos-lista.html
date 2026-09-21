@@ -4,7 +4,9 @@
 <html lang="es" xmlns:th="http://www.thymeleaf.org"
       th:replace="~{plantilla :: plantilla(~{::section})}">
 <section class="pagina-profesor-alumnos">
-    <script type="application/json" id="datos-comparativa-clase" th:inline="text" th:utext="${comparativaJson != null ? comparativaJson : '{&quot;alumnos&quot;:[],&quot;modulos&quot;:[]}'}">{}</script>
+    <!-- th:text (no utext): escapa HTML y evita XSS si el nombre del alumno trae </script> -->
+    <script type="application/json" id="datos-comparativa-clase"
+            th:text="${comparativaJson != null ? comparativaJson : '{&quot;alumnos&quot;:[],&quot;modulos&quot;:[]}'}">{}</script>
     <div class="card card-wide">
         <h1>Seguimiento de alumnos</h1>
         <p class="hint">

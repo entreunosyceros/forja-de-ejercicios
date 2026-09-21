@@ -81,7 +81,7 @@ def probar_palabra_clave_docs():
         "peso": 5,
     }
     pista = pista_desde_criterio(criterio)
-    assert "docker run" in pista
+    assert "docker run" not in pista  # no filtrar el término a corregir
     assert "enunciado" in pista.lower()
     print("OK palabra clave docs")
 

@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.luegoestarde.forjaexamenes.modelo.Escenario;
 import com.luegoestarde.forjaexamenes.modelo.ResultadoEvaluacion;
+import com.luegoestarde.forjaexamenes.util.EscrituraAtomica;
 import com.luegoestarde.forjaexamenes.util.MapeadorJson;
 import com.luegoestarde.forjaexamenes.util.NombresBanco;
 import com.luegoestarde.forjaexamenes.util.TextoPlano;
@@ -114,7 +115,7 @@ public class ServicioBancoPortable {
         if (valida) {
             Path destino = rutaDestino(limpio);
             Files.createDirectories(destino.getParent());
-            mapeador.writerWithDefaultPrettyPrinter().writeValue(destino.toFile(), limpio);
+            EscrituraAtomica.json(mapeador, destino, limpio);
             Files.deleteIfExists(servicioBanco.carpetaPendientes().resolve(nombreArchivo + ".json"));
             servicioBanco.reconstruirCatalogo();
             String relativa = servicioBanco.directorioBanco()
@@ -142,7 +143,7 @@ public class ServicioBancoPortable {
             wrapper.set("propuesta", propuesta);
         }
         wrapper.set("escenario_preview", limpio);
-        mapeador.writerWithDefaultPrettyPrinter().writeValue(pendiente.toFile(), wrapper);
+        EscrituraAtomica.json(mapeador, pendiente, wrapper);
         String relativa = "pendientes/" + nombreArchivo + ".json";
         return new ResultadoGuardadoBanco(
                 "pendientes",
@@ -183,7 +184,7 @@ public class ServicioBancoPortable {
                         destino.getParent().getFileName().toString()));
                 boolean existia = Files.isRegularFile(destino);
                 Files.createDirectories(destino.getParent());
-                mapeador.writerWithDefaultPrettyPrinter().writeValue(destino.toFile(), limpio);
+                EscrituraAtomica.json(mapeador, destino, limpio);
                 if (existia) {
                     actualizados++;
                     detalles.add("Actualizado: " + id);

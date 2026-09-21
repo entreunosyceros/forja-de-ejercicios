@@ -38,10 +38,12 @@ def probar_construccion_desde_propuesta():
     assert resultado["nota"] >= 7
 
     ref = evaluador.evaluar(escenario, escenario["solucion_referencia"])
-    assert ref["peso_obtenido"] == ref["peso_total"]
+    assert all(d["cumplido"] for d in ref["detalles"])
+    assert abs(ref["peso_obtenido"] - ref["peso_total"]) < 0.01
 
 
-def probar_solucion_fallback_desde_claves():
+def probar_solucion_incompleta_no_se_rebaja():
+    """Ya no se sustituye la solución por una lista de claves (va a revisión)."""
     fragmento = "docker run nginx con puerto 8080 mapeado"
     propuesta = {
         "tema": "docker",
@@ -49,12 +51,15 @@ def probar_solucion_fallback_desde_claves():
         "palabras_clave": ["docker run", "nginx"],
         "solucion_modelo": "texto incompleto sin las claves",
     }
-    escenario = modelo_ejercicio.construir_escenario_desde_propuesta(
-        propuesta,
-        "docs_docker",
-        texto_fragmento=fragmento,
-    )
-    assert modelo_ejercicio.solucion_referencia_completa(escenario)
+    try:
+        modelo_ejercicio.construir_escenario_desde_propuesta(
+            propuesta,
+            "docs_docker",
+            texto_fragmento=fragmento,
+        )
+        assert False, "Debía rechazar solución incompleta"
+    except ValueError as e:
+        assert "revisión" in str(e).lower() or "criterios" in str(e).lower()
 
 
 def probar_rechaza_clave_vaga():
@@ -97,6 +102,7 @@ def probar_variantes_contiene_alguno():
         "pregunta": "Levanta nginx con docker run y publica el puerto 8080 al 80.",
         "palabras_clave": ["docker run", "nginx"],
         "variantes": {"nginx": ["nginx", "nginx:latest"]},
+        "solucion_modelo": "docker run -d nginx:latest -p 8080:80",
     }
     fragmento = "docker run nginx nginx:latest -p 8080:80"
     escenario = modelo_ejercicio.construir_escenario_desde_propuesta(
@@ -110,7 +116,7 @@ def probar_variantes_contiene_alguno():
 
 if __name__ == "__main__":
     probar_construccion_desde_propuesta()
-    probar_solucion_fallback_desde_claves()
+    probar_solucion_incompleta_no_se_rebaja()
     probar_rechaza_clave_vaga()
     probar_rechaza_clave_fuera_fragmento()
     probar_variantes_contiene_alguno()

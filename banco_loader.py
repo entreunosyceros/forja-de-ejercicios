@@ -93,10 +93,7 @@ def reconstruir_catalogo() -> dict[str, Any]:
         except (json.JSONDecodeError, OSError, ValueError):
             continue
     catalogo = {"actualizado": _ahora_iso(), "ejercicios": entradas}
-    CATALOGO.write_text(
-        json.dumps(catalogo, ensure_ascii=False, indent=2),
-        encoding="utf-8",
-    )
+    comun.escribir_json_atomico(CATALOGO, catalogo)
     return catalogo
 
 
@@ -157,7 +154,7 @@ def guardar_pendiente(
         "escenario_preview": escenario,
     }
     ruta = PENDIENTES / f"{eid}.json"
-    ruta.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    comun.escribir_json_atomico(ruta, payload)
     return ruta
 
 
@@ -191,7 +188,7 @@ def aprobar_pendiente(eid: str, subcarpeta: str | None = None) -> Path:
     params["aprobado_en"] = _ahora_iso()
     params["generado_con"] = params.get("generado_con", "gemini+modelo_ejercicio")
     escenario["parametros"] = params
-    destino.write_text(json.dumps(escenario, ensure_ascii=False, indent=2), encoding="utf-8")
+    comun.escribir_json_atomico(destino, escenario)
     (PENDIENTES / f"{eid}.json").unlink(missing_ok=True)
     reconstruir_catalogo()
     return destino

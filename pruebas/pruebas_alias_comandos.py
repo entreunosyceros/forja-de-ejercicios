@@ -14,6 +14,7 @@ def probar_variantes_docker_run():
     vars_ = variantes_termino("docker run")
     assert "docker container run" in [v.lower() for v in vars_]
     assert contiene_termino_flexible("docker container run -d nginx", "docker run")
+    assert not contiene_termino_flexible("No se puede concatenar la salida", "cat")
     print("OK variantes docker run")
 
 

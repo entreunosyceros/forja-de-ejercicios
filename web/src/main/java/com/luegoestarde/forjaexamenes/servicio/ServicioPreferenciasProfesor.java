@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
+import com.luegoestarde.forjaexamenes.util.EscrituraAtomica;
 
 /**
  * Preferencias del profesor editables desde la web (persistidas en datos/).
@@ -51,7 +52,7 @@ public class ServicioPreferenciasProfesor {
     private void guardar(PreferenciasProfesor prefs) throws IOException {
         Path fichero = ficheroPreferencias();
         Files.createDirectories(fichero.getParent());
-        mapeador.writerWithDefaultPrettyPrinter().writeValue(fichero.toFile(), prefs);
+        EscrituraAtomica.json(mapeador, fichero, prefs);
     }
 
     private Path ficheroPreferencias() {

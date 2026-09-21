@@ -9,6 +9,7 @@ import com.luegoestarde.forjaexamenes.modelo.EntregaAlumno;
 import com.luegoestarde.forjaexamenes.modelo.EntregaAlumno.AlumnoInfo;
 import com.luegoestarde.forjaexamenes.modelo.EstadisticasUsuario;
 import com.luegoestarde.forjaexamenes.modelo.EstadisticasUsuario.EstadisticasModulo;
+import com.luegoestarde.forjaexamenes.util.EscrituraAtomica;
 import com.luegoestarde.forjaexamenes.util.FechasForja;
 import com.luegoestarde.forjaexamenes.util.RutasUsuario;
 import java.io.IOException;
@@ -153,7 +154,7 @@ public class ServicioEntregasAlumno {
 
         Path fichero = ficheroImportada(profesorLogin, id);
         Files.createDirectories(fichero.getParent());
-        mapeador.writerWithDefaultPrettyPrinter().writeValue(fichero.toFile(), entrega);
+        EscrituraAtomica.json(mapeador, fichero, entrega);
         return new ResultadoImportacion(tipo, entrega);
     }
 
@@ -295,7 +296,7 @@ public class ServicioEntregasAlumno {
 
     private void guardarImportada(String profesorLogin, EntregaAlumno entrega) throws IOException {
         Path fichero = ficheroImportada(profesorLogin, entrega.getIdImportacion());
-        mapeador.writerWithDefaultPrettyPrinter().writeValue(fichero.toFile(), entrega);
+        EscrituraAtomica.json(mapeador, fichero, entrega);
     }
 
     private EntregaAlumno normalizarEntrada(JsonNode raiz) throws IOException {
@@ -331,11 +332,16 @@ public class ServicioEntregasAlumno {
         if (limpio.isEmpty()) {
             limpio = nombreAlumnoFichero(entrega);
         }
+        // Evitar inyección HTML/JS en la comparativa de clase (nombres visibles).
+        limpio = limpio.replaceAll("[<>\"'&\\\\]", "");
+        limpio = limpio.strip();
         if (limpio.length() > MAX_NOMBRE_ETIQUETA) {
             limpio = limpio.substring(0, MAX_NOMBRE_ETIQUETA);
         }
         if (limpio.isBlank()) {
-            throw new IOException("Indica un nombre para identificar al alumno.");
+            throw new IOException(
+                    "Indica un nombre válido para identificar al alumno "
+                            + "(sin caracteres < > \" ' & \\).");
         }
         return limpio;
     }

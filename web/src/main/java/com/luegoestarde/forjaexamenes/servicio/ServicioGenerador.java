@@ -42,37 +42,52 @@ public class ServicioGenerador {
             throw new IllegalStateException("No se encuentra generador.py en: " + script);
         }
 
-        List<String> comando = new ArrayList<>();
-        comando.add(InterpretePython.resolver(propiedades));
-        comando.add(script.toString());
-        comando.add("--formateado");
-        comando.add("--nivel");
-        comando.add(String.valueOf(nivel));
-        modulo.ifPresent(m -> {
-            comando.add("--modulo");
-            comando.add(m);
-        });
-        capitulo.filter(c -> !c.isBlank()).ifPresent(c -> {
-            comando.add("--capitulo");
-            comando.add(c);
-        });
-        seccion.filter(s -> !s.isBlank()).ifPresent(s -> {
-            comando.add("--seccion");
-            comando.add(s);
-        });
+        // El JSON va a fichero (--salida): stderr puede mezclarse en la tubería
+        // (avisos de pip/pypdf) y rompería el parseo si leemos stdout.
+        Path archivoSalida = Files.createTempFile("escenario-gen-", ".json");
+        try {
+            List<String> comando = new ArrayList<>();
+            comando.add(InterpretePython.resolver(propiedades));
+            comando.add(script.toString());
+            comando.add("--formateado");
+            comando.add("--nivel");
+            comando.add(String.valueOf(nivel));
+            comando.add("--salida");
+            comando.add(archivoSalida.toString());
+            modulo.ifPresent(m -> {
+                comando.add("--modulo");
+                comando.add(m);
+            });
+            capitulo.filter(c -> !c.isBlank()).ifPresent(c -> {
+                comando.add("--capitulo");
+                comando.add(c);
+            });
+            seccion.filter(s -> !s.isBlank()).ifPresent(s -> {
+                comando.add("--seccion");
+                comando.add(s);
+            });
 
-        ProcessBuilder constructorProceso = new ProcessBuilder(comando);
-        constructorProceso.directory(script.getParent().toFile());
-        constructorProceso.redirectErrorStream(true);
-        configurarEntornoGemini(constructorProceso);
+            ProcessBuilder constructorProceso = new ProcessBuilder(comando);
+            constructorProceso.directory(script.getParent().toFile());
+            constructorProceso.redirectErrorStream(true);
+            configurarEntornoGemini(constructorProceso);
 
-        EjecutorProcesoPython.Resultado resultado = EjecutorProcesoPython.ejecutar(
-                constructorProceso, propiedades.getTimeoutGeneradorSegundos());
-        if (resultado.codigo() != 0) {
-            throw new IllegalStateException(MensajesErrorGenerador.resumir(resultado.salida()));
+            EjecutorProcesoPython.Resultado resultado = EjecutorProcesoPython.ejecutar(
+                    constructorProceso, propiedades.getTimeoutGeneradorSegundos());
+            if (resultado.codigo() != 0) {
+                throw new IllegalStateException(MensajesErrorGenerador.resumir(resultado.salida()));
+            }
+            if (!Files.isRegularFile(archivoSalida) || Files.size(archivoSalida) == 0) {
+                throw new IllegalStateException(
+                        MensajesErrorGenerador.resumir(
+                                "generador.py no escribió el escenario. "
+                                        + resultado.salida()));
+            }
+
+            return mapeador.readValue(archivoSalida.toFile(), Escenario.class);
+        } finally {
+            Files.deleteIfExists(archivoSalida);
         }
-
-        return mapeador.readValue(resultado.salida().trim(), Escenario.class);
     }
 
     private void configurarEntornoGemini(ProcessBuilder constructorProceso) {

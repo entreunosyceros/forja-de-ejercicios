@@ -12,6 +12,7 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
+import com.luegoestarde.forjaexamenes.util.EscrituraAtomica;
 
 @Service
 public class ServicioConfiguracionGemini {
@@ -153,7 +154,7 @@ public class ServicioConfiguracionGemini {
     private void guardarEnDisco(ConfiguracionGeminiAlmacenada datos) throws IOException {
         Path fichero = ficheroConfiguracion();
         Files.createDirectories(fichero.getParent());
-        mapeador.writerWithDefaultPrettyPrinter().writeValue(fichero.toFile(), datos);
+        EscrituraAtomica.json(mapeador, fichero, datos);
     }
 
     private Path ficheroConfiguracion() {

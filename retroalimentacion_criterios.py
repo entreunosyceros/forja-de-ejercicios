@@ -215,37 +215,42 @@ def _esperado_pista_regex(patron: str) -> tuple[str, str, str]:
 
     if tokens:
         return (
-            f"Incluir: {', '.join(tokens[:3])}",
-            f"Tu respuesta debe mencionar o usar {nombres}.",
-            f"Revisa el enunciado: se esperaba que apareciera algo relacionado con "
-            f"{nombres}. Comprueba que no omitiste ese paso o concepto.",
+            "Completar el apartado del enunciado",
+            "Tu respuesta debe cubrir lo que pide este apartado del enunciado.",
+            "Revisa el enunciado: falta un paso o concepto clave. "
+            "No copies patrones técnicos; escribe la solución completa.",
         )
 
     simpl = _simplificar_patron(patron)
     return (
         simpl or "Criterio técnico",
-        f"Tu respuesta debe incluir elementos como: {simpl}." if simpl else "Completar el enunciado.",
-        "Vuelve a leer el enunciado y la solución de referencia: falta un paso o comando clave.",
+        "Tu respuesta debe cubrir lo que pide este apartado del enunciado.",
+        "Vuelve a leer el enunciado: falta un paso o comando clave.",
     )
 
 
 def _esperado_pista_contiene_todos(terminos: list[str]) -> tuple[str, str, str]:
-    lista = ", ".join(f"«{t}»" for t in terminos)
+    n = len(terminos)
     return (
-        f"Incluir: {lista}",
-        f"Debe aparecer en tu respuesta: {lista}.",
-        f"El ejercicio pide que uses o menciones {lista}. "
-        "Revisa el enunciado y comprueba que no falte ninguno de esos términos.",
+        f"Cubrir {n} conceptos del enunciado",
+        f"Debes cubrir {n} conceptos de este apartado (puntúa de forma proporcional).",
+        "Revisa el enunciado y completa los conceptos que faltan en tu respuesta.",
     )
 
 
 def _esperado_pista_contiene_alguno(terminos: list[str]) -> tuple[str, str, str]:
-    lista = ", ".join(f"«{t}»" for t in terminos)
     return (
-        f"Uno de: {lista}",
-        f"Debe incluir al menos uno de: {lista}.",
-        f"Válido cualquiera de estas formas: {lista}. "
-        "El concepto del enunciado debe quedar reflejado con alguna de ellas.",
+        "Incluir al menos una forma válida",
+        "Debes incluir al menos una de las formas válidas del concepto pedido.",
+        "Falta el concepto principal de este apartado. Revisa el enunciado.",
+    )
+
+
+def _esperado_pista_no_contiene(terminos: list[str]) -> tuple[str, str, str]:
+    return (
+        "Evitar elementos no deseados",
+        "Tu respuesta no debe incluir prácticas o elementos prohibidos en el enunciado.",
+        "Has incluido algo que el enunciado pide evitar. Revisa y corrige esa parte.",
     )
 
 
@@ -259,6 +264,9 @@ def descripcion_desde_criterio(criterio: dict[str, Any]) -> str:
     if tipo == "contiene_alguno":
         terminos = criterio.get("terminos") or []
         return _esperado_pista_contiene_alguno(terminos)[0] if terminos else "Incluir un término válido"
+    if tipo == "no_contiene":
+        terminos = criterio.get("terminos") or []
+        return _esperado_pista_no_contiene(terminos)[0] if terminos else "Evitar elementos no deseados"
     desc, _, _ = _esperado_pista_regex(criterio.get("patron", ""))
     return desc
 
@@ -271,11 +279,17 @@ def esperado_desde_criterio(criterio: dict[str, Any]) -> str:
     if tipo == "contiene_alguno":
         terminos = criterio.get("terminos") or []
         return _esperado_pista_contiene_alguno(terminos)[1] if terminos else "Criterio mal configurado"
+    if tipo == "no_contiene":
+        terminos = criterio.get("terminos") or []
+        return _esperado_pista_no_contiene(terminos)[1] if terminos else "Criterio mal configurado"
     _, esperado, _ = _esperado_pista_regex(criterio.get("patron", ""))
     return esperado
 
 
 def pista_desde_criterio(criterio: dict[str, Any]) -> str:
+    # Preferir siempre la pista escrita en el criterio (profesor / Gemini).
+    if criterio.get("pista") and not parece_patron_regex(str(criterio["pista"])):
+        return str(criterio["pista"]).strip()
     tipo = criterio.get("tipo", "regex")
     if tipo == "contiene_todos":
         terminos = criterio.get("terminos") or []
@@ -283,6 +297,9 @@ def pista_desde_criterio(criterio: dict[str, Any]) -> str:
     if tipo == "contiene_alguno":
         terminos = criterio.get("terminos") or []
         return _esperado_pista_contiene_alguno(terminos)[2] if terminos else "Revisa el enunciado."
+    if tipo == "no_contiene":
+        terminos = criterio.get("terminos") or []
+        return _esperado_pista_no_contiene(terminos)[2] if terminos else "Revisa el enunciado."
     _, _, pista = _esperado_pista_regex(criterio.get("patron", ""))
     return pista
 

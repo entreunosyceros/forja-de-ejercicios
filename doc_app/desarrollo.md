@@ -28,6 +28,10 @@
 ## Pruebas
 
 ```bash
+# Todas las suites Python (recomendado)
+pytest
+
+# O una a una:
 python3 pruebas/pruebas_generador_evaluador.py
 python3 pruebas/pruebas_modelo_ejercicio.py
 python3 pruebas/pruebas_evaluador_tipos.py
@@ -36,8 +40,11 @@ python3 pruebas/pruebas_banco_loader.py
 python3 pruebas/pruebas_indexador_docs.py
 python3 pruebas/pruebas_tipo_materia.py
 python3 pruebas/pruebas_retroalimentacion_criterios.py
+python3 pruebas/pruebas_regresion_corrector.py
 cd web && mvn test
 ```
+
+Hay integración continua en `.github/workflows/ci.yml` (`pytest` + `mvn test` con JDK 21).
 
 ## Licencia y agradecimientos
 

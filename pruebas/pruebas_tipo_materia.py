@@ -77,8 +77,12 @@ def probar_validacion_general():
 
 def probar_enunciado_por_tipo():
     claves = ["docker run", "nginx"]
-    assert "comandos" in texto_enunciado_alumno("informatica", claves)
-    assert "traducción" in texto_enunciado_alumno("idiomas", claves) or "frases" in texto_enunciado_alumno("idiomas", claves)
+    info = texto_enunciado_alumno("informatica", claves)
+    assert "comandos" in info
+    assert "docker run" not in info  # no filtrar las claves al alumno
+    assert "nginx" not in info
+    idiomas = texto_enunciado_alumno("idiomas", claves)
+    assert "traducción" in idiomas or "frases" in idiomas
     assert "fragmento" in texto_enunciado_alumno("general", claves)
     print("OK enunciado por tipo")
 

@@ -22,6 +22,7 @@ import java.util.stream.Stream;
 import jakarta.annotation.PostConstruct;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import com.luegoestarde.forjaexamenes.util.EscrituraAtomica;
 
 @Service
 public class ServicioBancoEjercicios {
@@ -135,7 +136,7 @@ public class ServicioBancoEjercicios {
         paramsObj.put("aprobado_en", Instant.now().toString());
         escenarioObj.set("parametros", paramsObj);
         Path destino = destinoDir.resolve(id + ".json");
-        mapeador.writerWithDefaultPrettyPrinter().writeValue(destino.toFile(), escenarioObj);
+        EscrituraAtomica.json(mapeador, destino, escenarioObj);
         Files.deleteIfExists(origen);
         reconstruirCatalogo();
     }
@@ -177,7 +178,7 @@ public class ServicioBancoEjercicios {
                                 datos.path("modulo").asText(""), subcarpeta);
                         if (!moduloNorm.equals(datos.path("modulo").asText(""))) {
                             datos.put("modulo", moduloNorm);
-                            mapeador.writerWithDefaultPrettyPrinter().writeValue(p.toFile(), datos);
+                            EscrituraAtomica.json(mapeador, p, datos);
                         }
                         entrada.put("modulo", moduloNorm);
                         entrada.put("titulo", datos.path("titulo").asText(p.getFileName().toString()));
@@ -193,8 +194,7 @@ public class ServicioBancoEjercicios {
         ObjectNode catalogo = mapeador.createObjectNode();
         catalogo.put("actualizado", Instant.now().toString());
         catalogo.set("ejercicios", ejercicios);
-        mapeador.writerWithDefaultPrettyPrinter()
-                .writeValue(banco.resolve("catalogo.json").toFile(), catalogo);
+        EscrituraAtomica.json(mapeador, banco.resolve("catalogo.json"), catalogo);
         eventos.publishEvent(new RecursosActualizadosEvent(this, Tipo.CATALOGO_BANCO));
     }
 

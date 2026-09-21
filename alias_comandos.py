@@ -5,6 +5,8 @@
 from __future__ import annotations
 
 import json
+import re
+import unicodedata
 from pathlib import Path
 from typing import Any
 
@@ -55,6 +57,15 @@ def cargar_grupos_alias() -> dict[str, list[str]]:
     return _CACHE
 
 
+def normalizar_texto(texto: str) -> str:
+    """Minúsculas, sin acentos y espacios colapsados (para comparar términos)."""
+    if not texto:
+        return ""
+    nfkd = unicodedata.normalize("NFKD", texto)
+    sin_acentos = "".join(c for c in nfkd if not unicodedata.combining(c))
+    return re.sub(r"\s+", " ", sin_acentos.lower()).strip()
+
+
 def variantes_termino(termino: str) -> list[str]:
     """Devuelve el término y sus alias conocidos (sin duplicados, orden estable)."""
     texto = (termino or "").strip()
@@ -71,7 +82,14 @@ def variantes_termino(termino: str) -> list[str]:
 
 
 def contiene_termino_flexible(respuesta: str, termino: str) -> bool:
-    respuesta_norm = (respuesta or "").lower()
-    return any(v.lower() in respuesta_norm for v in variantes_termino(termino))
-
-
+    """Busca el término (o alias) con límites de palabra; evita falsos positivos tipo «cat» en «concatenar»."""
+    texto = normalizar_texto(respuesta or "")
+    if not texto:
+        return False
+    for variante in variantes_termino(termino):
+        patron = normalizar_texto(variante)
+        if not patron:
+            continue
+        if re.search(rf"(?<!\w){re.escape(patron)}(?!\w)", texto):
+            return True
+    return False

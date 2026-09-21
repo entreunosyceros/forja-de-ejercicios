@@ -6,6 +6,7 @@ import com.luegoestarde.forjaexamenes.configuracion.PropiedadesForjaExamenes;
 import com.luegoestarde.forjaexamenes.modelo.EstadisticasUsuario;
 import com.luegoestarde.forjaexamenes.modelo.EstadisticasUsuario.EstadisticasModulo;
 import com.luegoestarde.forjaexamenes.modelo.EstadisticasUsuario.IntentoReciente;
+import com.luegoestarde.forjaexamenes.util.EscrituraAtomica;
 import com.luegoestarde.forjaexamenes.util.FechasForja;
 import com.luegoestarde.forjaexamenes.util.RutasUsuario;
 import java.io.IOException;
@@ -224,7 +225,7 @@ public class ServicioEstadisticasUsuario {
     private void guardar(String login, EstadisticasUsuario stats) throws IOException {
         Path fichero = ficheroEstadisticas(login);
         Files.createDirectories(fichero.getParent());
-        mapeador.writerWithDefaultPrettyPrinter().writeValue(fichero.toFile(), stats);
+        EscrituraAtomica.json(mapeador, fichero, stats);
     }
 
     private Path ficheroEstadisticas(String login) {

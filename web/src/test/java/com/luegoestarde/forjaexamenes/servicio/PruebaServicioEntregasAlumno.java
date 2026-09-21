@@ -132,4 +132,17 @@ class PruebaServicioEntregasAlumno {
         assertEquals(2, segunda.entrega().getEstadisticasServidor().getTotalIntentos());
         assertEquals(1, servicioEntregas.listarImportadas("profesor").size());
     }
+
+    @Test
+    void importarSanitizaNombreConMarcadoHtml() throws Exception {
+        EntregaAlumno original = servicioEntregas.construirExportacion("alumno", "Alumno Demo");
+        byte[] json = mapeador.writeValueAsBytes(original);
+
+        EntregaAlumno importada = servicioEntregas
+                .importar("profesor", json, "</script><img src=x onerror=alert(1)>")
+                .entrega();
+        assertFalse(importada.getNombreEtiqueta().contains("<"));
+        assertFalse(importada.getNombreEtiqueta().contains(">"));
+        assertFalse(importada.getNombreEtiqueta().contains("\""));
+    }
 }

@@ -189,18 +189,20 @@ def formato_respuesta_prompt(tipo: str) -> str:
 
 
 def texto_enunciado_alumno(tipo: str, claves: list[str]) -> str:
-    lista = ", ".join(claves[:6])
+    """Texto de ayuda al alumno sin filtrar las claves que se van a corregir."""
+    n = max(1, len(claves[:6])) if claves else 2
     if tipo == "informatica":
         return (
-            f"Escribe los comandos o el código en el cuadro de respuesta. "
-            f"Se comprobarán conceptos del material: {lista}."
+            "Escribe los comandos o el código en el cuadro de respuesta. "
+            f"Se comprobarán unos {n} conceptos del material (sin listarlos aquí: "
+            "léelos en el fragmento y en el enunciado)."
         )
     if tipo == "idiomas":
         return (
-            f"Escribe tu respuesta en el cuadro de texto (frases, traducción o explicación según el enunciado). "
-            f"Debe reflejar el material: {lista}."
+            "Escribe tu respuesta en el cuadro de texto (frases, traducción o explicación según el enunciado). "
+            f"Debe reflejar el material (se valoran unos {n} conceptos del fragmento)."
         )
     return (
-        f"Escribe tu respuesta en el cuadro de texto basándote en el fragmento de apuntes. "
-        f"Se tendrán en cuenta estos conceptos: {lista}."
+        "Escribe tu respuesta en el cuadro de texto basándote en el fragmento de apuntes. "
+        f"Se tendrán en cuenta unos {n} conceptos del material (léelos en el enunciado)."
     )

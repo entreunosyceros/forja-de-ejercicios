@@ -41,7 +41,7 @@ PROHIBIDAS_GLOBAL = frozenset({
     "informacion", "datos", "archivo", "programa", "aplicacion", "usuario",
 })
 
-TIPOS_CRITERIO = frozenset({"regex", "contiene_todos", "contiene_alguno"})
+TIPOS_CRITERIO = frozenset({"regex", "contiene_todos", "contiene_alguno", "no_contiene"})
 
 
 def _cargar_vocabulario() -> dict[str, Any]:
@@ -102,23 +102,21 @@ def solucion_referencia_completa(escenario: dict[str, Any], solucion: str | None
     """True si la solución cumple todos los criterios del escenario."""
     texto = (solucion if solucion is not None else escenario.get("solucion_referencia")) or ""
     resultado = evaluador.evaluar(escenario, texto)
-    return resultado.get("peso_obtenido") == resultado.get("peso_total")
+    detalles = resultado.get("detalles") or []
+    if not detalles:
+        return False
+    return all(d.get("cumplido") for d in detalles)
 
 
 def asegurar_solucion_referencia(escenario: dict[str, Any]) -> None:
-    """Ajusta o valida la solución de referencia para que pase todos los criterios."""
+    """Exige que la solución de referencia cumpla los criterios (sin rebajarla a claves)."""
     if solucion_referencia_completa(escenario):
         return
-    claves = _palabras_clave_desde_escenario(escenario)
-    if claves:
-        candidata = _solucion_desde_claves(claves)
-        if solucion_referencia_completa(escenario, candidata):
-            escenario["solucion_referencia"] = candidata
-            return
     resultado = evaluador.evaluar(escenario, escenario.get("solucion_referencia") or "")
     raise ValueError(
         "La solución de referencia no cumple todos los criterios "
-        f"(nota {resultado.get('nota', 0)}/10). Revísala antes de publicar el ejercicio."
+        f"(nota {resultado.get('nota', 0)}/10). "
+        "Envía el ejercicio a revisión; no se sustituye por una lista de palabras clave."
     )
 
 
@@ -140,15 +138,15 @@ def validar_escenario_verificable(datos: dict[str, Any]) -> None:
             patron = criterio.get("patron", "")
             if not patron:
                 raise ValueError("Criterio regex sin patrón")
-            re.compile(patron, _banderas_regex(criterio))
-        elif tipo == "contiene_todos":
+            re.compile(patron, evaluador.banderas_regex(criterio))
+        elif tipo in ("contiene_todos", "contiene_alguno", "no_contiene"):
             terminos = criterio.get("terminos") or []
             if not terminos:
-                raise ValueError("contiene_todos requiere lista terminos")
-        elif tipo == "contiene_alguno":
-            terminos = criterio.get("terminos") or []
-            if not terminos:
-                raise ValueError("contiene_alguno requiere lista terminos")
+                raise ValueError(f"{tipo} requiere lista terminos")
+        # Normaliza peso (el JSON del banco puede traer texto o negativos)
+        criterio["peso"] = evaluador.peso_criterio(criterio)
+        if "obligatorio" in criterio:
+            criterio["obligatorio"] = bool(criterio["obligatorio"])
 
 
 def validar_propuesta_gemini(
@@ -313,7 +311,12 @@ def construir_escenario_desde_propuesta(
     )
     titulo = _titulo_desde_propuesta(validada, titulo_coleccion)
     enunciado = _enunciado_desde_propuesta(validada, tipo)
-    solucion = validada["solucion_modelo"] or _solucion_desde_claves(validada["palabras_clave"])
+    solucion = (validada.get("solucion_modelo") or "").strip()
+    if not solucion:
+        raise ValueError(
+            "Gemini no devolvió una solución de referencia usable. "
+            "El ejercicio debe ir a revisión (no se inventa una lista de claves)."
+        )
 
     escenario: dict[str, Any] = {
         "modulo": modulo,
@@ -362,8 +365,3 @@ def _distribuir_pesos(cantidad: int) -> list[int]:
     if cantidad > 3:
         pesos[1] = 3
     return pesos
-
-
-def _banderas_regex(criterio: dict[str, Any]) -> int:
-    banderas_texto = criterio.get("banderas", criterio.get("flags", ""))
-    return re.IGNORECASE if str(banderas_texto).lower().find("i") >= 0 else 0

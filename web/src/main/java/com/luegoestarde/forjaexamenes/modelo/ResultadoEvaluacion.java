@@ -12,7 +12,7 @@ public class ResultadoEvaluacion {
     private String modulo;
     private double nota;
     private boolean aprobado;
-    private int pesoObtenido;
+    private double pesoObtenido;
     private int pesoTotal;
     private String retroalimentacion;
     private List<DetalleCriterio> detalles;
@@ -35,8 +35,8 @@ public class ResultadoEvaluacion {
     public boolean isAprobado() { return aprobado; }
     public void setAprobado(boolean aprobado) { this.aprobado = aprobado; }
 
-    public int getPesoObtenido() { return pesoObtenido; }
-    public void setPesoObtenido(int pesoObtenido) { this.pesoObtenido = pesoObtenido; }
+    public double getPesoObtenido() { return pesoObtenido; }
+    public void setPesoObtenido(double pesoObtenido) { this.pesoObtenido = pesoObtenido; }
 
     public int getPesoTotal() { return pesoTotal; }
     public void setPesoTotal(int pesoTotal) { this.pesoTotal = pesoTotal; }

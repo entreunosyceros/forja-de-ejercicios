@@ -7,6 +7,7 @@ import com.luegoestarde.forjaexamenes.modelo.Escenario;
 import com.luegoestarde.forjaexamenes.modelo.HistorialUsuario;
 import com.luegoestarde.forjaexamenes.modelo.IntentoHistorial;
 import com.luegoestarde.forjaexamenes.modelo.ResultadoEvaluacion;
+import com.luegoestarde.forjaexamenes.util.EscrituraAtomica;
 import com.luegoestarde.forjaexamenes.util.FechasForja;
 import com.luegoestarde.forjaexamenes.util.RutasUsuario;
 import java.io.IOException;
@@ -213,7 +214,7 @@ public class ServicioHistorialIntentos {
     private void guardar(String login, HistorialUsuario historial) throws IOException {
         Path fichero = ficheroHistorial(login);
         Files.createDirectories(fichero.getParent());
-        mapeador.writerWithDefaultPrettyPrinter().writeValue(fichero.toFile(), historial);
+        EscrituraAtomica.json(mapeador, fichero, historial);
     }
 
     private Path carpetaHistorial() {

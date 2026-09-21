@@ -20,6 +20,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import com.luegoestarde.forjaexamenes.util.EscrituraAtomica;
 
 @Service
 public class ServicioCuentasUsuarios implements UserDetailsService {
@@ -194,7 +195,7 @@ public class ServicioCuentasUsuarios implements UserDetailsService {
     private void guardarEnFichero(Path fichero) throws IOException {
         RegistroUsuarios registro = new RegistroUsuarios();
         registro.setUsuarios(new LinkedHashMap<>(usuarios));
-        mapeador.writerWithDefaultPrettyPrinter().writeValue(fichero.toFile(), registro);
+        EscrituraAtomica.json(mapeador, fichero, registro);
     }
 
     private void anadirUsuariosFaltantesDesdePropiedades() {

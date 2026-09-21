@@ -8,8 +8,12 @@ evitar divergencias de comportamiento entre capas.
 
 from __future__ import annotations
 
+import json
+import os
 import re
+import tempfile
 import uuid
+from pathlib import Path
 
 
 def slug(texto: str, defecto: str = "") -> str:
@@ -24,3 +28,27 @@ def slug(texto: str, defecto: str = "") -> str:
 def generar_identificador(longitud: int = 8) -> str:
     """Identificador corto y único basado en UUID4."""
     return str(uuid.uuid4())[:longitud]
+
+
+def escribir_json_atomico(ruta: Path | str, datos: object, *, indent: int = 2) -> None:
+    """Escribe JSON vía fichero temporal + ``os.replace`` (evita truncados)."""
+    destino = Path(ruta)
+    destino.parent.mkdir(parents=True, exist_ok=True)
+    texto = json.dumps(datos, ensure_ascii=False, indent=indent) + "\n"
+    fd, tmp_nombre = tempfile.mkstemp(
+        prefix=".tmp-",
+        suffix=".json",
+        dir=str(destino.parent),
+    )
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as tmp:
+            tmp.write(texto)
+            tmp.flush()
+            os.fsync(tmp.fileno())
+        os.replace(tmp_nombre, destino)
+    except Exception:
+        try:
+            os.unlink(tmp_nombre)
+        except OSError:
+            pass
+        raise
