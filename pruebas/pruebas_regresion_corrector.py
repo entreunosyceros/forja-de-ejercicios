@@ -13,19 +13,20 @@ from alias_comandos import contiene_termino_flexible
 
 
 def probar_limites_palabra_falsos_positivos():
-    casos = [
+    """Los seis casos del informe de revisión (punto 19)."""
+    no_debe_coincidir = [
         ("No se puede concatenar la salida", "cat"),
         ("Es false, no funciona", "ls"),
         ("El formulario esta mal", "rm"),
         ("Usa el metodo digital", "git"),
         ("Hice un commitment con el equipo", "commit"),
     ]
-    for respuesta, termino in casos:
+    for respuesta, termino in no_debe_coincidir:
         assert not contiene_termino_flexible(respuesta, termino), (
             f"falso positivo: «{termino}» en «{respuesta}»"
         )
     # Negar el comando sigue encontrando la palabra (límites de palabra no bastan);
-    # para eso existe el criterio no_contiene / obligatorio.
+    # para eso existen no_contiene / obligatorio.
     assert contiene_termino_flexible("No uses chmod nunca jamas", "chmod")
 
 
@@ -161,24 +162,35 @@ def probar_banco_docker_no_acepta_palabras_sueltas():
 
 
 def probar_banco_aprobados_solucion_pasa():
-    """Cada ejercicio aprobado debe sacar 10 con su propia solución de referencia."""
-    banco = RAIZ / "banco" / "aprobados"
-    if not banco.is_dir():
-        return
+    """Cada JSON en banco/aprobados debe sacar 10 con su solución de referencia."""
     import json
 
+    banco = RAIZ / "banco" / "aprobados"
+    assert banco.is_dir(), f"Falta el directorio del banco: {banco}"
+    rutas = sorted(p for p in banco.rglob("*.json") if p.is_file())
+    assert rutas, f"No hay ejercicios en {banco} (se espera al menos uno)"
+
     fallos = []
-    for ruta in banco.rglob("*.json"):
+    for ruta in rutas:
         try:
             datos = json.loads(ruta.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, OSError):
+        except (json.JSONDecodeError, OSError) as exc:
+            fallos.append(f"{ruta.relative_to(banco)}: JSON inválido ({exc})")
             continue
         if not datos.get("criterios"):
+            fallos.append(f"{ruta.relative_to(banco)}: sin criterios")
             continue
         sol = datos.get("solucion_referencia") or ""
+        if not str(sol).strip():
+            fallos.append(f"{ruta.relative_to(banco)}: sin solucion_referencia")
+            continue
         r = evaluador.evaluar(datos, sol)
-        if not all(d.get("cumplido") for d in r.get("detalles") or []):
-            fallos.append(f"{ruta.name}: nota={r.get('nota')}")
+        cumplidos = all(d.get("cumplido") for d in r.get("detalles") or [])
+        if not cumplidos or float(r.get("nota", 0)) != 10.0:
+            fallos.append(
+                f"{ruta.relative_to(banco)}: nota={r.get('nota')} "
+                f"cumplidos={cumplidos}"
+            )
     assert not fallos, "Soluciones de referencia que no pasan:\n" + "\n".join(fallos)
 
 

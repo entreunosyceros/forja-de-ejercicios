@@ -1,0 +1,4 @@
+# Dependencias opcionales para desarrollo / CI Python
+pytest>=8.0
+regex>=2024.1
+hypothesis>=6.100

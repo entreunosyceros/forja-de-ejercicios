@@ -30,6 +30,9 @@
 ## Pruebas
 
 ```bash
+# Deps de prueba (pytest, regex, hypothesis)
+pip install -r requirements-dev.txt
+
 # Todas las suites Python (recomendado)
 pytest
 
@@ -44,10 +47,17 @@ python3 pruebas/pruebas_alias_comandos.py
 python3 pruebas/pruebas_banco_loader.py
 python3 pruebas/pruebas_indexador_docs.py
 python3 pruebas/pruebas_tipo_materia.py
+python3 pruebas/pruebas_texto_plano.py
+python3 pruebas/pruebas_plantillas_criterios.py
+python3 pruebas/pruebas_redos_y_basura.py
 python3 pruebas/pruebas_retroalimentacion_criterios.py
 python3 pruebas/pruebas_regresion_corrector.py
+# Opcional (hypothesis): nota siempre en [0, 10]
+pytest pruebas/pruebas_hypothesis_nota.py
 cd web && mvn test
 ```
+
+Cobertura clave del corrector: falsos positivos de límites de palabra, pesos/banderas inválidos, ReDoS, y que **toda** `solucion_referencia` de `banco/aprobados/**/*.json` saque un 10.
 
 Hay integración continua en `.github/workflows/ci.yml` (`pytest` + `mvn test` con JDK 21).
 
