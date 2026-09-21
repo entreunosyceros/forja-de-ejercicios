@@ -1,0 +1,16 @@
+{
+  "modulo": "git",
+  "pista_modulo": "git status es siempre el primer paso.",
+  "variables": {
+    "archivo": ["Main.java", "App.java", "config.yml", "index.html"],
+    "rama": ["feature/login", "feature/api", "hotfix/permisos"]
+  },
+  "titulo": "Conflicto de merge en {archivo}",
+  "enunciado": "Tras `git merge {rama}` hay conflictos en '{archivo}'. El merge debe completarse o abortarse de forma controlada.\n\nEscribe los comandos git para revisar el estado, resolver o abortar el merge y dejar el repositorio limpio.",
+  "criterios": [
+    {"tipo": "regex", "patron": "git\\s+status", "peso": 2, "banderas": "i"},
+    {"tipo": "regex", "patron": "git\\s+merge\\s+--abort|git\\s+add|git\\s+commit", "peso": 3, "banderas": "i"},
+    {"tipo": "regex", "patron": "{archivo}", "peso": 1, "banderas": "i"}
+  ],
+  "solucion_referencia": "git status\n# Opción A: abortar\ngit merge --abort\n# Opción B: resolver\ngit add {archivo}\ngit commit -m \"Resuelve conflicto en merge\""
+}

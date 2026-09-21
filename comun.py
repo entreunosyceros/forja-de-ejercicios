@@ -31,14 +31,19 @@ def generar_identificador(longitud: int = 8) -> str:
 
 
 def escribir_json_atomico(ruta: Path | str, datos: object, *, indent: int = 2) -> None:
-    """Escribe JSON vía fichero temporal + ``os.replace`` (evita truncados)."""
+    """Escribe JSON vía fichero temporal + ``os.replace`` (evita truncados).
+
+    Los temporales se crean junto al destino; si existe ``datos/tmp`` (o ``TMPDIR``),
+    se usa esa carpeta cuando el destino no es escribible de forma segura.
+    """
     destino = Path(ruta)
     destino.parent.mkdir(parents=True, exist_ok=True)
     texto = json.dumps(datos, ensure_ascii=False, indent=indent) + "\n"
+    dir_tmp = _directorio_temporales(destino.parent)
     fd, tmp_nombre = tempfile.mkstemp(
         prefix=".tmp-",
         suffix=".json",
-        dir=str(destino.parent),
+        dir=str(dir_tmp),
     )
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as tmp:
@@ -52,3 +57,22 @@ def escribir_json_atomico(ruta: Path | str, datos: object, *, indent: int = 2) -
         except OSError:
             pass
         raise
+
+
+def _directorio_temporales(preferido: Path) -> Path:
+    """Prefiere ``TMPDIR`` / ``datos/tmp`` del proyecto; cae al directorio del destino."""
+    candidatos: list[Path] = []
+    env_tmp = os.environ.get("TMPDIR") or os.environ.get("FORJAEXAMENES_TMP")
+    if env_tmp:
+        candidatos.append(Path(env_tmp))
+    raiz = Path(__file__).resolve().parent
+    candidatos.append(raiz / "datos" / "tmp")
+    candidatos.append(preferido)
+    for cand in candidatos:
+        try:
+            cand.mkdir(parents=True, exist_ok=True)
+            if os.access(cand, os.W_OK):
+                return cand
+        except OSError:
+            continue
+    return preferido

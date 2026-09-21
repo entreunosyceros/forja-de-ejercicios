@@ -27,9 +27,11 @@ from tipo_materia import (
 from util_texto import sin_markdown
 
 import evaluador
+import criterios
 
 RAIZ = Path(__file__).resolve().parent
 RUTA_VOCABULARIO = RAIZ / "vocabulario_claves.json"
+RUTA_ESQUEMA = RAIZ / "esquema_escenario.json"
 
 CAMPOS_OBLIGATORIOS = ("titulo", "enunciado", "criterios", "solucion_referencia")
 MIN_PALABRAS_CLAVE = 2
@@ -41,7 +43,9 @@ PROHIBIDAS_GLOBAL = frozenset({
     "informacion", "datos", "archivo", "programa", "aplicacion", "usuario",
 })
 
-TIPOS_CRITERIO = frozenset({"regex", "contiene_todos", "contiene_alguno", "no_contiene"})
+TIPOS_CRITERIO = criterios.tipos_soportados()
+VERSION_ESCENARIO = 1
+
 
 
 def _cargar_vocabulario() -> dict[str, Any]:
@@ -126,25 +130,29 @@ def validar_escenario_verificable(datos: dict[str, Any]) -> None:
         if campo not in datos or not datos[campo]:
             raise ValueError(f"Falta el campo obligatorio: {campo}")
 
-    criterios = datos["criterios"]
-    if not isinstance(criterios, list) or len(criterios) < 2:
+    version = datos.get("version", VERSION_ESCENARIO)
+    try:
+        version_int = int(version)
+    except (TypeError, ValueError) as e:
+        raise ValueError(f"version de escenario inválida: {version}") from e
+    if version_int != VERSION_ESCENARIO:
+        raise ValueError(
+            f"Versión de escenario no soportada: {version_int} "
+            f"(esperada {VERSION_ESCENARIO}). Migra el ejercicio o regenera el banco."
+        )
+    datos["version"] = VERSION_ESCENARIO
+
+    criterios_lista = datos["criterios"]
+    if not isinstance(criterios_lista, list) or len(criterios_lista) < 2:
         raise ValueError("Se requieren al menos 2 criterios")
 
-    for criterio in criterios:
+    for criterio in criterios_lista:
         tipo = criterio.get("tipo", "regex")
         if tipo not in TIPOS_CRITERIO:
             raise ValueError(f"Tipo de criterio no soportado: {tipo}")
-        if tipo == "regex":
-            patron = criterio.get("patron", "")
-            if not patron:
-                raise ValueError("Criterio regex sin patrón")
-            re.compile(patron, evaluador.banderas_regex(criterio))
-        elif tipo in ("contiene_todos", "contiene_alguno", "no_contiene"):
-            terminos = criterio.get("terminos") or []
-            if not terminos:
-                raise ValueError(f"{tipo} requiere lista terminos")
-        # Normaliza peso (el JSON del banco puede traer texto o negativos)
-        criterio["peso"] = evaluador.peso_criterio(criterio)
+        instancia = criterios.desde_json(criterio)
+        instancia.validar()
+        criterio["peso"] = instancia.peso
         if "obligatorio" in criterio:
             criterio["obligatorio"] = bool(criterio["obligatorio"])
 
@@ -319,6 +327,7 @@ def construir_escenario_desde_propuesta(
         )
 
     escenario: dict[str, Any] = {
+        "version": VERSION_ESCENARIO,
         "modulo": modulo,
         "titulo": titulo,
         "enunciado": enunciado,

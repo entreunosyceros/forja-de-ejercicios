@@ -82,6 +82,14 @@ mvn -f web\pom.xml spring-boot:run
 
 Espera `Started AplicacionForjaExamenes` y abre **http://localhost:8080**. **Detener:** `Ctrl+C` en la misma terminal.
 
+Por defecto la app **solo escucha en localhost** (`server.address=127.0.0.1`). Para compartir en la red del aula (cambia antes las contraseñas demo):
+
+```bash
+FORJAEXAMENES_SERVER_ADDRESS=0.0.0.0 ./iniciar-forja.sh
+# o:
+java -jar web/target/forjaexamenes-web-1.0.0.jar --spring.profiles.active=red
+```
+
 > El `pom.xml` está en **`web/`**, no en la raíz. Si Maven muestra *«no POM in this directory»*, usa `-f web/pom.xml` o entra antes en `cd web`.
 
 ## Arranque manual sin instalador

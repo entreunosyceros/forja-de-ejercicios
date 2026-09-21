@@ -1,0 +1,17 @@
+{
+  "modulo": "docker",
+  "pista_modulo": "Mira los logs del contenedor antes de reconstruir.",
+  "variables": {
+    "contenedor": ["api-web", "backend", "nginx-app", "worker"],
+    "puerto": [3000, 4000, 5000, 8080, 8443]
+  },
+  "titulo": "El contenedor '{contenedor}' no arranca",
+  "enunciado": "El contenedor '{contenedor}' (puerto {puerto}) sale con estado Exited (1) justo al arrancar. El Dockerfile y el compose parecen correctos a primera vista.\n\nEscribe los comandos Docker para diagnosticar (logs, ps/inspect) y volver a levantar el servicio con rebuild.",
+  "criterios": [
+    {"tipo": "regex", "patron": "docker\\s+logs", "peso": 3, "banderas": "i"},
+    {"tipo": "regex", "patron": "docker(-compose)?\\s+(ps|inspect)|docker\\s+container\\s+(ls|inspect)", "peso": 2, "banderas": "i"},
+    {"tipo": "regex", "patron": "compose\\s+up|docker-compose\\s+up", "peso": 3, "banderas": "i"},
+    {"tipo": "regex", "patron": "{contenedor}", "peso": 1, "banderas": "i"}
+  ],
+  "solucion_referencia": "docker logs {contenedor}\ndocker ps -a\ndocker compose up -d --build"
+}

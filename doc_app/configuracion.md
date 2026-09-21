@@ -11,7 +11,8 @@ Claves de `application.properties` (o variables de entorno equivalentes):
 | Clave | Descripción |
 |-------|-------------|
 | `forjaexamenes.raiz` | Raíz del proyecto (por defecto `../` desde `web/`) |
-| `forjaexamenes.python-interprete` | `FORJAEXAMENES_PYTHON_INTERPRETE` — `python3` o `python` (el instalador lo fija en `.env`) |
+| `server.address` | `FORJAEXAMENES_SERVER_ADDRESS` — por defecto `127.0.0.1` (solo este PC). En aula/LAN o Docker: `0.0.0.0` o perfil `red` |
+| `forjaexamenes.python-interprete` | `FORJAEXAMENES_PYTHON_INTERPRETE` — `python3`, `python` o la ruta de `.venv` (el instalador lo fija en `.env`) |
 | `forjaexamenes.login.usuarios` | `FORJAEXAMENES_USUARIOS` — `usuario:clave` separados por coma; ver [Cambiar contraseñas](cuenta-perfil.md#cambiar-contraseñas-por-defecto) |
 | `forjaexamenes.login.profesores` | `FORJAEXAMENES_PROFESORES` — logins con rol profesor |
 | `forjaexamenes.modo-profesor` | `FORJAEXAMENES_MODO_PROFESOR` — solución visible |

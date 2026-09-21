@@ -84,18 +84,43 @@ actualizar_env "FORJAEXAMENES_PYTHON_INTERPRETE" "$PYTHON"
 
 # ── 2. Carpetas locales ───────────────────────────────────────
 info "Preparando carpetas de datos…"
-mkdir -p datos datos/estadisticas datos-practica indice banco/aprobados banco/pendientes examenes/paquetes documentacion
-ok "Carpetas listas (datos/, indice/, banco/, datos-practica/)"
+mkdir -p datos datos/tmp datos/estadisticas datos-practica indice banco/aprobados banco/pendientes examenes/paquetes documentacion
+ok "Carpetas listas (datos/, datos/tmp/, indice/, banco/, datos-practica/)"
 
-# ── 3. Dependencias Python (PDF + Gemini) ─────────────────────
+# ── 3. Dependencias Python (venv + PDF/Gemini) ────────────────
 echo ""
-info "Dependencias Python para apuntes PDF y Gemini (requirements-docs.txt)"
-if preguntar_si "¿Instalar dependencias Python ahora?"; then
-    "$PYTHON" -m pip install -r requirements-docs.txt
-    ok "Dependencias Python instaladas"
+info "Entorno virtual Python (.venv) y dependencias (requirements-docs.txt)"
+VENV_PYTHON=""
+if preguntar_si "¿Crear/actualizar .venv e instalar dependencias Python ahora?"; then
+    if [[ ! -d "$RAIZ/.venv" ]]; then
+        "$PYTHON" -m venv "$RAIZ/.venv"
+        ok "Creado .venv"
+    fi
+    # shellcheck disable=SC1091
+    if [[ -f "$RAIZ/.venv/bin/activate" ]]; then
+        # Preferir el intérprete del venv para la app
+        if [[ -x "$RAIZ/.venv/bin/python" ]]; then
+            VENV_PYTHON="$RAIZ/.venv/bin/python"
+        elif [[ -x "$RAIZ/.venv/bin/python3" ]]; then
+            VENV_PYTHON="$RAIZ/.venv/bin/python3"
+        fi
+    fi
+    if [[ -n "$VENV_PYTHON" ]]; then
+        "$VENV_PYTHON" -m pip install --upgrade pip
+        "$VENV_PYTHON" -m pip install -r requirements-docs.txt
+        actualizar_env "FORJAEXAMENES_PYTHON_INTERPRETE" "$VENV_PYTHON"
+        PYTHON="$VENV_PYTHON"
+        ok "Dependencias instaladas en .venv"
+    else
+        aviso "No se pudo activar .venv; instalando con el Python del sistema…"
+        "$PYTHON" -m pip install -r requirements-docs.txt
+        ok "Dependencias Python instaladas (sistema)"
+    fi
 else
-    aviso "Omitido. Instálalas más tarde: $PYTHON -m pip install -r requirements-docs.txt"
+    aviso "Omitido. Más tarde: $PYTHON -m venv .venv && .venv/bin/pip install -r requirements-docs.txt"
 fi
+
+actualizar_env "TMPDIR" "$RAIZ/datos/tmp"
 
 # ── 4. Compilar aplicación web ────────────────────────────────
 echo ""

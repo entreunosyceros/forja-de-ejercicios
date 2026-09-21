@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/entreunosyceros/forja-de-ejercicios/esquema_escenario.json",
+  "title": "Escenario Forja de ejercicios",
+  "description": "Contrato JSON entre generador Python y evaluador / web Java. version=1.",
+  "type": "object",
+  "required": ["titulo", "enunciado", "criterios", "solucion_referencia"],
+  "properties": {
+    "version": {
+      "type": "integer",
+      "const": 1,
+      "description": "Versión del contrato; incrementar al cambiar el formato de forma incompatible."
+    },
+    "id": { "type": "string" },
+    "modulo": { "type": "string" },
+    "titulo": { "type": "string", "minLength": 1 },
+    "enunciado": { "type": "string", "minLength": 1 },
+    "dificultad": { "type": "integer", "minimum": 1, "maximum": 3 },
+    "solucion_referencia": { "type": "string" },
+    "parametros": { "type": "object" },
+    "criterios": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "required": ["tipo", "peso"],
+        "properties": {
+          "tipo": {
+            "type": "string",
+            "enum": ["regex", "contiene_todos", "contiene_alguno", "no_contiene"]
+          },
+          "peso": { "type": "integer", "minimum": 1 },
+          "obligatorio": { "type": "boolean" },
+          "patron": { "type": "string" },
+          "banderas": { "type": "string" },
+          "flags": { "type": "string" },
+          "terminos": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "descripcion": { "type": "string" },
+          "esperado": { "type": "string" },
+          "pista": { "type": "string" }
+        }
+      }
+    }
+  }
+}

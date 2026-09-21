@@ -456,12 +456,16 @@ def generar_git() -> dict:
     }
 
 
+import generador_docs  # noqa: E402
+import banco_loader  # noqa: E402
+import motor_plantillas  # noqa: E402
+
 GENERADORES = {
-    "redes": generar_redes,
+    "redes": lambda: motor_plantillas.generar_desde_plantilla("redes"),
     "sistemas": generar_sistemas,
-    "bd": generar_bd,
-    "docker": generar_docker,
-    "git": generar_git,
+    "bd": lambda: motor_plantillas.generar_desde_plantilla("bd"),
+    "docker": lambda: motor_plantillas.generar_desde_plantilla("docker"),
+    "git": lambda: motor_plantillas.generar_desde_plantilla("git"),
     "poo": generar_poo,
     "bd_sql": generar_bd_sql,
     "bd_modelo": generar_bd_modelo,
@@ -482,9 +486,7 @@ PISTAS_MODULO = {
     "bd_jdbc": "Nunca concatenes SQL: usa ? y PreparedStatement.",
 }
 
-import generador_docs  # noqa: E402
-import banco_loader  # noqa: E402
-
+motor_plantillas.registrar_en_generadores(GENERADORES, PISTAS_MODULO)
 generador_docs.registrar_modulos_documentacion(GENERADORES, PISTAS_MODULO)
 banco_loader.registrar_en_generadores(GENERADORES, PISTAS_MODULO)
 MODULOS = tuple(sorted(GENERADORES.keys()))

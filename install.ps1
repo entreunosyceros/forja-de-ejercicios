@@ -789,10 +789,25 @@ foreach ($d in $dirs) {
 }
 Write-Ok "Carpetas listas."
 
-# Dependencias Python (pip)
+# Dependencias Python (venv + pip)
 Write-Host ""
-Write-Info "Dependencias Python (PDF + Gemini): requirements-docs.txt"
-if (Preguntar-Si "Instalar dependencias Python ahora?") {
+Write-Info "Entorno virtual Python (.venv) y dependencias (requirements-docs.txt)"
+New-Item -ItemType Directory -Force -Path (Join-Path $Raiz "datos\tmp") | Out-Null
+Actualizar-Env "TMPDIR" (Join-Path $Raiz "datos\tmp")
+if (Preguntar-Si "Crear/actualizar .venv e instalar dependencias Python ahora?") {
+    $venvDir = Join-Path $Raiz ".venv"
+    $venvPython = Join-Path $venvDir "Scripts\python.exe"
+    if (-not (Test-Path -LiteralPath $venvPython)) {
+        $venvCreate = Invoke-Native -FilePath $pythonExe -ArgumentList @("-m", "venv", $venvDir)
+        if ($venvCreate.ExitCode -ne 0) {
+            Write-Warn "No se pudo crear .venv; se usara el Python del sistema."
+        }
+    }
+    if (Test-Path -LiteralPath $venvPython) {
+        $pythonExe = $venvPython
+        Actualizar-Env "FORJAEXAMENES_PYTHON_INTERPRETE" $pythonExe
+        Write-Ok "Usando .venv: $pythonExe"
+    }
     $pipRes = Invoke-Native -FilePath $pythonExe -ArgumentList @(
         "-m", "pip", "install", "--upgrade", "pip"
     )
@@ -811,7 +826,7 @@ if (Preguntar-Si "Instalar dependencias Python ahora?") {
         Write-Ok "Dependencias Python instaladas."
     }
 } else {
-    Write-Warn "Omitido. Mas tarde: $pythonExe -m pip install -r requirements-docs.txt"
+    Write-Warn "Omitido. Mas tarde: $pythonExe -m venv .venv ; .\.venv\Scripts\pip install -r requirements-docs.txt"
 }
 
 # Compilar JAR

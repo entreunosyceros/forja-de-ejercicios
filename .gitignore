@@ -39,3 +39,11 @@ banco/pendientes/
 tools/
 !tools/.gitkeep
 
+# Entorno virtual Python del instalador
+.venv/
+venv/
+
+# Temporales de escritura atómica / subprocesos
+datos/tmp/
+!datos/tmp/.gitkeep
+

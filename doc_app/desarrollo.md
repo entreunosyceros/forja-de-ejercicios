@@ -16,7 +16,8 @@
 | Nuevos sinónimos de comandos | `vocabulario_claves.json` → `alias_comandos` |
 | Textos de corrección (esperado / pista) | `retroalimentacion_criterios.py`, `evaluador.py` |
 | Botón en portada | `templates/inicio.html` |
-| Nuevo módulo plantilla | `generador.py` + `pruebas/pruebas_generador_evaluador.py` |
+| Nuevo módulo plantilla | `plantillas/<modulo>.json` (+ opcional entrada en `generador.py`) |
+| Nuevo tipo de criterio | Clase en `criterios.py` con `@registrar` |
 | Nuevo tema PDF | `documentacion/<tema>/` + indexar |
 | Ejercicio verificado manual | `banco/aprobados/<tema>/<id>.json` + `reindexar` |
 | Exportar/importar banco entre PCs | `ServicioBancoPortable.java`, `ControladorBanco.java` |

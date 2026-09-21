@@ -46,6 +46,14 @@ El fichero incluye estadísticas del **servidor**, el **historial de ejercicios*
 
 Si varios alumnos practican en el **mismo equipo**, el profesor también puede verlos en «Alumnos en este servidor» sin importar ficheros.
 
+### Servidor en la LAN del aula
+
+Por defecto la web **solo escucha en localhost**. Si un PC actúa de servidor para otros puestos:
+
+1. Cambia las contraseñas demo (`FORJAEXAMENES_USUARIOS` / Perfil).
+2. Arranca con `FORJAEXAMENES_SERVER_ADDRESS=0.0.0.0` o `--spring.profiles.active=red`.
+3. Abre el puerto 8080 solo en la red del aula (firewall).
+
 ## Compartir ejercicios del banco (carpeta compartida)
 
 La app **no sincroniza** instalaciones entre profesor y alumnos. El banco local (`banco/aprobados/`) solo existe en cada equipo.

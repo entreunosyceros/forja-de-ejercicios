@@ -1,0 +1,18 @@
+{
+  "modulo": "redes",
+  "pista_modulo": "Empieza comprobando interfaces VLAN y el reenvío IP.",
+  "variables": {
+    "v1": [10, 20, 30, 40, 50, 100],
+    "v2": [10, 20, 30, 40, 50, 100],
+    "puerto": [8000, 8080, 8443, 9000, 9999]
+  },
+  "titulo": "VLAN {v1} no comunica con VLAN {v2}",
+  "enunciado": "En el switch del aula, la VLAN {v1} (192.168.{v1}.0/24) no puede comunicar con la VLAN {v2} (192.168.{v2}.0/24). El servicio en puerto {puerto} tampoco responde entre subredes.\n\nIndica los comandos que ejecutarías para diagnosticar y habilitar el enrutamiento entre VLANs (ip route, vlan, sysctl, etc.).",
+  "criterios": [
+    {"tipo": "regex", "patron": "(vlan|ip\\s+link)", "peso": 1},
+    {"tipo": "regex", "patron": "vlan.*{v1}|{v1}.*vlan", "peso": 2},
+    {"tipo": "regex", "patron": "vlan.*{v2}|{v2}.*vlan", "peso": 2},
+    {"tipo": "regex", "patron": "ip\\s+route|ip\\s+routing|sysctl.*ip_forward", "peso": 3}
+  ],
+  "solucion_referencia": "ip link add link eth0 name eth0.{v1} type vlan id {v1}\nip link add link eth0 name eth0.{v2} type vlan id {v2}\nip addr add 192.168.{v1}.1/24 dev eth0.{v1}\nip addr add 192.168.{v2}.1/24 dev eth0.{v2}\nsysctl -w net.ipv4.ip_forward=1\nip route add 192.168.{v2}.0/24 via 192.168.{v1}.1"
+}

@@ -9,23 +9,41 @@ services:
       - ./datos-practica:/home/alumno/practica
     stdin_open: true
     tty: true
+    read_only: true
+    tmpfs:
+      - /tmp:mode=1777,size=64m
+      - /run:mode=755,size=16m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
+      - NET_RAW
+      - NET_ADMIN
     networks:
       - forjaexamenes-red
-      
 
+  # Imagen web + montaje de la raíz del repo (scripts Python, banco, datos).
+  # El contenedor escucha en 0.0.0.0; el host solo publica en 127.0.0.1.
   web:
     build:
       context: ./web
       dockerfile: Dockerfile
     container_name: forjaexamenes-web
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
     volumes:
-      - ./examenes:/app/examenes
-      - ./generador.py:/app/generador.py:ro
-      - ./evaluador.py:/app/evaluador.py:ro
+      - ./:/forja
     environment:
-      - FORJAEXAMENES_RAIZ=/app
+      - FORJAEXAMENES_RAIZ=/forja
+      - FORJAEXAMENES_SERVER_ADDRESS=0.0.0.0
+      - FORJAEXAMENES_PYTHON_INTERPRETE=python3
+      - TMPDIR=/forja/datos/tmp
     depends_on:
       - practica
     networks:

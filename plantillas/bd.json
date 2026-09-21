@@ -1,0 +1,17 @@
+{
+  "modulo": "bd",
+  "pista_modulo": "Usa EXPLAIN antes de crear un índice.",
+  "variables": {
+    "tabla": ["pedidos", "clientes", "facturas", "logs"],
+    "columna": ["fecha", "email", "estado", "codigo"],
+    "segundos": [8, 10, 12, 15]
+  },
+  "titulo": "La consulta sobre '{tabla}' tarda {segundos} segundos",
+  "enunciado": "La consulta `SELECT * FROM {tabla} WHERE {columna} = ?` tarda {segundos} segundos con 2 millones de filas. El DBA sospecha falta de índice.\n\nEscribe los comandos SQL para analizar (EXPLAIN) y optimizar (CREATE INDEX) la consulta.",
+  "criterios": [
+    {"tipo": "regex", "patron": "EXPLAIN", "peso": 3, "banderas": "i"},
+    {"tipo": "regex", "patron": "CREATE\\s+INDEX.*{tabla}|INDEX.*{columna}", "peso": 4, "banderas": "i"},
+    {"tipo": "regex", "patron": "{tabla}", "peso": 1, "banderas": "i"}
+  ],
+  "solucion_referencia": "EXPLAIN SELECT * FROM {tabla} WHERE {columna} = 'valor';\nCREATE INDEX idx_{tabla}_{columna} ON {tabla}({columna});"
+}

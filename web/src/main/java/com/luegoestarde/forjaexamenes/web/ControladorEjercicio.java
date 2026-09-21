@@ -6,33 +6,20 @@ import com.luegoestarde.forjaexamenes.modelo.Escenario;
 import com.luegoestarde.forjaexamenes.modelo.ResultadoEvaluacion;
 import com.luegoestarde.forjaexamenes.servicio.AlmacenSesionesEjercicios;
 import com.luegoestarde.forjaexamenes.servicio.ServicioAccesoProfesor;
-import com.luegoestarde.forjaexamenes.servicio.ServicioCuentasUsuarios;
-import com.luegoestarde.forjaexamenes.servicio.ServicioDificultadAdaptativa;
-import com.luegoestarde.forjaexamenes.servicio.ServicioDificultadAdaptativa.AjusteDificultad;
-import com.luegoestarde.forjaexamenes.servicio.ServicioEvaluador;
-import com.luegoestarde.forjaexamenes.servicio.ServicioDocumentacion;
-import com.luegoestarde.forjaexamenes.servicio.ServicioEstadisticasUsuario;
-import com.luegoestarde.forjaexamenes.servicio.ServicioEntornoPractica;
-import com.luegoestarde.forjaexamenes.servicio.ServicioGenerador;
-import com.luegoestarde.forjaexamenes.servicio.ServicioHistorialIntentos;
-import com.luegoestarde.forjaexamenes.servicio.ServicioMetadatosEjercicio;
-import com.luegoestarde.forjaexamenes.servicio.ServicioPdf;
 import com.luegoestarde.forjaexamenes.servicio.ServicioBancoPortable;
 import com.luegoestarde.forjaexamenes.servicio.ServicioBancoPortable.ResultadoGuardadoBanco;
-import com.luegoestarde.forjaexamenes.servicio.ServicioPrecargaEjercicios;
+import com.luegoestarde.forjaexamenes.servicio.ServicioDificultadAdaptativa.AjusteDificultad;
+import com.luegoestarde.forjaexamenes.servicio.ServicioMetadatosEjercicio;
+import com.luegoestarde.forjaexamenes.servicio.ServicioPdf;
+import com.luegoestarde.forjaexamenes.servicio.ServicioSesionEjercicio;
 import com.luegoestarde.forjaexamenes.util.MapeadorJson;
 import com.luegoestarde.forjaexamenes.util.NombresBanco;
 import jakarta.servlet.http.HttpServletResponse;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Base64;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Random;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -52,56 +39,27 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @RequestMapping("/ejercicio")
 public class ControladorEjercicio {
 
-    private static final List<String> MODULOS_SORPRESA = List.of(
-            "redes", "sistemas", "bd", "docker", "git",
-            "poo", "bd_sql", "bd_modelo", "bd_transacciones", "bd_jdbc"
-    );
-
-    private final ServicioGenerador servicioGenerador;
-    private final ServicioEvaluador servicioEvaluador;
+    private final ServicioSesionEjercicio sesionEjercicio;
     private final ServicioPdf servicioPdf;
-    private final ServicioDocumentacion servicioDocumentacion;
     private final AlmacenSesionesEjercicios almacenSesiones;
     private final ServicioMetadatosEjercicio metadatosEjercicio;
-    private final ServicioEstadisticasUsuario servicioEstadisticas;
-    private final ServicioEntornoPractica servicioEntornoPractica;
-    private final ServicioCuentasUsuarios cuentasUsuarios;
     private final ServicioAccesoProfesor accesoProfesor;
-    private final ServicioDificultadAdaptativa servicioDificultadAdaptativa;
-    private final ServicioPrecargaEjercicios servicioPrecarga;
     private final ServicioBancoPortable servicioBancoPortable;
-    private final ServicioHistorialIntentos servicioHistorial;
     private final ObjectMapper mapeadorJson;
-    private final Random aleatorio = new Random();
 
-    public ControladorEjercicio(ServicioGenerador servicioGenerador,
-                              ServicioEvaluador servicioEvaluador,
-                              ServicioPdf servicioPdf,
-                              ServicioDocumentacion servicioDocumentacion,
-                              AlmacenSesionesEjercicios almacenSesiones,
-                              ServicioMetadatosEjercicio metadatosEjercicio,
-                              ServicioEstadisticasUsuario servicioEstadisticas,
-                              ServicioEntornoPractica servicioEntornoPractica,
-                              ServicioCuentasUsuarios cuentasUsuarios,
-                              ServicioAccesoProfesor accesoProfesor,
-                              ServicioDificultadAdaptativa servicioDificultadAdaptativa,
-                              ServicioPrecargaEjercicios servicioPrecarga,
-                              ServicioBancoPortable servicioBancoPortable,
-                              ServicioHistorialIntentos servicioHistorial) {
-        this.servicioGenerador = servicioGenerador;
-        this.servicioEvaluador = servicioEvaluador;
+    public ControladorEjercicio(
+            ServicioSesionEjercicio sesionEjercicio,
+            ServicioPdf servicioPdf,
+            AlmacenSesionesEjercicios almacenSesiones,
+            ServicioMetadatosEjercicio metadatosEjercicio,
+            ServicioAccesoProfesor accesoProfesor,
+            ServicioBancoPortable servicioBancoPortable) {
+        this.sesionEjercicio = sesionEjercicio;
         this.servicioPdf = servicioPdf;
-        this.servicioDocumentacion = servicioDocumentacion;
         this.almacenSesiones = almacenSesiones;
         this.metadatosEjercicio = metadatosEjercicio;
-        this.servicioEstadisticas = servicioEstadisticas;
-        this.servicioEntornoPractica = servicioEntornoPractica;
-        this.cuentasUsuarios = cuentasUsuarios;
         this.accesoProfesor = accesoProfesor;
-        this.servicioDificultadAdaptativa = servicioDificultadAdaptativa;
-        this.servicioPrecarga = servicioPrecarga;
         this.servicioBancoPortable = servicioBancoPortable;
-        this.servicioHistorial = servicioHistorial;
         this.mapeadorJson = MapeadorJson.snakeCase();
     }
 
@@ -112,7 +70,7 @@ public class ControladorEjercicio {
                         @RequestParam(required = false) String capitulo,
                         @RequestParam(required = false) String seccion,
                         Model modelo) throws Exception {
-        prepararNuevoEjercicio(modulo, sorpresa, nivel, capitulo, seccion, modelo);
+        sesionEjercicio.prepararNuevoEjercicio(modulo, sorpresa, nivel, capitulo, seccion, modelo);
         return "ejercicio";
     }
 
@@ -123,24 +81,16 @@ public class ControladorEjercicio {
                                  @RequestParam(required = false) String capitulo,
                                  @RequestParam(required = false) String seccion,
                                  Model modelo) throws Exception {
-        prepararNuevoEjercicio(modulo, sorpresa, nivel, capitulo, seccion, modelo);
+        sesionEjercicio.prepararNuevoEjercicio(modulo, sorpresa, nivel, capitulo, seccion, modelo);
         return "fragments/ejercicio-contenido :: contenido";
-    }
-
-    /** Genera y guarda el escenario y lo expone en el modelo (común a página y fragmento). */
-    private void prepararNuevoEjercicio(String modulo, Boolean sorpresa, Integer nivel,
-                                        String capitulo, String seccion, Model modelo) throws Exception {
-        Escenario escenario = crearYGuardarEscenario(modulo, sorpresa, nivel, capitulo, seccion);
-        modelo.addAttribute("escenario", escenario);
-        adjuntarEstadoSolucionReferencia(escenario, modelo);
     }
 
     @GetMapping("/{id}")
     public String ver(@PathVariable String id, Model modelo) throws Exception {
-        Escenario escenario = obtenerEscenario(id);
+        Escenario escenario = sesionEjercicio.obtenerEscenario(id);
         modelo.addAttribute("escenario", escenario);
         almacenSesiones.obtenerResultado(id).ifPresent(r -> modelo.addAttribute("resultado", r));
-        adjuntarEstadoSolucionReferencia(escenario, modelo);
+        sesionEjercicio.adjuntarEstadoSolucionReferencia(escenario, modelo);
         return "ejercicio";
     }
 
@@ -149,7 +99,7 @@ public class ControladorEjercicio {
                           @RequestParam String respuesta,
                           @RequestParam(required = false) Long tiempoSegundos,
                           RedirectAttributes atributosRedireccion) throws Exception {
-        ResultadoEvaluacion resultado = evaluarRespuesta(id, respuesta, tiempoSegundos);
+        ResultadoEvaluacion resultado = sesionEjercicio.evaluarRespuesta(id, respuesta, tiempoSegundos);
         atributosRedireccion.addFlashAttribute("resultado", resultado);
         if (tiempoSegundos != null) {
             atributosRedireccion.addFlashAttribute("tiempoSegundos", tiempoSegundos);
@@ -163,22 +113,21 @@ public class ControladorEjercicio {
                               @RequestParam(required = false) Long tiempoSegundos,
                               HttpServletResponse respuestaHttp,
                               Model modelo) throws Exception {
-        ResultadoEvaluacion resultado = evaluarRespuesta(id, respuesta, tiempoSegundos);
-        Escenario escenario = obtenerEscenario(id);
+        ResultadoEvaluacion resultado = sesionEjercicio.evaluarRespuesta(id, respuesta, tiempoSegundos);
+        Escenario escenario = sesionEjercicio.obtenerEscenario(id);
         modelo.addAttribute("escenario", escenario);
         modelo.addAttribute("resultado", resultado);
-        adjuntarEstadoSolucionReferencia(escenario, modelo);
-        long tiempoEfectivo = tiempoSegundos != null
-                ? tiempoSegundos
-                : almacenSesiones.obtenerTiempoSegundos(id).orElse(0L);
+        sesionEjercicio.adjuntarEstadoSolucionReferencia(escenario, modelo);
+        long tiempoEfectivo = sesionEjercicio.tiempoEfectivo(id, tiempoSegundos);
         if (tiempoSegundos != null) {
             modelo.addAttribute("tiempoSegundos", tiempoSegundos);
         } else if (tiempoEfectivo > 0) {
             modelo.addAttribute("tiempoSegundos", tiempoEfectivo);
         }
         String login = metadatosEjercicio.loginActual();
-        Optional<AjusteDificultad> ajuste = servicioDificultadAdaptativa.evaluarTrasIntento(login);
-        adjuntarCabeceraProgresoLocal(respuestaHttp, escenario, resultado, id, tiempoEfectivo, ajuste, login);
+        Optional<AjusteDificultad> ajuste = sesionEjercicio.evaluarAjusteDificultad();
+        sesionEjercicio.adjuntarCabeceraProgresoLocal(
+                respuestaHttp, escenario, resultado, id, tiempoEfectivo, ajuste, login);
         return "fragments/resultado-contenido :: contenido";
     }
 
@@ -186,12 +135,12 @@ public class ControladorEjercicio {
     public String resultado(@PathVariable String id,
                             @RequestParam(required = false) Long tiempoSegundos,
                             Model modelo) throws Exception {
-        Escenario escenario = obtenerEscenario(id);
+        Escenario escenario = sesionEjercicio.obtenerEscenario(id);
         ResultadoEvaluacion resultado = almacenSesiones.obtenerResultado(id)
                 .orElseThrow(() -> new IllegalArgumentException("Sin corrección para: " + id));
         modelo.addAttribute("escenario", escenario);
         modelo.addAttribute("resultado", resultado);
-        adjuntarEstadoSolucionReferencia(escenario, modelo);
+        sesionEjercicio.adjuntarEstadoSolucionReferencia(escenario, modelo);
         if (tiempoSegundos != null) {
             modelo.addAttribute("tiempoSegundos", tiempoSegundos);
         } else if (resultado.getTiempoSegundos() != null) {
@@ -204,10 +153,8 @@ public class ControladorEjercicio {
 
     @GetMapping("/{id}/pdf")
     public ResponseEntity<Resource> descargarPdf(@PathVariable String id) throws Exception {
-        Escenario escenario = obtenerEscenario(id);
+        Escenario escenario = sesionEjercicio.obtenerEscenario(id);
         ResultadoEvaluacion resultado = almacenSesiones.obtenerResultado(id).orElse(null);
-        // El PDF incluye la solución de referencia: el alumno solo puede
-        // descargarlo tras enviar la respuesta a corrección.
         if (!accesoProfesor.modoProfesorActivo() && resultado == null) {
             return ResponseEntity.status(403).build();
         }
@@ -221,25 +168,19 @@ public class ControladorEjercicio {
                 .body(recurso);
     }
 
-    /** El profesor puede ajustar la solución de referencia generada por Gemini antes de exportar. */
     @PostMapping("/{id}/solucion-referencia")
     @ResponseBody
     public Map<String, String> actualizarSolucionReferencia(
             @PathVariable String id,
-            @RequestParam(required = false) String solucionReferencia) throws Exception {
-        if (!accesoProfesor.modoProfesorActivo()) {
-            throw new IllegalArgumentException("Solo el profesor puede editar la solución de referencia.");
-        }
-        Escenario escenario = obtenerEscenario(id);
-        escenario.setSolucionReferencia(solucionReferencia != null ? solucionReferencia : "");
-        almacenSesiones.guardarEscenario(escenario);
+            @RequestParam(required = false) String solucionReferencia) {
+        sesionEjercicio.actualizarSolucionReferencia(id, solucionReferencia);
         return Map.of("ok", "true", "mensaje", "Solución de referencia guardada.");
     }
 
     @GetMapping("/{id}/json")
     @ResponseBody
     public ResponseEntity<byte[]> exportarJson(@PathVariable String id) throws Exception {
-        Escenario escenario = obtenerEscenario(id);
+        Escenario escenario = sesionEjercicio.obtenerEscenario(id);
         byte[] bytes = mapeadorJson.writerWithDefaultPrettyPrinter().writeValueAsBytes(escenario);
         String nombre = "ejercicio-" + escenario.getId() + ".json";
         return ResponseEntity.ok()
@@ -257,9 +198,8 @@ public class ControladorEjercicio {
         if (!accesoProfesor.modoProfesorActivo()) {
             throw new IllegalArgumentException("Solo el profesor puede guardar ejercicios en el banco.");
         }
-        Escenario escenario = obtenerEscenario(id);
-        String solucion = escenario.getSolucionReferencia() != null ? escenario.getSolucionReferencia() : "";
-        ResultadoEvaluacion evalReferencia = servicioEvaluador.evaluar(escenario, solucion);
+        Escenario escenario = sesionEjercicio.obtenerEscenario(id);
+        ResultadoEvaluacion evalReferencia = sesionEjercicio.evaluarSolucionReferencia(escenario);
         ResultadoGuardadoBanco guardado =
                 servicioBancoPortable.guardarEjercicioLocal(escenario, evalReferencia, nombreArchivo);
         Map<String, Object> respuesta = new LinkedHashMap<>();
@@ -282,7 +222,7 @@ public class ControladorEjercicio {
         if (!accesoProfesor.modoProfesorActivo()) {
             return ResponseEntity.status(403).build();
         }
-        Escenario escenario = obtenerEscenario(id);
+        Escenario escenario = sesionEjercicio.obtenerEscenario(id);
         byte[] bytes = servicioBancoPortable.exportarEjercicio(escenario);
         String slug = NombresBanco.resolverNombreArchivo(
                 nombreArchivo, escenario.getTitulo(), escenario.getId());
@@ -291,146 +231,5 @@ public class ControladorEjercicio {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + nombre + "\"")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(bytes);
-    }
-
-    private List<String> modulosParaSorpresa() {
-        List<String> lista = new ArrayList<>(MODULOS_SORPRESA);
-        if (servicioDocumentacion.geminiConfigurado()) {
-            lista.addAll(servicioDocumentacion.listarIdsModulos());
-        }
-        return lista;
-    }
-
-    private Escenario crearYGuardarEscenario(String modulo, Boolean sorpresa, Integer nivel,
-                                             String capitulo, String seccion) throws Exception {
-        Escenario escenario = crearEscenario(modulo, sorpresa, nivel, capitulo, seccion);
-        if (servicioEntornoPractica.debeLimpiarAlNuevoEjercicio(escenario.getModulo())) {
-            servicioEntornoPractica.limpiar();
-        }
-        metadatosEjercicio.marcarEscenario(
-                escenario,
-                metadatosEjercicio.loginActual(),
-                metadatosEjercicio.nombreVisibleActual());
-        almacenSesiones.guardarEscenario(escenario);
-        return escenario;
-    }
-
-    private Escenario crearEscenario(String modulo, Boolean sorpresa, Integer nivel,
-                                     String capitulo, String seccion) throws Exception {
-        Optional<String> moduloOpt;
-        if (Boolean.TRUE.equals(sorpresa) || modulo == null || modulo.isBlank()) {
-            if (Boolean.TRUE.equals(sorpresa)) {
-                List<String> candidatos = modulosParaSorpresa();
-                String elegido = candidatos.get(aleatorio.nextInt(candidatos.size()));
-                moduloOpt = Optional.of(elegido);
-            } else {
-                moduloOpt = Optional.empty();
-            }
-        } else {
-            moduloOpt = Optional.of(modulo);
-        }
-        int nivelEfectivo = resolverNivelEfectivo(moduloOpt, nivel);
-
-        String mod = moduloOpt.orElse("");
-        boolean sinFiltro = (capitulo == null || capitulo.isBlank())
-                && (seccion == null || seccion.isBlank());
-        if (mod.startsWith("docs_") && sinFiltro) {
-            Optional<Escenario> precargado = servicioPrecarga.tomar(mod, nivelEfectivo);
-            if (precargado.isPresent()) {
-                return precargado.get();
-            }
-        }
-
-        return servicioGenerador.generar(
-                moduloOpt,
-                nivelEfectivo,
-                Optional.ofNullable(capitulo),
-                Optional.ofNullable(seccion));
-    }
-
-    private int resolverNivelEfectivo(Optional<String> moduloOpt, Integer nivelParam) {
-        String login = metadatosEjercicio.loginActual();
-        // Cualquier usuario autenticado (alumno o profesor) usa el nivel fijado en su perfil.
-        // En alumnos, la dificultad adaptativa va actualizando ese mismo nivel guardado.
-        if (login != null && !login.isBlank()) {
-            return cuentasUsuarios.obtenerNivelGemini(login);
-        }
-        if (nivelParam != null) {
-            return Math.max(1, Math.min(3, nivelParam));
-        }
-        return 2;
-    }
-
-    private ResultadoEvaluacion evaluarRespuesta(String id, String respuesta, Long tiempoSegundos) throws Exception {
-        Escenario escenario = obtenerEscenario(id);
-        String nombreVisible = metadatosEjercicio.nombreVisibleActual();
-        ResultadoEvaluacion resultado = servicioEvaluador.evaluar(escenario, respuesta);
-        metadatosEjercicio.enriquecerResultado(resultado, escenario, nombreVisible, tiempoSegundos);
-        almacenSesiones.guardarResultado(id, resultado, tiempoSegundos);
-        String login = metadatosEjercicio.loginActual();
-        servicioEstadisticas.registrar(
-                login,
-                escenario.getModulo(),
-                resultado.getNota(),
-                resultado.isAprobado(),
-                tiempoSegundos,
-                escenario.getTitulo(),
-                escenario.getId());
-        servicioHistorial.registrar(
-                login,
-                nombreVisible,
-                escenario,
-                resultado,
-                respuesta,
-                tiempoSegundos);
-        return resultado;
-    }
-
-    private void adjuntarCabeceraProgresoLocal(
-            HttpServletResponse respuestaHttp,
-            Escenario escenario,
-            ResultadoEvaluacion resultado,
-            String ejercicioId,
-            long tiempoSegundos,
-            Optional<AjusteDificultad> ajusteDificultad,
-            String login) throws Exception {
-        Map<String, Object> datos = new LinkedHashMap<>();
-        datos.put("modulo", escenario.getModulo());
-        datos.put("titulo", escenario.getTitulo());
-        datos.put("enunciado", escenario.getEnunciado());
-        datos.put("nota", resultado.getNota());
-        datos.put("aprobado", resultado.isAprobado());
-        datos.put("tiempoSegundos", tiempoSegundos);
-        datos.put("ejercicioId", ejercicioId);
-        ajusteDificultad.ifPresent(a -> {
-            datos.put("mensajeDificultad", a.mensaje());
-            datos.put("nivelDificultad", a.nivelNuevo());
-        });
-        if (login != null && !login.isBlank()) {
-            datos.put("nivelDificultad", cuentasUsuarios.obtenerNivelGemini(login));
-        }
-        String json = mapeadorJson.writeValueAsString(datos);
-        String b64 = Base64.getEncoder().encodeToString(json.getBytes(StandardCharsets.UTF_8));
-        respuestaHttp.setHeader("X-Forja-Progreso", b64);
-    }
-
-    private Escenario obtenerEscenario(String id) {
-        return almacenSesiones.obtenerEscenario(id, metadatosEjercicio.loginActual())
-                .orElseThrow(() -> new IllegalArgumentException("Ejercicio no encontrado: " + id));
-    }
-
-    private void adjuntarEstadoSolucionReferencia(Escenario escenario, Model modelo) {
-        if (!accesoProfesor.modoProfesorActivo()) {
-            return;
-        }
-        try {
-            String solucion = escenario.getSolucionReferencia() != null ? escenario.getSolucionReferencia() : "";
-            ResultadoEvaluacion evaluacion = servicioEvaluador.evaluar(escenario, solucion);
-            modelo.addAttribute("solucionReferenciaValida",
-                    evaluacion.getPesoObtenido() >= evaluacion.getPesoTotal());
-            modelo.addAttribute("notaSolucionReferencia", evaluacion.getNota());
-        } catch (Exception ignored) {
-            modelo.addAttribute("solucionReferenciaValida", false);
-        }
     }
 }
