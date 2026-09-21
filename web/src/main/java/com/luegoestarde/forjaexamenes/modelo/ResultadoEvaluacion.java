@@ -22,6 +22,14 @@ public class ResultadoEvaluacion {
     private String fechaHoraInicio;
     private String fechaHoraEvaluacion;
     private Long tiempoSegundos;
+    /** Nota solo por criterios comprobables (regex/términos), antes del juicio IA. */
+    private Double notaElementos;
+    /** Texto honesto: «X sobre los elementos que sé comprobar». */
+    private String etiquetaNota;
+    /** elementos | elementos_y_ia */
+    private String medicion;
+    private String modoCombinacion;
+    private CorrectorIa correctorIa;
 
     public String getExamenId() { return examenId; }
     public void setExamenId(String examenId) { this.examenId = examenId; }
@@ -67,6 +75,47 @@ public class ResultadoEvaluacion {
 
     public Long getTiempoSegundos() { return tiempoSegundos; }
     public void setTiempoSegundos(Long tiempoSegundos) { this.tiempoSegundos = tiempoSegundos; }
+
+    public Double getNotaElementos() { return notaElementos; }
+    public void setNotaElementos(Double notaElementos) { this.notaElementos = notaElementos; }
+
+    public String getEtiquetaNota() { return etiquetaNota; }
+    public void setEtiquetaNota(String etiquetaNota) { this.etiquetaNota = etiquetaNota; }
+
+    public String getMedicion() { return medicion; }
+    public void setMedicion(String medicion) { this.medicion = medicion; }
+
+    public String getModoCombinacion() { return modoCombinacion; }
+    public void setModoCombinacion(String modoCombinacion) { this.modoCombinacion = modoCombinacion; }
+
+    public CorrectorIa getCorrectorIa() { return correctorIa; }
+    public void setCorrectorIa(CorrectorIa correctorIa) { this.correctorIa = correctorIa; }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class CorrectorIa {
+        private boolean usado;
+        private Double nota;
+        private Boolean cumpleEnunciado;
+        private String comentario;
+        private String modelo;
+        private String error;
+        private String omitido;
+
+        public boolean isUsado() { return usado; }
+        public void setUsado(boolean usado) { this.usado = usado; }
+        public Double getNota() { return nota; }
+        public void setNota(Double nota) { this.nota = nota; }
+        public Boolean getCumpleEnunciado() { return cumpleEnunciado; }
+        public void setCumpleEnunciado(Boolean cumpleEnunciado) { this.cumpleEnunciado = cumpleEnunciado; }
+        public String getComentario() { return comentario; }
+        public void setComentario(String comentario) { this.comentario = comentario; }
+        public String getModelo() { return modelo; }
+        public void setModelo(String modelo) { this.modelo = modelo; }
+        public String getError() { return error; }
+        public void setError(String error) { this.error = error; }
+        public String getOmitido() { return omitido; }
+        public void setOmitido(String omitido) { this.omitido = omitido; }
+    }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class DetalleCriterio {

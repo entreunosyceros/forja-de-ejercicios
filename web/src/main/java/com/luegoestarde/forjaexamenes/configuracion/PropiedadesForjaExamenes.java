@@ -31,6 +31,10 @@ public class PropiedadesForjaExamenes {
     private boolean precargaEjerciciosActiva = true;
     private int precargaPorClave = 1;
     private int precargaHilos = 1;
+    /** Segundo corrector Gemini tras la nota por elementos (cuesta API). */
+    private boolean correctorIa = false;
+    /** min | ponderada — cómo combinar nota_elementos y nota_ia. */
+    private String correctorIaModo = "min";
 
     public String getRaiz() { return raiz; }
     public void setRaiz(String raiz) { this.raiz = raiz; }
@@ -141,5 +145,13 @@ public class PropiedadesForjaExamenes {
     public int getPrecargaHilos() { return precargaHilos; }
     public void setPrecargaHilos(int precargaHilos) {
         this.precargaHilos = precargaHilos;
+    }
+
+    public boolean isCorrectorIa() { return correctorIa; }
+    public void setCorrectorIa(boolean correctorIa) { this.correctorIa = correctorIa; }
+
+    public String getCorrectorIaModo() { return correctorIaModo; }
+    public void setCorrectorIaModo(String correctorIaModo) {
+        this.correctorIaModo = correctorIaModo;
     }
 }

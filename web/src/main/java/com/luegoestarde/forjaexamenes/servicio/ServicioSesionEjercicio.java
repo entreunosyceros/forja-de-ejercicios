@@ -42,6 +42,7 @@ public class ServicioSesionEjercicio {
     private final ServicioDificultadAdaptativa servicioDificultadAdaptativa;
     private final ServicioPrecargaEjercicios servicioPrecarga;
     private final ServicioHistorialIntentos servicioHistorial;
+    private final ServicioAnaliticaDiscriminacion servicioAnalitica;
     private final ObjectMapper mapeadorJson;
     private final Random aleatorio = new Random();
 
@@ -57,7 +58,8 @@ public class ServicioSesionEjercicio {
             ServicioAccesoProfesor accesoProfesor,
             ServicioDificultadAdaptativa servicioDificultadAdaptativa,
             ServicioPrecargaEjercicios servicioPrecarga,
-            ServicioHistorialIntentos servicioHistorial) {
+            ServicioHistorialIntentos servicioHistorial,
+            ServicioAnaliticaDiscriminacion servicioAnalitica) {
         this.servicioGenerador = servicioGenerador;
         this.servicioEvaluador = servicioEvaluador;
         this.servicioDocumentacion = servicioDocumentacion;
@@ -70,6 +72,7 @@ public class ServicioSesionEjercicio {
         this.servicioDificultadAdaptativa = servicioDificultadAdaptativa;
         this.servicioPrecarga = servicioPrecarga;
         this.servicioHistorial = servicioHistorial;
+        this.servicioAnalitica = servicioAnalitica;
         this.mapeadorJson = MapeadorJson.snakeCase();
     }
 
@@ -110,6 +113,11 @@ public class ServicioSesionEjercicio {
                 resultado,
                 respuesta,
                 tiempoSegundos);
+        try {
+            servicioAnalitica.registrar(escenario, resultado);
+        } catch (Exception ignored) {
+            // La analítica no debe romper la corrección
+        }
         return resultado;
     }
 

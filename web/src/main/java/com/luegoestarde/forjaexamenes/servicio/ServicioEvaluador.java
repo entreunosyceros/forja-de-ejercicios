@@ -12,6 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -33,8 +34,6 @@ public class ServicioEvaluador {
 
         try {
             mapeador.writerWithDefaultPrettyPrinter().writeValue(archivoEscenario.toFile(), escenario);
-            // La respuesta va por archivo (no como argumento) para no chocar con el
-            // límite de longitud de la línea de comandos ni problemas de escapado.
             Files.writeString(archivoRespuesta, respuesta == null ? "" : respuesta, StandardCharsets.UTF_8);
 
             List<String> comando = new ArrayList<>();
@@ -50,9 +49,34 @@ public class ServicioEvaluador {
             ProcessBuilder constructorProceso = new ProcessBuilder(comando);
             constructorProceso.directory(script.getParent().toFile());
             constructorProceso.redirectErrorStream(true);
+            Map<String, String> entorno = constructorProceso.environment();
+            if (propiedades.isCorrectorIa()) {
+                entorno.put("FORJAEXAMENES_CORRECTOR_IA", "true");
+                String modo = propiedades.getCorrectorIaModo();
+                if (modo != null && !modo.isBlank()) {
+                    entorno.put("FORJAEXAMENES_CORRECTOR_IA_MODO", modo.trim());
+                }
+            } else {
+                entorno.put("FORJAEXAMENES_CORRECTOR_IA", "false");
+            }
+            if (propiedades.getGeminiApiKey() != null && !propiedades.getGeminiApiKey().isBlank()) {
+                entorno.put("GEMINI_API_KEY", propiedades.getGeminiApiKey());
+                entorno.put("FORJAEXAMENES_GEMINI_API_KEY", propiedades.getGeminiApiKey());
+            }
+            if (propiedades.getGeminiModel() != null && !propiedades.getGeminiModel().isBlank()) {
+                entorno.put("FORJAEXAMENES_GEMINI_MODEL", propiedades.getGeminiModel());
+            }
+            entorno.put(
+                    "FORJAEXAMENES_GEMINI_TIMEOUT_MS",
+                    String.valueOf(Math.max(1, propiedades.getGeminiTimeoutMs())));
+
+            long timeout = propiedades.getTimeoutEvaluadorSegundos();
+            if (propiedades.isCorrectorIa()) {
+                timeout = Math.max(timeout, 90);
+            }
 
             EjecutorProcesoPython.Resultado res = EjecutorProcesoPython.ejecutar(
-                    constructorProceso, propiedades.getTimeoutEvaluadorSegundos());
+                    constructorProceso, timeout);
             if (res.codigo() != 0) {
                 throw new IllegalStateException("evaluador.py falló: " + res.salida());
             }

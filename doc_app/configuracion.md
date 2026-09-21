@@ -18,6 +18,8 @@ Claves de `application.properties` (o variables de entorno equivalentes):
 | `forjaexamenes.modo-profesor` | `FORJAEXAMENES_MODO_PROFESOR` — solución visible |
 | `forjaexamenes.gemini-guardar-pendientes` | Cola de revisión en `banco/pendientes/` |
 | `forjaexamenes.gemini-solo-aprobados` | Sin generación Gemini en vivo |
+| `forjaexamenes.corrector-ia` | `FORJAEXAMENES_CORRECTOR_IA` — segundo corrector semántico con Gemini tras la nota por elementos (default `false`; consume API) |
+| `forjaexamenes.corrector-ia-modo` | `FORJAEXAMENES_CORRECTOR_IA_MODO` — `min` (nota = mínimo elementos/IA) o `ponderada` (60 % / 40 %) |
 | `forjaexamenes.gemini-timeout-ms` | Timeout (ms) de la llamada HTTP a Gemini (default 60000) |
 | `forjaexamenes.precarga-ejercicios-activa` | Pre-genera ejercicios `docs_*` en segundo plano |
 | `forjaexamenes.precarga-por-clave` | Cuántos ejercicios listos por módulo+nivel (default 1) |

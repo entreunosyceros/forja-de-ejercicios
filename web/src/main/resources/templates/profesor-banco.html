@@ -97,6 +97,44 @@
             </p>
         </div>
 
+        <div class="profesor-banco-analitica" style="margin-top:1.5rem"
+             th:if="${analiticaEjercicios != null and !#lists.isEmpty(analiticaEjercicios)}">
+            <h2>Discriminación de ejercicios</h2>
+            <p class="hint">
+                Si casi todo el mundo aprueba (≥95&nbsp;% con nota media alta) el criterio puede ser un colador.
+                Si casi nadie aprueba, puede ser una trampa o un enunciado confuso. Mínimo 3 intentos en la tabla;
+                las alertas aparecen a partir de 5.
+            </p>
+            <div class="tabla-pendientes-wrap">
+                <table class="tabla-pendientes">
+                    <thead>
+                    <tr>
+                        <th>Módulo</th>
+                        <th>Título</th>
+                        <th>Intentos</th>
+                        <th>% aprob.</th>
+                        <th>Nota media</th>
+                        <th>Alerta</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="a : ${analiticaEjercicios}">
+                        <td th:text="${a.modulo()}">mod</td>
+                        <td th:text="${a.titulo()}">titulo</td>
+                        <td th:text="${a.intentos()}">0</td>
+                        <td th:text="${#numbers.formatDecimal(a.tasaAprobado() * 100, 1, 0)} + '%'">0%</td>
+                        <td th:text="${#numbers.formatDecimal(a.notaMedia(), 1, 1)}">0</td>
+                        <td>
+                            <span th:if="${a.alerta() == 'posible_colador'}" class="hint hint-warn">posible colador</span>
+                            <span th:if="${a.alerta() == 'posible_trampa'}" class="hint hint-warn">posible trampa</span>
+                            <span th:if="${a.alerta() == null or #strings.isEmpty(a.alerta())}">—</span>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         <p class="hint" style="margin-top:1.5rem">
             CLI: <code>python3 herramientas/revisar_banco.py listar|aprobar &lt;id&gt;|rechazar &lt;id&gt;</code>
         </p>

@@ -36,7 +36,19 @@ Los criterios `contiene_todos` y `contiene_alguno` aceptan **sinónimos técnico
 - Al generar criterios desde apuntes (`modelo_ejercicio.py`), las variantes se incorporan como `contiene_alguno` cuando hay alias.
 - Para añadir sinónimos: edita `alias_comandos` en el JSON (frases completas, no palabras sueltas sueltas).
 
-Tipos de criterio soportados: `regex`, `contiene_todos`, `contiene_alguno`.
+Tipos de criterio soportados: `regex`, `contiene_todos`, `contiene_alguno`, `no_contiene` (y flag `obligatorio`).
+
+## Qué mide la nota (honestidad)
+
+La nota automática mide **elementos comprobables** (términos, regex). En pantalla aparece como
+«X sobre los elementos que sé comprobar». No pretende ser un corrector humano.
+
+### Segundo corrector con IA (opcional)
+
+Con `FORJAEXAMENES_CORRECTOR_IA=true` (y clave Gemini), tras la nota por elementos se pide a Gemini
+si la respuesta **resuelve el enunciado**. La nota final es, por defecto, el **mínimo** de ambas
+(`FORJAEXAMENES_CORRECTOR_IA_MODO=ponderada` usa 60 % elementos + 40 % IA). Si la API falla, se
+conserva solo la nota por elementos.
 
 ### Retroalimentación al corregir
 

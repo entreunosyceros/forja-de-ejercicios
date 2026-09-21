@@ -27,6 +27,7 @@ indice/*.json
 # Datos de uso local (no subir a GitHub)
 datos/usuarios.json
 datos/gemini.json
+datos/analitica_ejercicios.json
 datos/estadisticas/*
 !datos/estadisticas/.gitkeep
 datos/historial/*

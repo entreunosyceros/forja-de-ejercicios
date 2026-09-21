@@ -21,20 +21,48 @@ def evaluar_criterio(respuesta: str, criterio: dict) -> dict:
     return criterios.desde_json(criterio).evaluar(respuesta)
 
 
+def _etiqueta_honestidad(nota_elementos: float, juicio: dict | None, nota_final: float) -> str:
+    base = f"{nota_elementos:g} sobre los elementos que sé comprobar"
+    if not juicio or not juicio.get("usado"):
+        return base
+    nota_ia = juicio.get("nota")
+    if nota_ia is None:
+        return base
+    return (
+        f"{nota_final:g} (elementos {nota_elementos:g} · juicio IA {float(nota_ia):g})"
+    )
+
+
 def evaluar(escenario: dict, respuesta: str) -> dict:
     lista = escenario.get("criterios", [])
     detalles = [evaluar_criterio(respuesta, c) for c in lista]
     peso_total = sum(peso_criterio(c) for c in lista) or 1
     peso_obtenido = sum(float(d.get("peso_parcial", 0)) for d in detalles)
-    nota = round(10 * peso_obtenido / peso_total, 1)
-    nota = min(10.0, max(0.0, nota))
+    nota_elementos = round(10 * peso_obtenido / peso_total, 1)
+    nota_elementos = min(10.0, max(0.0, nota_elementos))
 
     obligatorio_fallido = any(
         d.get("obligatorio") and not d.get("cumplido") for d in detalles
     )
     if obligatorio_fallido:
-        nota = min(nota, TOPE_NOTA_OBLIGATORIO_FALLIDO)
+        nota_elementos = min(nota_elementos, TOPE_NOTA_OBLIGATORIO_FALLIDO)
 
+    juicio: dict = {"usado": False}
+    try:
+        import corrector_ia
+
+        juicio = corrector_ia.juzgar(
+            escenario,
+            respuesta,
+            nota_elementos=nota_elementos,
+        )
+        combinacion = corrector_ia.combinar_notas(nota_elementos, juicio)
+    except Exception as exc:  # noqa: BLE001
+        juicio = {"usado": False, "error": str(exc)[:240]}
+        combinacion = {"nota": nota_elementos, "modo_combinacion": "solo_elementos"}
+
+    nota = float(combinacion.get("nota", nota_elementos))
+    nota = min(10.0, max(0.0, round(nota, 1)))
     aprobado = nota >= 5.0
 
     if obligatorio_fallido and nota < 5:
@@ -51,15 +79,23 @@ def evaluar(escenario: dict, respuesta: str) -> dict:
     else:
         retroalimentacion = "Insuficiente. Repasa el enunciado y la solución de referencia."
 
+    if juicio.get("usado") and juicio.get("comentario"):
+        retroalimentacion = f"{retroalimentacion} {juicio['comentario']}"
+
     return {
         "examen_id": escenario.get("id"),
         "modulo": escenario.get("modulo"),
         "nota": nota,
+        "nota_elementos": nota_elementos,
         "aprobado": aprobado,
         "peso_obtenido": round(peso_obtenido, 4),
         "peso_total": peso_total,
         "obligatorio_fallido": obligatorio_fallido,
         "retroalimentacion": retroalimentacion,
+        "etiqueta_nota": _etiqueta_honestidad(nota_elementos, juicio, nota),
+        "medicion": "elementos_y_ia" if juicio.get("usado") else "elementos",
+        "corrector_ia": juicio,
+        "modo_combinacion": combinacion.get("modo_combinacion", "solo_elementos"),
         "detalles": detalles,
         "solucion_referencia": escenario.get("solucion_referencia", ""),
     }

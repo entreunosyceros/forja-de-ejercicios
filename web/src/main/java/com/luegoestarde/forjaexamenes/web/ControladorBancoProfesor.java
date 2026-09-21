@@ -2,10 +2,12 @@
 package com.luegoestarde.forjaexamenes.web;
 
 import com.luegoestarde.forjaexamenes.servicio.ServicioAccesoProfesor;
+import com.luegoestarde.forjaexamenes.servicio.ServicioAnaliticaDiscriminacion;
 import com.luegoestarde.forjaexamenes.servicio.ServicioBancoEjercicios;
 import com.luegoestarde.forjaexamenes.servicio.ServicioBancoPortable;
 import com.luegoestarde.forjaexamenes.servicio.ServicioExploradorArchivos;
 import com.luegoestarde.forjaexamenes.servicio.ServicioPreferenciasProfesor;
+import java.util.List;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,18 +26,21 @@ public class ControladorBancoProfesor {
     private final ServicioBancoPortable servicioBancoPortable;
     private final ServicioPreferenciasProfesor preferenciasProfesor;
     private final ServicioExploradorArchivos exploradorArchivos;
+    private final ServicioAnaliticaDiscriminacion servicioAnalitica;
 
     public ControladorBancoProfesor(
             ServicioBancoEjercicios servicioBanco,
             ServicioAccesoProfesor accesoProfesor,
             ServicioBancoPortable servicioBancoPortable,
             ServicioPreferenciasProfesor preferenciasProfesor,
-            ServicioExploradorArchivos exploradorArchivos) {
+            ServicioExploradorArchivos exploradorArchivos,
+            ServicioAnaliticaDiscriminacion servicioAnalitica) {
         this.servicioBanco = servicioBanco;
         this.accesoProfesor = accesoProfesor;
         this.servicioBancoPortable = servicioBancoPortable;
         this.preferenciasProfesor = preferenciasProfesor;
         this.exploradorArchivos = exploradorArchivos;
+        this.servicioAnalitica = servicioAnalitica;
     }
 
     @GetMapping
@@ -49,6 +54,8 @@ public class ControladorBancoProfesor {
         modelo.addAttribute("geminiGuardarPendientes", preferenciasProfesor.isGeminiGuardarPendientes());
         modelo.addAttribute("totalBancoAprobados", servicioBancoPortable.contarAprobados());
         modelo.addAttribute("exploradorDisponible", exploradorArchivos.disponible());
+        List<ServicioAnaliticaDiscriminacion.FilaAnalitica> analitica = servicioAnalitica.listar(3);
+        modelo.addAttribute("analiticaEjercicios", analitica);
         return "profesor-banco";
     }
 

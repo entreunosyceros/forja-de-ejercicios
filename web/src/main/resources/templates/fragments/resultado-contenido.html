@@ -29,10 +29,22 @@
         <p class="score-label">Nota</p>
         <p class="score-value"><span th:text="${resultado.nota}">0</span> / 10</p>
         <p class="score-status" th:text="${resultado.aprobado} ? 'APROBADO' : 'SUSPENSO'">—</p>
+        <p class="etiqueta-nota muted"
+           th:if="${resultado.etiquetaNota != null}"
+           th:text="${resultado.etiquetaNota}">—</p>
+        <p class="hint"
+           th:if="${resultado.etiquetaNota == null and resultado.notaElementos != null}"
+           th:text="${resultado.notaElementos} + ' sobre los elementos que sé comprobar'">—</p>
         <p class="retroalimentacion" th:text="${resultado.retroalimentacion}">—</p>
         <p class="peso" th:text="'Puntos: ' + ${resultado.pesoObtenido} + '/' + ${resultado.pesoTotal}">—</p>
         <p class="tiempo-resultado" th:if="${tiempoSegundos != null}"
            th:text="'Tiempo: ' + ${tiempoSegundos} + ' s'">—</p>
+        <p class="hint"
+           th:if="${resultado.correctorIa != null and resultado.correctorIa.usado}">
+            Incluye juicio semántico con IA
+            <span th:if="${resultado.correctorIa.nota != null}"
+                  th:text="' (IA: ' + ${resultado.correctorIa.nota} + '/10)'"></span>.
+        </p>
     </div>
 
     <article class="card">
