@@ -18,10 +18,14 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.function.Predicate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 @Service
 public class ServicioEstadisticasUsuario {
+
+    private static final Logger LOG = LoggerFactory.getLogger(ServicioEstadisticasUsuario.class);
 
     public record ResumenAlumnoServidor(
             String login,
@@ -49,6 +53,7 @@ public class ServicioEstadisticasUsuario {
         try {
             return mapeador.readValue(fichero.toFile(), EstadisticasUsuario.class);
         } catch (IOException e) {
+            LOG.warn("No se pudieron leer estadísticas de {}: {}", login, e.toString());
             return vacias();
         }
     }
@@ -79,8 +84,9 @@ public class ServicioEstadisticasUsuario {
                                     stats.getNotaMedia(),
                                     stats.getUltimaActividad(),
                                     stats.getPorModulo().size()));
-                        } catch (IOException ignored) {
-                            // omitir ficheros corruptos
+                        } catch (IOException ex) {
+                            LOG.warn("Estadísticas corruptas u omitidas: {} ({})",
+                                    fichero.getFileName(), ex.toString());
                         }
                     });
         }

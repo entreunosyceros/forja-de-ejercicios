@@ -8,10 +8,14 @@ import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.Set;
 import java.util.stream.Stream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 @Service
 public class ServicioEntornoPractica {
+
+    private static final Logger LOG = LoggerFactory.getLogger(ServicioEntornoPractica.class);
 
     public static final Set<String> MODULOS_CON_ENTORNO_SHELL =
             Set.of("docker", "redes", "sistemas", "git");
@@ -46,8 +50,8 @@ public class ServicioEntornoPractica {
                         walk.sorted(Comparator.reverseOrder()).forEach(p -> {
                             try {
                                 Files.deleteIfExists(p);
-                            } catch (IOException ignored) {
-                                // omitir
+                            } catch (IOException ex) {
+                                LOG.warn("No se pudo borrar {}: {}", p, ex.toString());
                             }
                         });
                     }

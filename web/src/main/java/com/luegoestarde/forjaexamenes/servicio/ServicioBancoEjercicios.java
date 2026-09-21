@@ -20,12 +20,16 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 import jakarta.annotation.PostConstruct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import com.luegoestarde.forjaexamenes.util.EscrituraAtomica;
 
 @Service
 public class ServicioBancoEjercicios {
+
+    private static final Logger LOG = LoggerFactory.getLogger(ServicioBancoEjercicios.class);
 
     public record EntradaCatalogo(String modulo, String titulo, String id) {}
 
@@ -56,8 +60,8 @@ public class ServicioBancoEjercicios {
     void inicializarCatalogo() {
         try {
             reconstruirCatalogo();
-        } catch (IOException ignored) {
-            // banco aún vacío o rutas no accesibles en arranque de tests
+        } catch (IOException ex) {
+            LOG.debug("Catálogo del banco no regenerado al arranque: {}", ex.toString());
         }
     }
 
@@ -106,8 +110,9 @@ public class ServicioBancoEjercicios {
                     .forEach(p -> {
                         try {
                             lista.add(leerPendiente(p));
-                        } catch (IOException ignored) {
-                            // omitir ficheros corruptos
+                        } catch (IOException ex) {
+                            LOG.warn("Ejercicio de banco ilegible: {} ({})",
+                                    p.getFileName(), ex.toString());
                         }
                     });
         }
@@ -185,8 +190,9 @@ public class ServicioBancoEjercicios {
                         entrada.put("ruta", banco.relativize(p.toAbsolutePath().normalize()).toString().replace('\\', '/'));
                         entrada.put("origen", datos.path("parametros").path("generado_con").asText("banco"));
                         ejercicios.add(entrada);
-                    } catch (IOException ignored) {
-                        // omitir
+                    } catch (IOException ex) {
+                        LOG.warn("No se pudo indexar ejercicio del banco {}: {}",
+                                p.getFileName(), ex.toString());
                     }
                 });
             }
@@ -210,6 +216,7 @@ public class ServicioBancoEjercicios {
                         try {
                             return Files.getLastModifiedTime(p).toMillis();
                         } catch (IOException e) {
+                            LOG.debug("No se pudo leer mtime de {}: {}", p, e.toString());
                             return 0L;
                         }
                     })

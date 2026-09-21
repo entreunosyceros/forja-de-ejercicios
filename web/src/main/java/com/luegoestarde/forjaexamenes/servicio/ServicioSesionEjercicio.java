@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.ui.Model;
 
@@ -24,6 +26,8 @@ import org.springframework.ui.Model;
  */
 @Service
 public class ServicioSesionEjercicio {
+
+    private static final Logger LOG = LoggerFactory.getLogger(ServicioSesionEjercicio.class);
 
     private static final List<String> MODULOS_SORPRESA = List.of(
             "redes", "sistemas", "bd", "docker", "git",
@@ -120,8 +124,9 @@ public class ServicioSesionEjercicio {
                 tiempoSegundos);
         try {
             servicioAnalitica.registrar(escenario, resultado);
-        } catch (Exception ignored) {
-            // La analítica no debe romper la corrección
+        } catch (Exception ex) {
+            LOG.warn("Analítica de discriminación no registrada para {}: {}",
+                    escenario.getId(), ex.toString());
         }
         return resultado;
     }
@@ -186,9 +191,8 @@ public class ServicioSesionEjercicio {
             modelo.addAttribute("solucionReferenciaValida", valida);
             modelo.addAttribute("notaSolucionReferencia", evaluacion.getNota());
         } catch (Exception ex) {
-            org.slf4j.LoggerFactory.getLogger(ServicioSesionEjercicio.class)
-                    .warn("No se pudo validar solución de referencia de {}: {}",
-                            escenario.getId(), ex.toString());
+            LOG.warn("No se pudo validar solución de referencia de {}: {}",
+                    escenario.getId(), ex.toString());
             modelo.addAttribute("solucionReferenciaValida", false);
         }
     }

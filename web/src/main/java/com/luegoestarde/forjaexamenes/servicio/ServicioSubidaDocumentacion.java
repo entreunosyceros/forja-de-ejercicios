@@ -10,12 +10,15 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class ServicioSubidaDocumentacion {
 
+    private static final Logger LOG = LoggerFactory.getLogger(ServicioSubidaDocumentacion.class);
     private static final Pattern SLUG_VALIDO = Pattern.compile("^[a-z0-9][a-z0-9_-]{0,48}$");
     private static final String TEMA_NUEVO = "__nuevo__";
 
@@ -45,8 +48,8 @@ public class ServicioSubidaDocumentacion {
             stream.filter(Files::isDirectory).forEach(carpeta -> {
                 try {
                     temas.add(toCarpetaTema(carpeta));
-                } catch (IOException ignored) {
-                    // omitir carpetas inaccesibles
+                } catch (IOException ex) {
+                    LOG.warn("Carpeta de tema inaccesible {}: {}", carpeta, ex.toString());
                 }
             });
         }

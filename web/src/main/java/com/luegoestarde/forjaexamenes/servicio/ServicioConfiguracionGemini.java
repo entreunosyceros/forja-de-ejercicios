@@ -11,11 +11,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import com.luegoestarde.forjaexamenes.util.EscrituraAtomica;
 
 @Service
 public class ServicioConfiguracionGemini {
+
+    private static final Logger LOG = LoggerFactory.getLogger(ServicioConfiguracionGemini.class);
 
     public record EstadoGemini(boolean configurado, String mascara, String modelo) {}
 
@@ -146,6 +150,7 @@ public class ServicioConfiguracionGemini {
         try {
             return Optional.of(mapeador.readValue(fichero.toFile(), ConfiguracionGeminiAlmacenada.class));
         } catch (IOException e) {
+            LOG.warn("No se pudo leer datos/gemini.json: {}", e.toString());
             return Optional.empty();
         }
     }

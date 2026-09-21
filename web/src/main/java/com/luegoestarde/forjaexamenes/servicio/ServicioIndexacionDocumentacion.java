@@ -186,6 +186,7 @@ public class ServicioIndexacionDocumentacion implements ApplicationRunner {
             return pdfs.anyMatch(p -> Files.isRegularFile(p)
                     && p.getFileName().toString().toLowerCase().endsWith(".pdf"));
         } catch (Exception e) {
+            log.debug("No se pudo inspeccionar PDFs en {}: {}", doc, e.toString());
             return false;
         }
     }

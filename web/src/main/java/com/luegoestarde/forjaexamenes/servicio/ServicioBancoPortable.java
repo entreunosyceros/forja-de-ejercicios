@@ -20,6 +20,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 /**
@@ -28,6 +30,8 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class ServicioBancoPortable {
+
+    private static final Logger LOG = LoggerFactory.getLogger(ServicioBancoPortable.class);
 
     public static final String FORMATO_PAQUETE = "forja-banco-ejercicios";
     public static final int VERSION_PAQUETE = 1;
@@ -76,8 +80,9 @@ public class ServicioBancoPortable {
                             try {
                                 JsonNode datos = mapeador.readTree(p.toFile());
                                 ejercicios.add(limpiarParaBanco(datos));
-                            } catch (IOException ignored) {
-                                // omitir corruptos
+                            } catch (IOException ex) {
+                                LOG.warn("Ejercicio omitido al exportar banco {}: {}",
+                                        p.getFileName(), ex.toString());
                             }
                         });
             }

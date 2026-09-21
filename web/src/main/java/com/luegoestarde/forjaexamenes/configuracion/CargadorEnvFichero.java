@@ -10,6 +10,8 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Lee variables de {@code examenforge/.env} (misma lógica que Python).
@@ -17,6 +19,7 @@ import java.util.Optional;
  */
 public final class CargadorEnvFichero {
 
+    private static final Logger LOG = LoggerFactory.getLogger(CargadorEnvFichero.class);
     private static final String FICHERO_ENV = ".env";
 
     private CargadorEnvFichero() {}
@@ -49,6 +52,7 @@ public final class CargadorEnvFichero {
                 }
             }
         } catch (IOException e) {
+            LOG.warn("No se pudo leer {}: {}", env, e.toString());
             return Map.of();
         }
         return variables;
@@ -94,6 +98,7 @@ public final class CargadorEnvFichero {
             JsonNode raiz = new ObjectMapper().readTree(fichero.toFile());
             return raiz.path("apiKey").asText("").strip();
         } catch (IOException e) {
+            LOG.debug("No se pudo leer apiKey de {}: {}", fichero, e.toString());
             return "";
         }
     }

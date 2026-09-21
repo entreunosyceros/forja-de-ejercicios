@@ -92,6 +92,7 @@ public class ServicioPrecargaEjercicios {
             ejecutor.submit(() -> rellenar(clave, modulo, nivel, objetivo));
         } catch (RejectedExecutionException ex) {
             enCurso.remove(clave);
+            log.debug("Precarga rechazada (cola llena) para {}: {}", clave, ex.toString());
         }
     }
 

@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import com.luegoestarde.forjaexamenes.util.EscrituraAtomica;
 
@@ -17,6 +19,8 @@ import com.luegoestarde.forjaexamenes.util.EscrituraAtomica;
  */
 @Service
 public class ServicioPreferenciasProfesor {
+
+    private static final Logger LOG = LoggerFactory.getLogger(ServicioPreferenciasProfesor.class);
 
     private final PropiedadesForjaExamenes propiedades;
     private final ObjectMapper mapeador = new ObjectMapper();
@@ -45,6 +49,7 @@ public class ServicioPreferenciasProfesor {
         try {
             return Optional.of(mapeador.readValue(fichero.toFile(), PreferenciasProfesor.class));
         } catch (IOException e) {
+            LOG.warn("Preferencias del profesor ilegibles: {}", e.toString());
             return Optional.empty();
         }
     }

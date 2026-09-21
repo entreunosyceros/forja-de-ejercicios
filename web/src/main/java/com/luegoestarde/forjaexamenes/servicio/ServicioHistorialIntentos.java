@@ -20,11 +20,14 @@ import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 import java.util.function.Predicate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 @Service
 public class ServicioHistorialIntentos {
 
+    private static final Logger LOG = LoggerFactory.getLogger(ServicioHistorialIntentos.class);
     private static final int MAX_TEXTO = 8000;
 
     public record FilaResultado(
@@ -135,8 +138,9 @@ public class ServicioHistorialIntentos {
                                         i.getId(),
                                         i.getEjercicioId()));
                             }
-                        } catch (IOException ignored) {
-                            // omitir corruptos
+                        } catch (IOException ex) {
+                            LOG.warn("Historial corrupto u omitido: {} ({})",
+                                    fichero.getFileName(), ex.toString());
                         }
                     });
         }
@@ -206,6 +210,7 @@ public class ServicioHistorialIntentos {
             }
             return h;
         } catch (IOException e) {
+            LOG.warn("No se pudo leer historial de {}: {}", login, e.toString());
             HistorialUsuario vacio = new HistorialUsuario();
             vacio.setLogin(login);
             return vacio;

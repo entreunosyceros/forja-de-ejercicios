@@ -12,6 +12,8 @@ import com.luegoestarde.forjaexamenes.servicio.ServicioHistorialIntentos.FilaRes
 import com.luegoestarde.forjaexamenes.util.LenguajeResaltado;
 import java.util.ArrayList;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +26,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @Controller
 @RequestMapping("/profesor/resultados")
 public class ControladorProfesorResultados {
+
+    private static final Logger LOG = LoggerFactory.getLogger(ControladorProfesorResultados.class);
 
     private final ServicioHistorialIntentos servicioHistorial;
     private final ServicioEntregasAlumno servicioEntregas;
@@ -109,8 +113,8 @@ public class ControladorProfesorResultados {
                             i.getId(),
                             i.getEjercicioId()));
                 }
-            } catch (Exception ignored) {
-                // omitir entregas corruptas
+            } catch (Exception ex) {
+                LOG.warn("Entrega omitida en resultados CSV: {}", ex.toString());
             }
         }
         return filas;

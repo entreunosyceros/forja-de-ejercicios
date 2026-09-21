@@ -15,10 +15,14 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 @Service
 public class ServicioPanelProfesor {
+
+    private static final Logger LOG = LoggerFactory.getLogger(ServicioPanelProfesor.class);
 
     public record MetricasPanel(
             int alumnosActivosSemana,
@@ -129,7 +133,8 @@ public class ServicioPanelProfesor {
         }
         try {
             return FechasForja.parsear(fechaTexto).isAfter(limite);
-        } catch (DateTimeParseException ignored) {
+        } catch (DateTimeParseException ex) {
+            LOG.debug("Fecha de actividad no parseable «{}»: {}", fechaTexto, ex.toString());
             return false;
         }
     }

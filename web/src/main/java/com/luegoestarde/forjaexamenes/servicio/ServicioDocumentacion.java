@@ -14,11 +14,15 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Stream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
 @Service
 public class ServicioDocumentacion {
+
+    private static final Logger LOG = LoggerFactory.getLogger(ServicioDocumentacion.class);
 
     public record SeccionDocumentacion(String capitulo, String titulo, int fragmentos) {}
 
@@ -87,6 +91,7 @@ public class ServicioDocumentacion {
                 modulos.add(leerModulo(archivo));
             }
         } catch (IOException e) {
+            LOG.warn("No se pudieron listar módulos de documentación: {}", e.toString());
             return List.of();
         }
         modulos.sort(Comparator.comparing(ModuloDocumentacion::titulo));
@@ -108,12 +113,14 @@ public class ServicioDocumentacion {
                         try {
                             return Files.getLastModifiedTime(p).toMillis();
                         } catch (IOException e) {
+                            LOG.debug("mtime ilegible en {}: {}", p, e.toString());
                             return 0L;
                         }
                     })
                     .max()
                     .orElse(0L);
         } catch (IOException e) {
+            LOG.debug("No se pudo calcular huella del índice: {}", e.toString());
             return 0L;
         }
     }

@@ -6,12 +6,16 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Ejecuta procesos Python drenando la salida en un hilo aparte (para que no se
  * bloquee si llena el buffer de la tubería) y aplicando un timeout máximo.
  */
 final class EjecutorProcesoPython {
+
+    private static final Logger LOG = LoggerFactory.getLogger(EjecutorProcesoPython.class);
 
     record Resultado(int codigo, String salida) {}
 
@@ -35,8 +39,8 @@ final class EjecutorProcesoPython {
                 while ((linea = r.readLine()) != null) {
                     salida.append(linea).append('\n');
                 }
-            } catch (IOException ignorado) {
-                // El proceso se cerró o fue destruido; la salida parcial basta.
+            } catch (IOException ex) {
+                LOG.debug("Lectura de salida Python interrumpida (proceso cerrado): {}", ex.toString());
             }
         }, "lector-python");
         lector.setDaemon(true);

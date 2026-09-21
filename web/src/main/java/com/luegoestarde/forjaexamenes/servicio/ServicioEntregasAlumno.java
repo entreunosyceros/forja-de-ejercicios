@@ -26,11 +26,14 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 @Service
 public class ServicioEntregasAlumno {
 
+    private static final Logger LOG = LoggerFactory.getLogger(ServicioEntregasAlumno.class);
     private static final int MAX_NOMBRE_ETIQUETA = 80;
 
     public record ResumenEntregaImportada(
@@ -268,8 +271,9 @@ public class ServicioEntregasAlumno {
                     .forEach(fichero -> {
                         try {
                             lista.add(mapeador.readValue(fichero.toFile(), EntregaAlumno.class));
-                        } catch (IOException ignored) {
-                            // omitir ficheros corruptos
+                        } catch (IOException ex) {
+                            LOG.warn("Entrega corrupta u omitida: {} ({})",
+                                    fichero.getFileName(), ex.toString());
                         }
                     });
         }
