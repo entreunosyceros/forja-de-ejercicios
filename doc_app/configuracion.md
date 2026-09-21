@@ -36,9 +36,9 @@ Claves de `application.properties` (o variables de entorno equivalentes):
 | **Actualizar apuntes** | Indexación **en segundo plano** (`@Async`): no bloquea la sesión; la portada hace polling y se recarga al terminar. |
 | **Entorno Docker** | Botón «Limpiar entorno de práctica» en la portada; auto-limpieza de `datos-practica/` al iniciar ejercicios `docker`, `redes`, `sistemas`, `git` (`forjaexamenes.limpiar-practica-al-nuevo-ejercicio`, default `true`). |
 | **Dificultad adaptativa** | El nivel del alumno sube tras 5 aprobados seguidos y baja tras 3 suspensos seguidos (`ServicioDificultadAdaptativa.java`). Ver [Dificultad adaptativa](guia-usuario.md#dificultad-adaptativa). |
-| **Progreso local** | Últimos 5 ejercicios en `localStorage` (`progreso.js`). Botón «Limpiar progreso local» en la portada. |
+| **Progreso (portada)** | Snapshot del servidor (`/estadisticas/progreso.json`); `localStorage` solo como caché. Botón «Recargar desde el servidor». |
 | **Estadísticas de uso** | Totales en `datos/estadisticas/<usuario>.json`. Botón «Limpiar estadísticas» → `POST /estadisticas/limpiar`. |
-| **Entrega al profesor** | **Alumno:** portada → «Descargar entrega para el profesor» → `GET /entrega/exportar.json` + progreso local. **Profesor:** no exporta entrega; importa en `/profesor/alumnos` con nombre personalizado. |
+| **Entrega al profesor** | **Alumno:** portada → «Descargar entrega» → estadísticas servidor (+ caché de progreso del navegador). **Profesor:** importa en `/profesor/alumnos`. |
 | **Banco portable** | Profesor exporta `banco-forja.json`; alumno importa en portada → `banco/aprobados/` + `catalogo.json`. |
 | **Seguimiento clase** | Tabla comparativa, notas por módulo y gráficas en `/profesor/alumnos` tras importar entregas. |
 | **Historial de intentos** | Tras cada corrección: `datos/historial/<login>.json` (enunciado, respuesta, nota). Panel y CSV en `/profesor/resultados`. |

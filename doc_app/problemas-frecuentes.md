@@ -25,8 +25,9 @@
 | `403` en `/profesor/revisar` | Entra con cuenta profesor (`profesor` / `profesor`) |
 | `403` al enviar ejercicio | Recarga la página (token CSRF en el formulario) |
 | Sinónimo no aceptado | Añádelo en `vocabulario_claves.json` → `alias_comandos` |
-| El panel local muestra datos viejos o de otro sitio | «Limpiar progreso local»; no confundir con «Limpiar estadísticas» del servidor |
-| Quiero empezar de cero en totales e historial del servidor | «Limpiar estadísticas» en la portada (no afecta al progreso del navegador) |
+| El panel de progreso muestra datos viejos | «Recargar desde el servidor»; o limpia estadísticas del servidor si quieres empezar de cero |
+
+| Quiero empezar de cero en totales e historial del servidor | «Limpiar estadísticas» en la portada (también vacía el panel de progreso al recargar) |
 | El profesor no ve el progreso de un alumno en otro PC | El alumno deja el JSON en la carpeta compartida; el profesor lo importa en `/profesor/alumnos` con un nombre personalizado |
 | `403` en `/profesor/alumnos` | Solo cuentas con rol profesor; el alumno exporta su entrega, no accede a este panel |
 | Aprobé ejercicios pero el alumno no los ve | Normal en PCs distintos: el profesor debe **exportar** el banco y el alumno **importar** en la portada |

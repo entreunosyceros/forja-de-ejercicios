@@ -14,7 +14,7 @@
 | Texto de la guía pública | `templates/fragments/guia-funcionamiento.html` |
 | Vista de revisión profesor | `profesor-revisar-detalle.html`, `herramientas/revision_profesor.py` |
 | Nuevos sinónimos de comandos | `vocabulario_claves.json` → `alias_comandos` |
-| Textos de corrección (esperado / pista) | `retroalimentacion_criterios.py`, `evaluador.py` |
+| Textos de corrección (esperado / pista) | `retroalimentacion_criterios.py` + tabla `reglas_retroalimentacion_regex.json`; `evaluador.py` |
 | Botón en portada | `templates/inicio.html` |
 | Nuevo módulo plantilla | `plantillas/<modulo>.json` (+ opcional entrada en `generador.py`) |
 | Nuevo tipo de criterio | Clase en `criterios.py` con `@registrar` |

@@ -4,8 +4,13 @@
 
 from __future__ import annotations
 
+import json
 import re
+from pathlib import Path
 from typing import Any
+
+RAIZ = Path(__file__).resolve().parent
+RUTA_REGLAS_REGEX = RAIZ / "reglas_retroalimentacion_regex.json"
 
 _PALABRAS_SQL = frozenset({
     "SELECT", "FROM", "WHERE", "JOIN", "INDEX", "CREATE", "EXPLAIN",
@@ -16,6 +21,65 @@ _PALABRAS_SQL = frozenset({
 _PALABRAS_DOCKER = frozenset({"DOCKER", "COMPOSE", "CONTAINER", "LOGS", "INSPECT"})
 
 _PALABRAS_GIT = frozenset({"GIT", "STATUS", "MERGE", "COMMIT", "ADD", "ABORT"})
+
+_CACHE_REGLAS: list[dict[str, Any]] | None = None
+
+
+def _flags_re(flags: str | None) -> int:
+    f = 0
+    for c in (flags or ""):
+        if c in "iI":
+            f |= re.IGNORECASE
+        elif c in "mM":
+            f |= re.MULTILINE
+        elif c in "sS":
+            f |= re.DOTALL
+    return f
+
+
+def _cargar_reglas_regex() -> list[dict[str, Any]]:
+    """Carga la tabla de reglas JSON (caché en proceso)."""
+    global _CACHE_REGLAS
+    if _CACHE_REGLAS is not None:
+        return _CACHE_REGLAS
+    if not RUTA_REGLAS_REGEX.is_file():
+        _CACHE_REGLAS = []
+        return _CACHE_REGLAS
+    try:
+        datos = json.loads(RUTA_REGLAS_REGEX.read_text(encoding="utf-8"))
+        reglas = datos.get("reglas") if isinstance(datos, dict) else None
+        _CACHE_REGLAS = list(reglas) if isinstance(reglas, list) else []
+    except (json.JSONDecodeError, OSError):
+        _CACHE_REGLAS = []
+    return _CACHE_REGLAS
+
+
+def _regla_coincide(regla: dict[str, Any], patron: str) -> bool:
+    """True si el patrón del criterio dispara esta regla."""
+    flags = _flags_re(str(regla.get("flags") or "i"))
+    expr = regla.get("patron") or ""
+    if expr and re.search(expr, patron, flags):
+        return True
+    contiene = regla.get("contiene_todas") or []
+    if contiene and all(str(t).upper() in patron.upper() for t in contiene):
+        return True
+    subcadenas = regla.get("contiene_subcadena") or []
+    p_low = patron.lower()
+    if subcadenas and any(str(s).lower() in p_low for s in subcadenas):
+        return True
+    return False
+
+
+def _aplicar_placeholders(texto: str, nombres: str) -> str:
+    ref = f" sobre {nombres}" if nombres else ""
+    nombres_ayuda = (
+        f" Usa la tabla o columna del enunciado ({nombres})." if nombres else ""
+    )
+    return (
+        texto.replace("{nombres}", nombres)
+        .replace("{ref}", ref)
+        .replace("{nombres_ayuda}", nombres_ayuda)
+    )
 
 
 def parece_patron_regex(texto: str) -> bool:
@@ -62,156 +126,19 @@ def _simplificar_patron(patron: str) -> str:
 
 
 def _esperado_pista_regex(patron: str) -> tuple[str, str, str]:
-    """Devuelve (descripcion, esperado, pista) para un patrón regex."""
-    p = patron
-    p_low = p.lower()
-    tokens = _tokens_legibles(p)
+    """Devuelve (descripcion, esperado, pista) según la tabla JSON de reglas."""
+    tokens = _tokens_legibles(patron)
     nombres = ", ".join(f"«{t}»" for t in tokens[:4])
 
-    if re.search(r"\bexplain\b", p, re.I):
-        return (
-            "Analizar la consulta con EXPLAIN",
-            "Incluir el comando EXPLAIN sobre la consulta del enunciado.",
-            "Antes de crear un índice, usa EXPLAIN para ver si la consulta hace un "
-            "recorrido completo de la tabla (full scan) o usa un índice.",
-        )
-
-    if ("CREATE" in p.upper() and "INDEX" in p.upper()) or re.search(
-        r"create\\s\+index", p, re.I
-    ):
-        ref = f" sobre {nombres}" if nombres else ""
-        return (
-            "Crear un índice (CREATE INDEX)",
-            f"Incluir un comando CREATE INDEX{ref}.",
-            "La consulta del enunciado es lenta porque falta un índice en la columna "
-            "del WHERE. Escribe CREATE INDEX nombre ON tabla(columna); "
-            + (f"Usa la tabla o columna del enunciado ({nombres})." if nombres else ""),
-        )
-
-    if re.search(r"docker\s*\\s*\+?\s*logs|docker\s+logs", p, re.I):
-        return (
-            "Consultar logs del contenedor",
-            "Incluir docker logs (o equivalente) para ver el error.",
-            "Los logs del contenedor muestran por qué falla el servicio antes de "
-            "reconstruir la imagen.",
-        )
-
-    if re.search(r"docker(-compose)?\s*\\s*\+?\s*(ps|inspect)", p, re.I) or "inspect" in p_low:
-        return (
-            "Inspeccionar contenedores",
-            "Incluir docker ps o docker inspect para revisar el estado.",
-            "Comprueba que el contenedor está en ejecución y revisa su configuración "
-            "antes de cambiar el compose.",
-        )
-
-    if re.search(r"docker-compose\s*\\s*\+?\s*up|compose\s+up", p, re.I):
-        return (
-            "Reconstruir y levantar servicios",
-            "Incluir docker compose up con --build (o docker-compose up --build).",
-            "Tras corregir el Dockerfile o el compose, vuelve a construir la imagen "
-            "con --build para aplicar los cambios.",
-        )
-
-    if re.search(r"git\s*\\s*\+?\s*status", p, re.I):
-        return (
-            "Comprobar el estado del repositorio",
-            "Incluir git status.",
-            "Siempre empieza viendo qué archivos están en conflicto o sin commitear.",
-        )
-
-    if re.search(r"git\s*\\s*\+?\s*merge", p, re.I):
-        return (
-            "Resolver el merge o abortarlo",
-            "Incluir git merge --abort, git add o git commit según el caso.",
-            "Tras un conflicto, o abortas el merge o resuelves los archivos y haces commit.",
-        )
-
-    if re.search(r"vlan|ip\s*\\s*\+?\s*link", p, re.I):
-        return (
-            "Revisar interfaces y VLANs",
-            "Mencionar VLAN o ip link para comprobar interfaces.",
-            "Comprueba que las VLAN existen y las interfaces están activas antes "
-            "de configurar rutas.",
-        )
-
-    if re.search(r"ip\s*\\s*\+?\s*route|ip_forward|routing", p, re.I):
-        return (
-            "Habilitar enrutamiento entre subredes",
-            "Incluir ip route, ip routing o sysctl ip_forward.",
-            "Para que dos VLANs se comuniquen hace falta reenvío IP y rutas entre subredes.",
-        )
-
-    if re.search(r"chmod", p, re.I):
-        return (
-            "Ajustar permisos (chmod)",
-            "Incluir chmod con los permisos pedidos en el enunciado.",
-            "Los permisos de lectura/escritura/ejecución deben coincidir con lo que pide el caso.",
-        )
-
-    if re.search(r"chown", p, re.I):
-        return (
-            "Cambiar propietario (chown)",
-            "Incluir chown para asignar usuario o grupo al archivo o carpeta.",
-            "El propietario y el grupo determinan quién puede acceder al recurso.",
-        )
-
-    if re.search(r"setfacl|usermod", p, re.I):
-        return (
-            "Permisos avanzados (ACL o grupos)",
-            "Incluir setfacl o usermod -aG según el enunciado.",
-            "A veces chmod no basta: ACL o grupos secundarios dan acceso fino.",
-        )
-
-    if re.search(r"preparedstatement|preparestatement", p, re.I):
-        return (
-            "Usar PreparedStatement",
-            "Incluir PreparedStatement y prepareStatement en el código Java.",
-            "Nunca concatenes SQL con el input del usuario: usa ? y PreparedStatement.",
-        )
-
-    if re.search(r"setstring|setint|setobject", p, re.I):
-        return (
-            "Enlazar parámetros con setXxx",
-            "Incluir setString, setInt o setObject para los placeholders ?.",
-            "Cada ? del SQL se rellena con setString/setInt antes de ejecutar.",
-        )
-
-    if re.search(r"left\s*\\s*\+?\s*join", p, re.I):
-        return (
-            "Unir tablas con LEFT JOIN",
-            "Incluir LEFT JOIN (o LEFT OUTER JOIN) entre las tablas del enunciado.",
-            "LEFT JOIN devuelve todas las filas de la tabla izquierda aunque no haya "
-            "coincidencia en la derecha.",
-        )
-
-    if re.search(r"\bselect\b", p, re.I):
-        return (
-            "Consulta SELECT",
-            "Incluir una sentencia SELECT que use las tablas del enunciado.",
-            "La consulta debe recuperar los datos pedidos con las tablas y columnas correctas.",
-        )
-
-    if re.search(r"primary\s*\\s*\+?\s*key|foreign\s*\\s*\+?\s*key|references", p, re.I):
-        return (
-            "Claves en el modelo relacional",
-            "Incluir PRIMARY KEY y/o FOREIGN KEY según el enunciado.",
-            "Separa entidades en tablas y enlázalas con claves foráneas para evitar "
-            "datos repetidos.",
-        )
-
-    if re.search(r"start\s*\\s*\+?\s*transaction|begin|commit|rollback", p, re.I):
-        return (
-            "Transacción SQL",
-            "Incluir BEGIN/START TRANSACTION y COMMIT o ROLLBACK.",
-            "Agrupa los cambios en una transacción para que todo se aplique o nada.",
-        )
-
-    if re.search(r"@override|extends|implements", p, re.I):
-        return (
-            "Herencia o polimorfismo en Java",
-            "Incluir extends, implements o @Override según el enunciado.",
-            "La subclase debe reutilizar o redefinir el comportamiento de la superclase.",
-        )
+    for regla in _cargar_reglas_regex():
+        if not isinstance(regla, dict):
+            continue
+        if not _regla_coincide(regla, patron):
+            continue
+        desc = _aplicar_placeholders(str(regla.get("descripcion") or ""), nombres)
+        esperado = _aplicar_placeholders(str(regla.get("esperado") or ""), nombres)
+        pista = _aplicar_placeholders(str(regla.get("pista") or ""), nombres)
+        return (desc, esperado, pista)
 
     if tokens:
         return (

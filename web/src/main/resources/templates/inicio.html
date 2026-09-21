@@ -251,17 +251,18 @@ docker exec -it forjaexamenes-practica bash</pre>
     </div>
 
     <div class="card-grid card-grid-inicio panel-superacion"
-         th:attr="data-historial-servidor=${historialServidorJson != null ? historialServidorJson : '[]'}">
+         th:attr="data-progreso-servidor=${progresoServidorJson != null ? progresoServidorJson : '{}'}">
         <div class="card card-wide">
             <div class="panel-estadisticas-cabecera">
-                <h2>Tu progreso (local, sin red)</h2>
-                <button type="button" class="btn btn-ghost btn-sm" id="btn-limpiar-progreso-local">
-                    Limpiar progreso local
+                <h2>Tu progreso</h2>
+                <button type="button" class="btn btn-ghost btn-sm" id="btn-recargar-progreso-servidor">
+                    Recargar desde el servidor
                 </button>
             </div>
             <p class="hint">
-                Solo los <strong>últimos 5 ejercicios</strong> en este navegador (gráfico, ranking y medallas).
-                No incluye el historial completo del servidor — eso está en «Tus estadísticas de uso» más abajo.
+                Últimos ejercicios, ranking y medallas según el <strong>servidor</strong>
+                (este navegador solo guarda una copia en caché).
+                El resumen acumulado completo está en «Tus estadísticas de uso» más abajo.
             </p>
             <label class="filtro-grafico-label" for="filtro-grafico-modulo">Gráfico por módulo:</label>
             <select id="filtro-grafico-modulo" class="filtro-grafico">
@@ -308,7 +309,7 @@ docker exec -it forjaexamenes-practica bash</pre>
             <span th:if="${estadisticas.ultimaActividad != null and !estadisticas.ultimaActividad.isEmpty()}">
                 · Última actividad: <span th:text="${estadisticas.ultimaActividad}">—</span>
             </span>
-            · No afecta al historial local del navegador (gráfico y medallas de arriba).
+            · El panel de progreso de arriba se sincroniza con estos datos.
         </p>
 
         <p class="hint" th:if="${estadisticas.totalIntentos == 0}">
@@ -353,7 +354,7 @@ docker exec -it forjaexamenes-practica bash</pre>
         <div class="card-entrega-profesor" th:if="${!esProfesor}">
             <h3>Entrega para el profesor</h3>
             <p class="hint">
-                Descarga un fichero <code>.json</code> con tus estadísticas del servidor y el progreso de este navegador.
+                Descarga un fichero <code>.json</code> con tus estadísticas del servidor (y la caché de progreso del navegador).
                 Déjalo en la <strong>carpeta compartida</strong> de la clase para que el profesor lo importe
                 (Seguimiento de alumnos).
                 Opcional: guarda también el PDF de ejercicios concretos desde la pantalla de resultado.

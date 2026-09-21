@@ -1,9 +1,11 @@
 /**
- * Progreso local (localStorage): historial, medallas, nivel, ranking personal, gráfico.
+ * Progreso de portada: el servidor es la fuente de verdad.
+ * localStorage solo cachea el último snapshot para UI inmediata / offline breve.
  */
 const Progreso = (function () {
     const PREFIJO = "forjaexamenes";
     let sufijoUsuario = "";
+    let hidratadoDesdeServidor = false;
 
     function clave(base) {
         return sufijoUsuario ? `${PREFIJO}-${base}-${sufijoUsuario}` : `${PREFIJO}-${base}`;
@@ -22,24 +24,9 @@ const Progreso = (function () {
             || "";
     }
 
-    /** Login de sesión; sin sufijo el progreso se guardaba en otra clave que la portada no leía. */
     function asegurarSufijoUsuario() {
         const login = loginDesdeDom();
         if (login) sufijoUsuario = login;
-    }
-
-    /** Migra datos guardados sin sufijo de usuario (ejercicio/resultado antes del fix). */
-    function leerJsonMigrando(claveActual, nombreBase, defecto, tieneDatos) {
-        asegurarSufijoUsuario();
-        const actual = leerJson(claveActual, null);
-        if (actual !== null && tieneDatos(actual)) return actual;
-        if (!sufijoUsuario) return defecto;
-        const legacy = leerJson(CLAVE_LEGACY(nombreBase), null);
-        if (legacy !== null && tieneDatos(legacy)) {
-            guardarJson(claveActual, legacy);
-            return legacy;
-        }
-        return defecto;
     }
 
     const MODULOS_SISTEMAS = ["redes", "sistemas", "docker"];
@@ -47,12 +34,22 @@ const Progreso = (function () {
     const MEDALLAS = [
         { id: "novato", icono: "🎓", nombre: "Novato", prueba: (s) => s.totalAprobados >= 1 },
         { id: "forjador", icono: "⚙️", nombre: "Forjador", prueba: (s) => s.totalAprobados >= 5 },
-        { id: "maestro", icono: "🔥", nombre: "Maestro forjador", prueba: (s) => s.totalAprobados >= 10 }, // 10 ejercicios aprobados
+        { id: "maestro", icono: "🔥", nombre: "Maestro forjador", prueba: (s) => s.totalAprobados >= 10 },
         { id: "admin", icono: "🐧", nombre: "Administrador", prueba: (s) => MODULOS_SISTEMAS.every((m) => s.modulosAprobados[m]) },
         { id: "dba", icono: "💾", nombre: "DBA", prueba: (s) => ["bd_sql", "bd_modelo", "bd_jdbc"].every((m) => s.modulosAprobados[m]) },
         { id: "dockerizado", icono: "🐳", nombre: "Dockerizado", prueba: (s) => s.modulosAprobados.docker },
         { id: "completista", icono: "🏆", nombre: "Completista", prueba: (s) => s.modulosDistintos >= 10 },
     ];
+
+    function statsVacias() {
+        return {
+            porModulo: {},
+            totalAprobados: 0,
+            rachaActual: 0,
+            modulosAprobados: {},
+            modulosDistintos: 0,
+        };
+    }
 
     function leerJson(clave, defecto) {
         try {
@@ -67,7 +64,7 @@ const Progreso = (function () {
         try {
             localStorage.setItem(clave, JSON.stringify(valor));
         } catch (e) {
-            console.warn("Forja: no se pudo guardar progreso local", e);
+            console.warn("Forja: no se pudo cachear progreso", e);
         }
     }
 
@@ -89,19 +86,60 @@ const Progreso = (function () {
         }
     }
 
+    /** Aplica snapshot del servidor a la caché local (sobrescribe). */
+    function aplicarSnapshotServidor(snapshot) {
+        asegurarSufijoUsuario();
+        if (!snapshot || typeof snapshot !== "object") return;
+        const historial = Array.isArray(snapshot.historial) ? snapshot.historial.slice(0, MAX_HISTORIAL) : [];
+        const stats = snapshot.stats && typeof snapshot.stats === "object"
+            ? {
+                porModulo: snapshot.stats.porModulo || {},
+                totalAprobados: snapshot.stats.totalAprobados || 0,
+                rachaActual: snapshot.stats.rachaActual || 0,
+                modulosAprobados: snapshot.stats.modulosAprobados || {},
+                modulosDistintos: snapshot.stats.modulosDistintos
+                    || Object.keys(snapshot.stats.porModulo || {}).length,
+            }
+            : statsVacias();
+        guardarJson(CLAVE_HISTORIAL(), historial);
+        guardarJson(CLAVE_STATS(), stats);
+        actualizarMedallas(stats);
+        hidratadoDesdeServidor = true;
+    }
+
+    function snapshotDesdePanelInicio() {
+        const panel = document.querySelector(".panel-superacion");
+        if (!panel) return null;
+        const raw = panel.getAttribute("data-progreso-servidor");
+        if (!raw) return null;
+        try {
+            return JSON.parse(raw);
+        } catch (e) {
+            console.warn("Forja: progreso del servidor ilegible", e);
+            return null;
+        }
+    }
+
+    async function sincronizarDesdeServidor() {
+        asegurarSufijoUsuario();
+        try {
+            const resp = await fetch("/estadisticas/progreso.json", {
+                headers: { "X-Requested-With": "XMLHttpRequest", Accept: "application/json" },
+            });
+            if (!resp.ok) return false;
+            const snapshot = await resp.json();
+            aplicarSnapshotServidor(snapshot);
+            renderizarPanelInicio();
+            return true;
+        } catch (e) {
+            console.warn("Forja: no se pudo sincronizar progreso con el servidor", e);
+            return false;
+        }
+    }
+
     function obtenerStats() {
-        return leerJsonMigrando(
-            CLAVE_STATS(),
-            "stats",
-            {
-                porModulo: {},
-                totalAprobados: 0,
-                rachaActual: 0,
-                modulosAprobados: {},
-                modulosDistintos: 0,
-            },
-            (s) => Object.keys(s.porModulo || {}).length > 0 || (s.totalAprobados || 0) > 0
-        );
+        asegurarSufijoUsuario();
+        return leerJson(CLAVE_STATS(), statsVacias()) || statsVacias();
     }
 
     function calcularNivel(modulo) {
@@ -112,6 +150,10 @@ const Progreso = (function () {
         return 3;
     }
 
+    /**
+     * Actualiza la caché local tras una corrección (el servidor ya guardó).
+     * Evita doble conteo con sessionStorage por ejercicioId.
+     */
     function registrarResultado(datos) {
         asegurarSufijoUsuario();
         const { modulo, titulo, enunciado, nota, aprobado, tiempoSegundos, ejercicioId } = datos;
@@ -165,11 +207,15 @@ const Progreso = (function () {
     }
 
     function actualizarMedallas(stats) {
-        const obtenidas = leerJson(CLAVE_MEDALLAS(), []);
-        const ids = new Set(obtenidas.map((m) => m.id));
+        const obtenidas = [];
         MEDALLAS.forEach((def) => {
-            if (!ids.has(def.id) && def.prueba(stats)) {
-                obtenidas.push({ id: def.id, icono: def.icono, nombre: def.nombre, fecha: new Date().toISOString() });
+            if (def.prueba(stats)) {
+                obtenidas.push({
+                    id: def.id,
+                    icono: def.icono,
+                    nombre: def.nombre,
+                    fecha: new Date().toISOString(),
+                });
             }
         });
         guardarJson(CLAVE_MEDALLAS(), obtenidas);
@@ -179,9 +225,7 @@ const Progreso = (function () {
     function mensajeMotivacion(modulo, nota, aprobado, pm) {
         const stats = obtenerStats();
         if (pm.intentos === 1) return "¡Primer ejercicio! El viaje empieza aquí.";
-        if (nota > pm.mejorNota || (nota === pm.mejorNota && pm.intentos > 1 && nota === stats.porModulo[modulo].mejorNota)) {
-            if (nota >= (pm.mejorNota || 0)) return "🔥 ¡Récord personal! Sigue así.";
-        }
+        if (nota >= (pm.mejorNota || 0) && pm.intentos > 1) return "🔥 ¡Récord personal! Sigue así.";
         if (!aprobado && pm.mejorNota > nota) return "Ánimo. Un mal día no define tu camino.";
         if (stats.rachaActual >= 3) return "🏅 ¡Racha de " + stats.rachaActual + "! Eres un máquina.";
         if (stats.totalAprobados >= 10) return "🎓 ¡Maestro forjador! Te has ganado el respeto.";
@@ -201,21 +245,15 @@ const Progreso = (function () {
     }
 
     function obtenerHistorial() {
-        return leerJsonMigrando(
-            CLAVE_HISTORIAL(),
-            "historial",
-            [],
-            (h) => Array.isArray(h) && h.length > 0
-        );
+        asegurarSufijoUsuario();
+        const h = leerJson(CLAVE_HISTORIAL(), []);
+        return Array.isArray(h) ? h : [];
     }
 
     function obtenerMedallas() {
-        return leerJsonMigrando(
-            CLAVE_MEDALLAS(),
-            "medallas",
-            [],
-            (m) => Array.isArray(m) && m.length > 0
-        );
+        asegurarSufijoUsuario();
+        const m = leerJson(CLAVE_MEDALLAS(), []);
+        return Array.isArray(m) ? m : [];
     }
 
     function rankingLocal() {
@@ -236,16 +274,19 @@ const Progreso = (function () {
             ? historial.filter((h) => h.modulo === moduloFiltro)
             : historial;
         return {
-            labels: filtrado.map((h) => new Date(h.fecha).toLocaleDateString("es-ES", { day: "2-digit", month: "short" })),
+            labels: filtrado.map((h) => {
+                try {
+                    return new Date(h.fecha).toLocaleDateString("es-ES", { day: "2-digit", month: "short" });
+                } catch (e) {
+                    return "";
+                }
+            }),
             notas: filtrado.map((h) => h.nota),
         };
     }
 
-    function historialParaMostrar() {
-        return obtenerHistorial();
-    }
-
-    function limpiarProgresoLocal() {
+    /** Vacía solo la caché del navegador y vuelve a tirar del servidor. */
+    async function limpiarProgresoLocal() {
         asegurarSufijoUsuario();
         try {
             localStorage.removeItem(CLAVE_HISTORIAL());
@@ -258,9 +299,15 @@ const Progreso = (function () {
                 if (k.startsWith("forja-reg-")) sessionStorage.removeItem(k);
             });
         } catch (e) {
-            console.warn("Forja: no se pudo limpiar el progreso local", e);
+            console.warn("Forja: no se pudo limpiar la caché local", e);
         }
-        renderizarPanelInicio();
+        const embebido = snapshotDesdePanelInicio();
+        if (embebido) {
+            aplicarSnapshotServidor(embebido);
+            renderizarPanelInicio();
+            return;
+        }
+        await sincronizarDesdeServidor();
     }
 
     function renderizarPanelInicio() {
@@ -270,10 +317,10 @@ const Progreso = (function () {
         const medDiv = document.getElementById("lista-medallas");
         if (!histUl) return;
 
-        const historial = historialParaMostrar();
+        const historial = obtenerHistorial();
         histUl.innerHTML = historial.length
             ? historial.map((h) =>
-                `<li><strong>${h.modulo}</strong> — ${h.nota}/10 ${h.aprobado ? "✓" : "✗"}<br><small>${h.titulo}</small></li>`
+                `<li><strong>${h.modulo}</strong> — ${h.nota}/10 ${h.aprobado ? "✓" : "✗"}<br><small>${h.titulo || ""}</small></li>`
             ).join("")
             : "<li>Aún no hay ejercicios. ¡Empieza uno!</li>";
 
@@ -346,6 +393,16 @@ const Progreso = (function () {
 
     document.addEventListener("DOMContentLoaded", function () {
         asegurarSufijoUsuario();
+        const embebido = snapshotDesdePanelInicio();
+        if (embebido) {
+            // Pintar ya con el snapshot embebido; luego refrescar por red por si la caché estaba vieja.
+            aplicarSnapshotServidor(embebido);
+            if (loginDesdeDom()) {
+                sincronizarDesdeServidor();
+            }
+        } else if (loginDesdeDom()) {
+            sincronizarDesdeServidor();
+        }
         renderizarPanelInicio();
         const sel = document.getElementById("filtro-grafico-modulo");
         if (sel) {
@@ -353,10 +410,14 @@ const Progreso = (function () {
                 dibujarGrafico(document.getElementById("grafico-progreso"), sel.value || null);
             });
         }
-        const btnLimpiar = document.getElementById("btn-limpiar-progreso-local");
-        if (btnLimpiar) {
-            btnLimpiar.addEventListener("click", function () {
-                if (confirm("¿Borrar el progreso local de este navegador (historial, ranking y medallas)? No afecta a las estadísticas del servidor.")) {
+        const btnRecargar = document.getElementById("btn-recargar-progreso-servidor")
+            || document.getElementById("btn-limpiar-progreso-local");
+        if (btnRecargar) {
+            btnRecargar.addEventListener("click", function () {
+                if (confirm(
+                    "¿Recargar la caché de este navegador desde el servidor?\n"
+                    + "No borra las estadísticas del servidor (usa «Limpiar estadísticas» más abajo)."
+                )) {
                     limpiarProgresoLocal();
                 }
             });
@@ -368,11 +429,15 @@ const Progreso = (function () {
         const b64 = respuestaFetch.headers.get("X-Forja-Progreso");
         if (!b64) return null;
         try {
-            const datos = JSON.parse(atob(b64));
+            const binario = atob(b64);
+            const bytes = Uint8Array.from(binario, (c) => c.charCodeAt(0));
+            const datos = JSON.parse(new TextDecoder("utf-8").decode(bytes));
             const res = registrarResultado(datos);
-            if (res && datos.mensaje_dificultad) {
-                res.mensaje = datos.mensaje_dificultad;
+            if (res && (datos.mensajeDificultad || datos.mensaje_dificultad)) {
+                res.mensaje = datos.mensajeDificultad || datos.mensaje_dificultad;
             }
+            // En cuanto pueda, alinear caché con el servidor (fuente de verdad).
+            sincronizarDesdeServidor();
             return res;
         } catch (e) {
             console.warn("Forja: cabecera de progreso no válida", e);
@@ -394,7 +459,7 @@ const Progreso = (function () {
                 || "0",
             10
         );
-        return registrarResultado({
+        const res = registrarResultado({
             modulo: zona.dataset.modulo,
             titulo,
             enunciado: titulo,
@@ -403,11 +468,14 @@ const Progreso = (function () {
             tiempoSegundos: tiempo,
             ejercicioId: zona.dataset.ejercicioId,
         });
+        sincronizarDesdeServidor();
+        return res;
     }
 
     function exportarParaEntrega() {
         asegurarSufijoUsuario();
         return {
+            fuente: hidratadoDesdeServidor ? "servidor+cache" : "cache",
             historial: obtenerHistorial(),
             stats: obtenerStats(),
             medallas: obtenerMedallas(),
@@ -420,6 +488,7 @@ const Progreso = (function () {
         registrarResultado,
         registrarDesdeCabecera,
         registrarDesdeZona,
+        sincronizarDesdeServidor,
         obtenerHistorial,
         obtenerMedallas,
         rankingLocal,

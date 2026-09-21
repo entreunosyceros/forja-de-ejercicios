@@ -12,7 +12,7 @@
 2. La web ejecuta `generador.py` y muestra un enunciado (con nombre y fecha del alumno).
 3. Escribe la respuesta en un cuadro con **resaltado de sintaxis** (Java, SQL, bash… según el módulo); `evaluador.py` aplica criterios y calcula la nota (0–10, aprueba ≥ 5). La dificultad se [adapta sola](#dificultad-adaptativa) según tus rachas.
 4. Opcional: contenedor Docker para practicar comandos reales.
-5. En la portada: progreso local y estadísticas del servidor (ver [Progreso y estadísticas](#progreso-y-estadísticas-portada)).
+5. En la portada: progreso y estadísticas del servidor (ver [Progreso y estadísticas](#progreso-y-estadísticas-portada)).
 6. **Entrega al profesor:** descarga un `.json` con su avance y lo deja en la carpeta compartida.
 
 ### Profesor
@@ -69,27 +69,27 @@ Solo se versionan los `.gitkeep` de las carpetas vacías.
 
 ## Progreso y estadísticas (portada)
 
-En la **portada** (`/`) hay dos paneles que **no comparten datos**: uno vive en el navegador y otro en el servidor.
+En la **portada** (`/`) el panel de progreso y las estadísticas de uso **comparten la misma fuente: el servidor**. El navegador solo guarda una caché para pintar el gráfico y las medallas al instante.
 
 | Panel | Dónde se guarda | Qué muestra | Cómo vaciarlo |
 |-------|-----------------|-------------|---------------|
-| **Tu progreso (local, sin red)** | `localStorage` del navegador (por usuario de sesión) | Últimos **5** ejercicios, gráfico, ranking por módulo y medallas | Botón **«Limpiar progreso local»** (solo este navegador) |
-| **Tus estadísticas de uso (servidor)** | `datos/estadisticas/<usuario>.json` en el equipo | Totales acumulados: intentos, aprobados, nota media, tiempo, desglose por módulo | Botón **«Limpiar estadísticas»** (pide confirmación) |
+| **Tu progreso** | Servidor (`datos/estadisticas/…`); caché en `localStorage` | Últimos **5** ejercicios, gráfico, ranking por módulo y medallas | **«Recargar desde el servidor»** (solo refresca la caché) |
+| **Tus estadísticas de uso** | `datos/estadisticas/<usuario>.json` | Totales acumulados: intentos, aprobados, nota media, tiempo, desglose por módulo | **«Limpiar estadísticas»** (borra el servidor; la caché se alinea al recargar) |
 
 ### Detalles importantes
 
-- **Local:** si cambias de navegador o borras datos del sitio, el progreso local desaparece; el del servidor no.
-- **Servidor:** cuenta todos los ejercicios que has **corregido** (enviado la respuesta), desde que usas la app en ese equipo.
-- Limpiar uno **no** borra el otro: puedes resetear medallas en el navegador y conservar el historial del servidor, o al revés.
-- Tras limpiar estadísticas del servidor, el fichero `datos/estadisticas/<usuario>.json` se elimina; al hacer el siguiente ejercicio se vuelve a crear.
+- Si cambias de navegador, al iniciar sesión el panel se **vuelve a sincronizar** con el servidor.
+- Contabiliza los ejercicios que has **corregido** (enviado la respuesta) en ese equipo.
+- Limpiar la caché del navegador **no** borra el servidor; limpiar estadísticas del servidor sí reinicia totales y el panel al recargar.
 
 ### API (servidor)
 
 | Método | Ruta | Efecto |
 |--------|------|--------|
-| `POST` | `/estadisticas/limpiar` | Borra las estadísticas de uso del usuario con sesión iniciada y redirige a la portada |
+| `GET` | `/estadisticas/progreso.json` | Snapshot para sincronizar el panel (historial + stats) |
+| `POST` | `/estadisticas/limpiar` | Borra las estadísticas de uso del usuario con sesión iniciada |
 
-Requiere estar logueado y token CSRF (el formulario de la portada lo incluye).
+Requiere estar logueado; el POST necesita token CSRF (el formulario de la portada lo incluye).
 
 ---
 

@@ -52,7 +52,7 @@ conserva solo la nota por elementos.
 
 ### Retroalimentación al corregir
 
-Tras enviar una respuesta, la pantalla de resultado muestra **criterios en lenguaje claro** (qué se esperaba y una **pista** distinta si fallas), no expresiones regulares crudas. La lógica está en [`retroalimentacion_criterios.py`](../retroalimentacion_criterios.py) y se aplica al generar (`generador.py`) y al evaluar (`evaluador.py`). En **modo profesor** puedes ver el patrón técnico del criterio.
+Tras enviar una respuesta, la pantalla de resultado muestra **criterios en lenguaje claro** (qué se esperaba y una **pista** distinta si fallas), no expresiones regulares crudas. La lógica está en [`retroalimentacion_criterios.py`](../retroalimentacion_criterios.py) (tabla editable [`reglas_retroalimentacion_regex.json`](../reglas_retroalimentacion_regex.json)) y se aplica al generar (`generador.py`) y al evaluar (`evaluador.py`). En **modo profesor** puedes ver el patrón técnico del criterio.
 
 ---
 

@@ -9,6 +9,7 @@ import com.luegoestarde.forjaexamenes.servicio.ServicioEstadisticasUsuario;
 import com.luegoestarde.forjaexamenes.servicio.ServicioSubidaDocumentacion;
 import com.luegoestarde.forjaexamenes.servicio.ServicioIndexacionDocumentacion;
 import com.luegoestarde.forjaexamenes.servicio.ServicioMetadatosEjercicio;
+import com.luegoestarde.forjaexamenes.servicio.ServicioProgresoUsuario;
 import com.luegoestarde.forjaexamenes.servicio.ServicioTerminalSistema;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -20,6 +21,7 @@ public class ControladorInicio {
     private final ServicioDocumentacion servicioDocumentacion;
     private final ServicioIndexacionDocumentacion servicioIndexacion;
     private final ServicioEstadisticasUsuario servicioEstadisticas;
+    private final ServicioProgresoUsuario servicioProgreso;
     private final ServicioMetadatosEjercicio metadatosEjercicio;
     private final ServicioBancoEjercicios servicioBanco;
     private final ServicioSubidaDocumentacion servicioSubida;
@@ -30,6 +32,7 @@ public class ControladorInicio {
     public ControladorInicio(ServicioDocumentacion servicioDocumentacion,
                              ServicioIndexacionDocumentacion servicioIndexacion,
                              ServicioEstadisticasUsuario servicioEstadisticas,
+                             ServicioProgresoUsuario servicioProgreso,
                              ServicioMetadatosEjercicio metadatosEjercicio,
                              ServicioBancoEjercicios servicioBanco,
                              ServicioSubidaDocumentacion servicioSubida,
@@ -38,6 +41,7 @@ public class ControladorInicio {
         this.servicioDocumentacion = servicioDocumentacion;
         this.servicioIndexacion = servicioIndexacion;
         this.servicioEstadisticas = servicioEstadisticas;
+        this.servicioProgreso = servicioProgreso;
         this.metadatosEjercicio = metadatosEjercicio;
         this.servicioBanco = servicioBanco;
         this.servicioSubida = servicioSubida;
@@ -64,8 +68,8 @@ public class ControladorInicio {
             modelo.addAttribute("estadisticas", stats);
             modelo.addAttribute("tiempoPracticado",
                     ServicioEstadisticasUsuario.formatearTiempo(stats.getTiempoTotalSegundos()));
-            modelo.addAttribute("historialServidorJson",
-                    mapeadorJson.writeValueAsString(stats.getUltimosIntentos()));
+            var snapshot = servicioProgreso.desdeEstadisticas(stats);
+            modelo.addAttribute("progresoServidorJson", mapeadorJson.writeValueAsString(snapshot));
         }
         return "inicio";
     }

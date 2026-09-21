@@ -42,7 +42,7 @@ La app **no envía ficheros**; el intercambio es mediante una **carpeta comparti
 | 3 | Profesor | **Perfil → Seguimiento de alumnos** o `/profesor/alumnos` → elegir fichero y **nombre personalizado** del alumno |
 | 4 | Profesor | Tabla comparativa y gráficas de la clase; «Detalle» para ver cada módulo |
 
-El fichero incluye estadísticas del **servidor**, el **historial de ejercicios** (enunciado, respuesta y nota de cada intento) y progreso **local** del navegador (ranking, medallas).
+El fichero incluye estadísticas del **servidor**, el **historial de ejercicios** (enunciado, respuesta y nota de cada intento) y la **caché de progreso** del navegador (ranking, medallas), alineada con el servidor.
 
 Si varios alumnos practican en el **mismo equipo**, el profesor también puede verlos en «Alumnos en este servidor» sin importar ficheros.
 
@@ -101,7 +101,8 @@ Tras importar varias entregas:
 
 | Método | Ruta | Quién | Efecto |
 |--------|------|-------|--------|
-| `GET` | `/entrega/exportar.json` | Alumno | Descarga entrega (estadísticas servidor; el navegador añade progreso local al guardar) |
+| `GET` | `/entrega/exportar.json` | Alumno | Descarga entrega (estadísticas servidor; el navegador añade la caché de progreso al guardar) |
+
 | `POST` | `/profesor/alumnos/importar` | Profesor | Importa entrega de un alumno (fichero + nombre personalizado) |
 | `POST` | `/profesor/alumnos/importada/{id}/renombrar` | Profesor | Cambia el nombre personalizado de una entrega |
 | `POST` | `/profesor/alumnos/importada/{id}/eliminar` | Profesor | Elimina una entrega importada |

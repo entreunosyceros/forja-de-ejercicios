@@ -79,15 +79,15 @@ QUÉ PUEDES HACER COMO ALUMNO
      informatica, idiomas o general (si la materia no se detecta sola).
 
 5. VER TU PROGRESO (portada, al final)
-   a) Tu progreso (local, sin red) — últimos 5 ejercicios en ESTE navegador.
-      Botón «Limpiar progreso local» (solo este navegador).
+   a) Tu progreso — últimos 5 ejercicios, gráfico y medallas (datos del servidor;
+      el navegador solo guarda una caché). Botón «Recargar desde el servidor».
    b) Tus estadísticas de uso (servidor) — totales en tu equipo.
       Botón «Limpiar estadísticas» (pide confirmación; borra datos del servidor).
 
 6. ENTREGAR TU PROGRESO AL PROFESOR (solo cuentas alumno)
    - Portada → «Descargar entrega para el profesor» → fichero .json.
    - Incluye estadísticas, historial de ejercicios (enunciado, respuesta, nota)
-     y progreso local del navegador.
+     y la caché de progreso del navegador.
    - Déjalo en la carpeta compartida para que el profesor lo importe en
      Seguimiento de alumnos o lo consulte en Resultados (CSV).
 

@@ -1,5 +1,5 @@
 /**
- * Exporta estadísticas del servidor + progreso local para la carpeta compartida con el profesor.
+ * Exporta estadísticas del servidor + caché de progreso del navegador para el profesor.
  */
 (function () {
     function exportarProgresoLocal() {

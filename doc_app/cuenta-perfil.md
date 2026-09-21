@@ -21,7 +21,8 @@
 | **Revisar propuestas IA** (profesor) | `/profesor/revisar` → detalle en `/profesor/revisar/{id}` |
 | Vista rápida del banco (profesor) | `/profesor/banco` |
 | Descargar paquete de revisión (profesor) | `/profesor/revisar/{id}/paquete` (ZIP) |
-| Limpiar progreso local (navegador) | Portada → **Tu progreso (local, sin red)** → «Limpiar progreso local» |
+| Limpiar caché de progreso del navegador | Portada → **Tu progreso** → «Recargar desde el servidor» |
+
 | Limpiar estadísticas de uso (servidor) | Portada → **Tus estadísticas de uso (servidor)** → «Limpiar estadísticas» |
 
 ## Usuarios y roles

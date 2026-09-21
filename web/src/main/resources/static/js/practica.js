@@ -1,5 +1,5 @@
 /**
- * Práctica infinita (AJAX), temporizador y registro de progreso local.
+ * Práctica infinita (AJAX), temporizador y registro de progreso (caché + sync servidor).
  */
 (function () {
     let segundosTranscurridos = 0;
@@ -52,6 +52,10 @@
         const usaIa = typeof ForjaCarga !== "undefined" && ForjaCarga.esModuloGemini(modulo);
         let nivel = 2;
         if (!usaIa && typeof Progreso !== "undefined") {
+            // Nivel desde estadísticas del servidor (caché sincronizada).
+            if (typeof Progreso.sincronizarDesdeServidor === "function") {
+                await Progreso.sincronizarDesdeServidor();
+            }
             nivel = Progreso.calcularNivel(modulo);
         }
         let url = usaIa ? "/ejercicio/fragment/nuevo?" : "/ejercicio/fragment/nuevo?nivel=" + nivel;

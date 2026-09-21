@@ -1,0 +1,165 @@
+{
+  "version": 1,
+  "descripcion": "Reglas (patrón → descripción/esperado/pista) para criterios tipo regex. Orden = prioridad. Placeholders: {nombres}, {ref}, {nombres_ayuda}.",
+  "reglas": [
+    {
+      "id": "explain",
+      "patron": "\\bexplain\\b",
+      "flags": "i",
+      "descripcion": "Analizar la consulta con EXPLAIN",
+      "esperado": "Incluir el comando EXPLAIN sobre la consulta del enunciado.",
+      "pista": "Antes de crear un índice, usa EXPLAIN para ver si la consulta hace un recorrido completo de la tabla (full scan) o usa un índice."
+    },
+    {
+      "id": "create_index",
+      "patron": "create\\\\s\\+index",
+      "flags": "i",
+      "contiene_todas": [
+        "CREATE",
+        "INDEX"
+      ],
+      "descripcion": "Crear un índice (CREATE INDEX)",
+      "esperado": "Incluir un comando CREATE INDEX{ref}.",
+      "pista": "La consulta del enunciado es lenta porque falta un índice en la columna del WHERE. Escribe CREATE INDEX nombre ON tabla(columna);{nombres_ayuda}"
+    },
+    {
+      "id": "docker_logs",
+      "patron": "docker\\s*\\\\s*\\+?\\s*logs|docker\\s+logs",
+      "flags": "i",
+      "descripcion": "Consultar logs del contenedor",
+      "esperado": "Incluir docker logs (o equivalente) para ver el error.",
+      "pista": "Los logs del contenedor muestran por qué falla el servicio antes de reconstruir la imagen."
+    },
+    {
+      "id": "docker_inspect",
+      "patron": "docker(-compose)?\\s*\\\\s*\\+?\\s*(ps|inspect)",
+      "flags": "i",
+      "contiene_subcadena": [
+        "inspect"
+      ],
+      "descripcion": "Inspeccionar contenedores",
+      "esperado": "Incluir docker ps o docker inspect para revisar el estado.",
+      "pista": "Comprueba que el contenedor está en ejecución y revisa su configuración antes de cambiar el compose."
+    },
+    {
+      "id": "docker_compose_up",
+      "patron": "docker-compose\\s*\\\\s*\\+?\\s*up|compose\\s+up",
+      "flags": "i",
+      "descripcion": "Reconstruir y levantar servicios",
+      "esperado": "Incluir docker compose up con --build (o docker-compose up --build).",
+      "pista": "Tras corregir el Dockerfile o el compose, vuelve a construir la imagen con --build para aplicar los cambios."
+    },
+    {
+      "id": "git_status",
+      "patron": "git\\s*\\\\s*\\+?\\s*status",
+      "flags": "i",
+      "descripcion": "Comprobar el estado del repositorio",
+      "esperado": "Incluir git status.",
+      "pista": "Siempre empieza viendo qué archivos están en conflicto o sin commitear."
+    },
+    {
+      "id": "git_merge",
+      "patron": "git\\s*\\\\s*\\+?\\s*merge",
+      "flags": "i",
+      "descripcion": "Resolver el merge o abortarlo",
+      "esperado": "Incluir git merge --abort, git add o git commit según el caso.",
+      "pista": "Tras un conflicto, o abortas el merge o resuelves los archivos y haces commit."
+    },
+    {
+      "id": "vlan_ip_link",
+      "patron": "vlan|ip\\s*\\\\s*\\+?\\s*link",
+      "flags": "i",
+      "descripcion": "Revisar interfaces y VLANs",
+      "esperado": "Mencionar VLAN o ip link para comprobar interfaces.",
+      "pista": "Comprueba que las VLAN existen y las interfaces están activas antes de configurar rutas."
+    },
+    {
+      "id": "ip_route",
+      "patron": "ip\\s*\\\\s*\\+?\\s*route|ip_forward|routing",
+      "flags": "i",
+      "descripcion": "Habilitar enrutamiento entre subredes",
+      "esperado": "Incluir ip route, ip routing o sysctl ip_forward.",
+      "pista": "Para que dos VLANs se comuniquen hace falta reenvío IP y rutas entre subredes."
+    },
+    {
+      "id": "chmod",
+      "patron": "chmod",
+      "flags": "i",
+      "descripcion": "Ajustar permisos (chmod)",
+      "esperado": "Incluir chmod con los permisos pedidos en el enunciado.",
+      "pista": "Los permisos de lectura/escritura/ejecución deben coincidir con lo que pide el caso."
+    },
+    {
+      "id": "chown",
+      "patron": "chown",
+      "flags": "i",
+      "descripcion": "Cambiar propietario (chown)",
+      "esperado": "Incluir chown para asignar usuario o grupo al archivo o carpeta.",
+      "pista": "El propietario y el grupo determinan quién puede acceder al recurso."
+    },
+    {
+      "id": "acl_grupos",
+      "patron": "setfacl|usermod",
+      "flags": "i",
+      "descripcion": "Permisos avanzados (ACL o grupos)",
+      "esperado": "Incluir setfacl o usermod -aG según el enunciado.",
+      "pista": "A veces chmod no basta: ACL o grupos secundarios dan acceso fino."
+    },
+    {
+      "id": "prepared_statement",
+      "patron": "preparedstatement|preparestatement",
+      "flags": "i",
+      "descripcion": "Usar PreparedStatement",
+      "esperado": "Incluir PreparedStatement y prepareStatement en el código Java.",
+      "pista": "Nunca concatenes SQL con el input del usuario: usa ? y PreparedStatement."
+    },
+    {
+      "id": "setxxx",
+      "patron": "setstring|setint|setobject",
+      "flags": "i",
+      "descripcion": "Enlazar parámetros con setXxx",
+      "esperado": "Incluir setString, setInt o setObject para los placeholders ?.",
+      "pista": "Cada ? del SQL se rellena con setString/setInt antes de ejecutar."
+    },
+    {
+      "id": "left_join",
+      "patron": "left\\s*\\\\s*\\+?\\s*join",
+      "flags": "i",
+      "descripcion": "Unir tablas con LEFT JOIN",
+      "esperado": "Incluir LEFT JOIN (o LEFT OUTER JOIN) entre las tablas del enunciado.",
+      "pista": "LEFT JOIN devuelve todas las filas de la tabla izquierda aunque no haya coincidencia en la derecha."
+    },
+    {
+      "id": "select",
+      "patron": "\\bselect\\b",
+      "flags": "i",
+      "descripcion": "Consulta SELECT",
+      "esperado": "Incluir una sentencia SELECT que use las tablas del enunciado.",
+      "pista": "La consulta debe recuperar los datos pedidos con las tablas y columnas correctas."
+    },
+    {
+      "id": "claves_relacionales",
+      "patron": "primary\\s*\\\\s*\\+?\\s*key|foreign\\s*\\\\s*\\+?\\s*key|references",
+      "flags": "i",
+      "descripcion": "Claves en el modelo relacional",
+      "esperado": "Incluir PRIMARY KEY y/o FOREIGN KEY según el enunciado.",
+      "pista": "Separa entidades en tablas y enlázalas con claves foráneas para evitar datos repetidos."
+    },
+    {
+      "id": "transaccion",
+      "patron": "start\\s*\\\\s*\\+?\\s*transaction|begin|commit|rollback",
+      "flags": "i",
+      "descripcion": "Transacción SQL",
+      "esperado": "Incluir BEGIN/START TRANSACTION y COMMIT o ROLLBACK.",
+      "pista": "Agrupa los cambios en una transacción para que todo se aplique o nada."
+    },
+    {
+      "id": "herencia_java",
+      "patron": "@override|extends|implements",
+      "flags": "i",
+      "descripcion": "Herencia o polimorfismo en Java",
+      "esperado": "Incluir extends, implements o @Override según el enunciado.",
+      "pista": "La subclase debe reutilizar o redefinir el comportamiento de la superclase."
+    }
+  ]
+}

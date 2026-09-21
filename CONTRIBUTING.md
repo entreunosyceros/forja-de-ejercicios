@@ -64,7 +64,7 @@ Detalle en [doc_app/desarrollo.md](doc_app/desarrollo.md).
 |------|-------------------|
 | Web Spring Boot | `web/src/main/java/`, `web/src/main/resources/templates/` |
 | Generación plantillas | `generador.py` |
-| Corrección | `evaluador.py`, `retroalimentacion_criterios.py`, `alias_comandos.py` |
+| Corrección | `evaluador.py`, `retroalimentacion_criterios.py`, `reglas_retroalimentacion_regex.json`, `alias_comandos.py` |
 | PDF + Gemini | `indexador_docs.py`, `generador_docs.py`, `generador_gemini.py`, `modelo_ejercicio.py` |
 | Tipos de materia | `tipo_materia.py`, `vocabulario_claves.json` |
 | Banco portable | `banco_loader.py`, `ServicioBancoPortable.java` |

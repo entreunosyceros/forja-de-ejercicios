@@ -12,10 +12,29 @@ sys.path.insert(0, str(RAIZ))
 
 import evaluador
 from retroalimentacion_criterios import (
+    RUTA_REGLAS_REGEX,
+    _cargar_reglas_regex,
+    _esperado_pista_regex,
     aplicar_retroalimentacion_a_criterio,
     parece_patron_regex,
     pista_desde_criterio,
 )
+
+
+def probar_tabla_reglas_json():
+    assert RUTA_REGLAS_REGEX.is_file(), f"Falta {RUTA_REGLAS_REGEX.name}"
+    reglas = _cargar_reglas_regex()
+    assert len(reglas) >= 10
+    ids = {r.get("id") for r in reglas}
+    assert "create_index" in ids
+    assert "explain" in ids
+    assert "docker_logs" in ids
+    desc, esperado, pista = _esperado_pista_regex(r"CREATE\s+INDEX.*pedidos")
+    assert "CREATE INDEX" in esperado
+    assert "índice" in pista.lower() or "indice" in pista.lower()
+    desc2, _, _ = _esperado_pista_regex(r"(?i)explain\s+select")
+    assert "EXPLAIN" in desc2.upper()
+    print("OK tabla reglas JSON")
 
 
 def probar_create_index_bd():
@@ -87,6 +106,7 @@ def probar_palabra_clave_docs():
 
 
 def main() -> int:
+    probar_tabla_reglas_json()
     probar_create_index_bd()
     probar_evaluador_enriquece_al_vuelo()
     probar_generador_bd_no_regex_en_pista()
