@@ -98,14 +98,66 @@ def probar_obligatorio_tope():
 
 
 def probar_pista_regex_no_filtra_tokens_de_clase():
-    from retroalimentacion_criterios import pista_desde_criterio
+    import re
+    from retroalimentacion_criterios import _tokens_legibles, pista_desde_criterio
 
-    pista = pista_desde_criterio({
-        "tipo": "regex",
-        "patron": r"getPassword|get[A-Z]\w*",
-    })
+    patron = r"getPassword|get[A-Z]\w*"
+    tokens = _tokens_legibles(patron)
+    assert "A-Z" not in tokens
+    assert not any(re.fullmatch(r"[A-Za-z]-[A-Za-z0-9]+", t) for t in tokens)
+    pista = pista_desde_criterio({"tipo": "regex", "patron": patron})
     assert "A-Z" not in pista
     assert "getPassword" not in pista
+
+
+def probar_criterios_no_colador_update_y_for():
+    """Alternativas flojas (UPDATE solo, for ( solo) ya no puntúan solos."""
+    esc_update = {
+        "id": "u1",
+        "modulo": "bd_transacciones",
+        "criterios": [
+            {
+                "tipo": "regex",
+                "patron": r"UPDATE\s+\w+\s+SET\s+[\s\S]{0,80}\bsaldo\b",
+                "peso": 10,
+                "flags": "i",
+            },
+        ],
+    }
+    assert evaluador.evaluar(esc_update, "UPDATE cuentas SET x = 1")["nota"] < 5
+    assert evaluador.evaluar(esc_update, "UPDATE")["nota"] == 0
+    ok = evaluador.evaluar(
+        esc_update, "UPDATE cuentas SET saldo = saldo - 10 WHERE id = 1"
+    )
+    assert ok["nota"] == 10.0
+
+    esc_for = {
+        "id": "f1",
+        "modulo": "poo",
+        "criterios": [
+            {
+                "tipo": "regex",
+                "patron": r"List<Empleado>|for\s*\(\s*Empleado\b",
+                "peso": 10,
+            },
+        ],
+    }
+    assert evaluador.evaluar(esc_for, "for (int i = 0; i < 10; i++) {}")["nota"] == 0
+    assert evaluador.evaluar(esc_for, "List<Empleado> xs = List.of();")["nota"] == 10.0
+
+
+def probar_banco_docker_no_acepta_palabras_sueltas():
+    import json
+
+    ruta = RAIZ / "banco" / "aprobados" / "docker" / "ejemplo.json"
+    if not ruta.is_file():
+        return
+    esc = json.loads(ruta.read_text(encoding="utf-8"))
+    basura = evaluador.evaluar(esc, "nginx docker -p 8080:80")
+    assert not basura["aprobado"], basura
+    assert basura["nota"] < 6
+    buena = evaluador.evaluar(esc, esc["solucion_referencia"])
+    assert buena["aprobado"] and buena["nota"] == 10.0
 
 
 def probar_banco_aprobados_solucion_pasa():
@@ -137,5 +189,7 @@ if __name__ == "__main__":
     probar_no_contiene()
     probar_obligatorio_tope()
     probar_pista_regex_no_filtra_tokens_de_clase()
+    probar_criterios_no_colador_update_y_for()
+    probar_banco_docker_no_acepta_palabras_sueltas()
     probar_banco_aprobados_solucion_pasa()
     print("OK regresion corrector")

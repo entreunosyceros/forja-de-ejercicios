@@ -10,7 +10,7 @@
   "criterios": [
     {"tipo": "regex", "patron": "docker\\s+logs", "peso": 3, "banderas": "i"},
     {"tipo": "regex", "patron": "docker(-compose)?\\s+(ps|inspect)|docker\\s+container\\s+(ls|inspect)", "peso": 2, "banderas": "i"},
-    {"tipo": "regex", "patron": "compose\\s+up|docker-compose\\s+up", "peso": 3, "banderas": "i"},
+    {"tipo": "regex", "patron": "(docker\\s+)?compose\\s+up[\\s\\S]{0,40}--build|docker-compose\\s+up[\\s\\S]{0,40}--build", "peso": 3, "banderas": "i"},
     {"tipo": "regex", "patron": "{contenedor}", "peso": 1, "banderas": "i"}
   ],
   "solucion_referencia": "docker logs {contenedor}\ndocker ps -a\ndocker compose up -d --build"

@@ -97,16 +97,22 @@ def parece_patron_regex(texto: str) -> bool:
 def _tokens_legibles(patron: str) -> list[str]:
     """Extrae palabras concretas (tablas, columnas, comandos) de un patrón regex."""
     simpl = patron
+    # Quitar clases [A-Z], [^0-9], etc. antes de tokenizar (evita basura «A-Z»).
+    simpl = re.sub(r"\[[^\]]*\]", " ", simpl)
+    simpl = re.sub(r"\\[wWdDsSAaBb]", " ", simpl)
     simpl = re.sub(r"\\s\+?", " ", simpl)
     simpl = re.sub(r"\\.", "", simpl)
     simpl = re.sub(r"\.\*", " ", simpl)
     simpl = re.sub(r"[|()?[\]{}^$+*]", " ", simpl)
     vistos: set[str] = set()
     tokens: list[str] = []
+    basura = frozenset({"a-z", "a-z0-9", "0-9", "az", "az09"})
     for coincidencia in re.finditer(r"[a-zA-Z_][a-zA-Z0-9_-]*", simpl):
         palabra = coincidencia.group(0)
         clave = palabra.lower()
         if clave in vistos or len(palabra) < 2:
+            continue
+        if clave in basura or re.fullmatch(r"[a-z0-9]-[a-z0-9]+", clave):
             continue
         if palabra.isupper() and palabra in _PALABRAS_SQL | _PALABRAS_DOCKER | _PALABRAS_GIT:
             continue

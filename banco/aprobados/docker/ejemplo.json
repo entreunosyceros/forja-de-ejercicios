@@ -5,25 +5,29 @@
   "enunciado": "Levanta un contenedor nginx publicando el puerto 8080 del host al 80 del contenedor.\n\nEscribe los comandos en el cuadro de respuesta.",
   "criterios": [
     {
-      "tipo": "contiene_todos",
-      "terminos": ["docker run"],
+      "tipo": "regex",
+      "patron": "docker\\s+run\\b",
       "peso": 3,
+      "flags": "i",
+      "obligatorio": true,
       "esperado": "Usar docker run",
       "pista": "Empieza con docker run"
     },
     {
-      "tipo": "contiene_alguno",
-      "terminos": ["-p 8080:80", "-p8080:80"],
+      "tipo": "regex",
+      "patron": "-p\\s*8080\\s*:\\s*80\\b",
       "peso": 3,
-      "esperado": "Mapear puerto 8080:80",
-      "pista": "Usa -p para publicar puertos"
+      "flags": "i",
+      "esperado": "Mapear puerto 8080:80 con -p",
+      "pista": "Usa -p 8080:80 para publicar el puerto"
     },
     {
-      "tipo": "contiene_todos",
-      "terminos": ["nginx"],
+      "tipo": "regex",
+      "patron": "docker\\s+run\\b(?:\\s+\\S+){0,12}\\s+nginx\\b",
       "peso": 2,
-      "esperado": "Imagen nginx",
-      "pista": "La imagen suele ser nginx"
+      "flags": "i",
+      "esperado": "Imagen nginx como argumento de docker run",
+      "pista": "La imagen va al final del docker run (p. ej. nginx)"
     }
   ],
   "solucion_referencia": "docker run -d -p 8080:80 nginx",

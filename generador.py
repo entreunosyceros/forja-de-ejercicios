@@ -99,7 +99,12 @@ def generar_bd() -> dict:
         "parametros": {"tabla": tabla, "columna": columna, "segundos": segundos},
         "criterios": [
             {"tipo": "regex", "patron": r"EXPLAIN", "peso": 3, "flags": "i"},
-            {"tipo": "regex", "patron": rf"CREATE\s+INDEX.*{tabla}|INDEX.*{columna}", "peso": 4, "flags": "i"},
+            {
+                "tipo": "regex",
+                "patron": rf"CREATE\s+INDEX\s+\S+\s+ON\s+{tabla}|CREATE\s+INDEX[\s\S]{{0,40}}\({columna}\)",
+                "peso": 4,
+                "flags": "i",
+            },
             {"tipo": "regex", "patron": tabla, "peso": 1, "flags": "i"},
         ],
         "solucion_referencia": (
@@ -156,7 +161,11 @@ def generar_poo_herencia() -> dict:
             {"tipo": "regex", "patron": r"extends\s+" + clase_base, "peso": 3},
             {"tipo": "regex", "patron": r"@Override", "peso": 2},
             {"tipo": "regex", "patron": metodo, "peso": 2},
-            {"tipo": "regex", "patron": r"List<" + clase_base + r">|for\s*\(", "peso": 2},
+            {
+                "tipo": "regex",
+                "patron": rf"List<{clase_base}>|for\s*\(\s*{clase_base}\b",
+                "peso": 2,
+            },
         ],
         "solucion_referencia": (
             f"public class {clase_base} {{\n"
@@ -257,7 +266,11 @@ def generar_poo_colecciones() -> dict:
                 {"tipo": "regex", "patron": re.escape(coleccion), "peso": 2},
                 {"tipo": "regex", "patron": re.escape(coleccion) + r"<", "peso": 2},
                 {"tipo": "regex", "patron": r"\.put\s*\(", "peso": 2},
-                {"tipo": "regex", "patron": r"entrySet\s*\(|keySet\s*\(|\.forEach\s*\(", "peso": 2},
+                {
+                    "tipo": "regex",
+                    "patron": r"\.entrySet\s*\(|\.keySet\s*\(|for\s*\(\s*Map\.Entry",
+                    "peso": 2,
+                },
             ],
             "solucion_referencia": (
                 f"{coleccion}<{tipo_clave}, {tipo_valor}> datos = new {coleccion}<>();\n"
@@ -285,7 +298,11 @@ def generar_poo_colecciones() -> dict:
             {"tipo": "regex", "patron": re.escape(coleccion), "peso": 2},
             {"tipo": "regex", "patron": re.escape(coleccion) + r"<", "peso": 2},
             {"tipo": "regex", "patron": r"\.add\s*\(", "peso": 2},
-            {"tipo": "regex", "patron": r"for\s*\(|\.forEach\s*\(", "peso": 2},
+            {
+                "tipo": "regex",
+                "patron": rf"for\s*\(\s*{re.escape(tipo_valor)}\b|\.forEach\s*\(",
+                "peso": 2,
+            },
         ],
         "solucion_referencia": (
             f"{coleccion}<{tipo_valor}> datos = new {coleccion}<>();\n"
@@ -316,8 +333,8 @@ def generar_poo_encapsulamiento() -> dict:
             {"tipo": "regex", "patron": re.escape(getter) + r"\s*\(", "peso": 2},
             {"tipo": "regex", "patron": re.escape(setter) + r"\s*\(", "peso": 2},
             {
-                "tipo": "contiene_alguno",
-                "terminos": ["if (", "throw new"],
+                "tipo": "regex",
+                "patron": r"if\s*\([^)]+\)[\s\S]{0,160}throw\s+new",
                 "peso": 2,
             },
         ],
@@ -388,10 +405,15 @@ def generar_bd_modelo() -> dict:
         ),
         "parametros": {"entidad": entidad, "dependencia": dependencia},
         "criterios": [
-            {"tipo": "regex", "patron": r"PRIMARY\s+KEY|PK", "peso": 2, "flags": "i"},
+            {"tipo": "regex", "patron": r"PRIMARY\s+KEY", "peso": 2, "flags": "i"},
             {"tipo": "regex", "patron": r"FOREIGN\s+KEY|REFERENCES", "peso": 3, "flags": "i"},
             {"tipo": "regex", "patron": entidad[:4], "peso": 1, "flags": "i"},
-            {"tipo": "regex", "patron": r"3FN|tercera\s+forma|normaliz", "peso": 2, "flags": "i"},
+            {
+                "tipo": "regex",
+                "patron": r"3FN|tercera\s+forma\s+normal|normalizaci[oó]n",
+                "peso": 2,
+                "flags": "i",
+            },
         ],
         "solucion_referencia": (
             f"CREATE TABLE {entidad} (id INT PRIMARY KEY, ...);\n"
@@ -417,8 +439,13 @@ def generar_bd_transacciones() -> dict:
         ),
         "parametros": {"cuenta_origen": cuenta_origen, "destino": cuenta_destino, "importe": importe},
         "criterios": [
-            {"tipo": "regex", "patron": r"START\s+TRANSACTION|BEGIN", "peso": 2, "flags": "i"},
-            {"tipo": "regex", "patron": r"UPDATE.*saldo|UPDATE", "peso": 3, "flags": "i"},
+            {"tipo": "regex", "patron": r"START\s+TRANSACTION|\bBEGIN(\s+TRANSACTION)?\b", "peso": 2, "flags": "i"},
+            {
+                "tipo": "regex",
+                "patron": r"UPDATE\s+\w+\s+SET\s+[\s\S]{0,80}\bsaldo\b",
+                "peso": 3,
+                "flags": "i",
+            },
             {"tipo": "regex", "patron": r"COMMIT", "peso": 2, "flags": "i"},
             {"tipo": "regex", "patron": r"ROLLBACK", "peso": 2, "flags": "i"},
             {"tipo": "regex", "patron": str(importe), "peso": 1},
@@ -451,7 +478,7 @@ def generar_bd_jdbc() -> dict:
             {"tipo": "regex", "patron": r"prepareStatement", "peso": 2},
             {"tipo": "regex", "patron": r"setString|setInt|setObject", "peso": 2},
             {"tipo": "regex", "patron": r"executeQuery|executeUpdate", "peso": 2},
-            {"tipo": "regex", "patron": r"\?\s*;|WHERE.*\?", "peso": 2},
+            {"tipo": "regex", "patron": r"=\s*\?|WHERE[\s\S]{0,60}\?", "peso": 2},
         ],
         "solucion_referencia": (
             f'String sql = "SELECT * FROM {tabla} WHERE {campo} = ?";\n'
