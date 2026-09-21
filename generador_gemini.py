@@ -52,7 +52,10 @@ _GEMINI_VARS = frozenset({
 
 
 def _cargar_env_desde_fichero() -> None:
-    """Lee examenforge/.env. Las claves Gemini del fichero tienen prioridad sobre el entorno heredado."""
+    """Lee examenforge/.env. El entorno del proceso tiene prioridad (Docker/CI).
+
+    Solo rellena claves Gemini que aún no estén definidas en el entorno.
+    """
     ruta_env = Path(__file__).resolve().parent / ".env"
     if not ruta_env.is_file():
         return
@@ -65,8 +68,9 @@ def _cargar_env_desde_fichero() -> None:
         valor = valor.strip().strip('"').strip("'")
         if not clave or not valor:
             continue
-        if clave in _GEMINI_VARS or clave not in os.environ:
-            os.environ[clave] = valor
+        if clave in os.environ and os.environ[clave].strip():
+            continue
+        os.environ[clave] = valor
 
 
 def _obtener_api_key() -> str:
@@ -95,10 +99,20 @@ class ErrorGeminiTransitorio(RuntimeError):
     """Error temporal de Gemini (p. ej. 503 por sobrecarga) que conviene reintentar."""
 
 
-def _es_error_transitorio(texto: str) -> bool:
-    """Detecta errores temporales del servidor de Gemini (no de configuración)."""
-    t = (texto or "").lower()
-    if any(codigo in texto for codigo in ("503", "502", "504")):
+def _es_error_transitorio(exc: BaseException | str) -> bool:
+    """Detecta errores temporales del servidor de Gemini (código HTTP / tipo SDK)."""
+    if isinstance(exc, BaseException):
+        codigo = getattr(exc, "code", None) or getattr(exc, "status_code", None)
+        if codigo in (502, 503, 504):
+            return True
+        nombre = type(exc).__name__
+        if nombre in {"ServerError", "ServiceUnavailable", "InternalServerError"}:
+            return True
+        texto = str(exc)
+    else:
+        texto = exc or ""
+    t = texto.lower()
+    if any(c in texto for c in ("503", "502", "504")):
         return True
     return any(
         marca in t
@@ -292,21 +306,30 @@ def generar_desde_fragmento(
     prompt = _construir_prompt(fragmento, nivel, titulo_coleccion, modulo, tipo)
     ultimo_error: Exception | None = None
     max_intentos = 3
+    feedback_validacion = ""
 
     for intento in range(max_intentos):
+        prompt_intento = prompt
+        if feedback_validacion:
+            prompt_intento = (
+                prompt
+                + "\n\n--- CORRECCIÓN DEL INTENTO ANTERIOR ---\n"
+                + feedback_validacion
+                + "\nCorrige la propuesta atendiendo a ese motivo y responde solo con JSON."
+            )
         try:
             return _generar_desde_fragmento_intento(
-                cliente, modelo_efectivo, prompt, fragmento, modulo,
+                cliente, modelo_efectivo, prompt_intento, fragmento, modulo,
                 titulo_coleccion, texto_fragmento, tipo,
             )
         except ErrorGeminiTransitorio as exc:
-            # 503/sobrecarga: el pico suele ser breve, reintenta con espera creciente.
             ultimo_error = exc
             if intento >= max_intentos - 1:
                 raise RuntimeError(str(exc)) from exc
             time.sleep(min(8, 2 ** intento))
         except ValueError as exc:
             ultimo_error = exc
+            feedback_validacion = str(exc)[:400]
             if intento >= max_intentos - 1:
                 raise
     raise ultimo_error or RuntimeError("No se pudo generar ejercicio desde fragmento")
@@ -333,8 +356,7 @@ def _generar_desde_fragmento_intento(
         )
     except Exception as exc:
         nombre = type(exc).__name__
-        # ServerError (503/5xx) y cualquier error marcado como transitorio se reintentan.
-        if "ServerError" in nombre or _es_error_transitorio(str(exc)):
+        if "ServerError" in nombre or _es_error_transitorio(exc):
             raise ErrorGeminiTransitorio(_mensaje_error_gemini(exc)) from exc
         if "ClientError" in nombre or "APIError" in nombre:
             raise RuntimeError(_mensaje_error_gemini(exc)) from exc
@@ -350,14 +372,9 @@ def _generar_desde_fragmento_intento(
     datos["_pagina"] = fragmento.get("pagina")
     datos["_modelo"] = modelo_efectivo
 
-    propuesta = modelo_ejercicio.validar_propuesta_gemini(
-        datos,
-        modulo=modulo,
-        texto_fragmento=texto_fragmento,
-        tipo_materia=tipo_materia,
-    )
+    # Validación única dentro de construir_escenario_desde_propuesta
     escenario = modelo_ejercicio.construir_escenario_desde_propuesta(
-        propuesta,
+        datos,
         modulo,
         titulo_coleccion=titulo_coleccion,
         texto_fragmento=texto_fragmento,

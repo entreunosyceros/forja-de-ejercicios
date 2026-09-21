@@ -32,6 +32,9 @@
 # Todas las suites Python (recomendado)
 pytest
 
+# Integración Java (requiere Python; en CI va en job aparte)
+mvn -f web/pom.xml test -Dgroups=integracion
+
 # O una a una:
 python3 pruebas/pruebas_generador_evaluador.py
 python3 pruebas/pruebas_modelo_ejercicio.py

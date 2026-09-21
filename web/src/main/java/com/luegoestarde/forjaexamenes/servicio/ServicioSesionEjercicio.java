@@ -143,7 +143,6 @@ public class ServicioSesionEjercicio {
         Map<String, Object> datos = new LinkedHashMap<>();
         datos.put("modulo", escenario.getModulo());
         datos.put("titulo", escenario.getTitulo());
-        datos.put("enunciado", escenario.getEnunciado());
         datos.put("nota", resultado.getNota());
         datos.put("aprobado", resultado.isAprobado());
         datos.put("tiempoSegundos", tiempoSegundos);
@@ -165,13 +164,23 @@ public class ServicioSesionEjercicio {
             return;
         }
         try {
-            String solucion = escenario.getSolucionReferencia() != null
-                    ? escenario.getSolucionReferencia() : "";
-            ResultadoEvaluacion evaluacion = servicioEvaluador.evaluar(escenario, solucion);
-            modelo.addAttribute("solucionReferenciaValida",
-                    evaluacion.getPesoObtenido() >= evaluacion.getPesoTotal());
+            if (escenario.getSolucionReferenciaValida() != null
+                    && escenario.getNotaSolucionReferencia() != null) {
+                modelo.addAttribute("solucionReferenciaValida", escenario.getSolucionReferenciaValida());
+                modelo.addAttribute("notaSolucionReferencia", escenario.getNotaSolucionReferencia());
+                return;
+            }
+            ResultadoEvaluacion evaluacion = evaluarSolucionReferencia(escenario);
+            boolean valida = evaluacion.getPesoObtenido() >= evaluacion.getPesoTotal();
+            escenario.setSolucionReferenciaValida(valida);
+            escenario.setNotaSolucionReferencia(evaluacion.getNota());
+            almacenSesiones.guardarEscenario(escenario);
+            modelo.addAttribute("solucionReferenciaValida", valida);
             modelo.addAttribute("notaSolucionReferencia", evaluacion.getNota());
-        } catch (Exception ignored) {
+        } catch (Exception ex) {
+            org.slf4j.LoggerFactory.getLogger(ServicioSesionEjercicio.class)
+                    .warn("No se pudo validar solución de referencia de {}: {}",
+                            escenario.getId(), ex.toString());
             modelo.addAttribute("solucionReferenciaValida", false);
         }
     }
@@ -182,6 +191,8 @@ public class ServicioSesionEjercicio {
         }
         Escenario escenario = obtenerEscenario(id);
         escenario.setSolucionReferencia(solucionReferencia != null ? solucionReferencia : "");
+        escenario.setSolucionReferenciaValida(null);
+        escenario.setNotaSolucionReferencia(null);
         almacenSesiones.guardarEscenario(escenario);
     }
 

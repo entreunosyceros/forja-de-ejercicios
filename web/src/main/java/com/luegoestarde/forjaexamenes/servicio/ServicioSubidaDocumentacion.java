@@ -123,6 +123,18 @@ public class ServicioSubidaDocumentacion {
         if (tipo != null && !tipo.equalsIgnoreCase("application/pdf")) {
             throw new IllegalArgumentException("Tipo de archivo no válido (se esperaba PDF).");
         }
+        try {
+            byte[] cabecera = archivo.getInputStream().readNBytes(5);
+            String magia = new String(cabecera, java.nio.charset.StandardCharsets.US_ASCII);
+            if (!magia.startsWith("%PDF-")) {
+                throw new IllegalArgumentException(
+                        "El fichero no parece un PDF válido (falta la cabecera %PDF-).");
+            }
+        } catch (IllegalArgumentException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new IllegalArgumentException("No se pudo leer el PDF subido.", e);
+        }
     }
 
     private String resolverSlugTema(String temaSeleccionado, String temaNuevo) {

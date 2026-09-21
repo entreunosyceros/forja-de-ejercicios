@@ -237,28 +237,59 @@ def generar_poo_excepciones() -> dict:
 
 
 def generar_poo_colecciones() -> dict:
-    coleccion = random.choice(["ArrayList", "HashMap", "HashSet", "TreeMap"])
-    tipo_clave = random.choice(["Integer", "String", "Long"])
+    es_mapa = random.choice([True, False])
+    if es_mapa:
+        coleccion = random.choice(["HashMap", "TreeMap"])
+        tipo_clave = random.choice(["Integer", "String", "Long"])
+        tipo_valor = random.choice(["String", "Producto", "Double"])
+        return {
+            "id": _generar_identificador(),
+            "modulo": "poo",
+            "titulo": f"Uso de {coleccion} para agrupar datos",
+            "enunciado": (
+                f"Necesitas almacenar pares clave-valor de tipo `{tipo_clave}` / `{tipo_valor}` "
+                f"sin duplicados de clave, usando `{coleccion}`.\n\n"
+                "Escribe la declaración genérica, la inserción de al menos dos elementos "
+                "y la iteración para listarlos."
+            ),
+            "parametros": {"coleccion": coleccion, "clave": tipo_clave, "valor": tipo_valor},
+            "criterios": [
+                {"tipo": "regex", "patron": re.escape(coleccion), "peso": 2},
+                {"tipo": "regex", "patron": re.escape(coleccion) + r"<", "peso": 2},
+                {"tipo": "regex", "patron": r"\.put\s*\(", "peso": 2},
+                {"tipo": "regex", "patron": r"entrySet\s*\(|keySet\s*\(|\.forEach\s*\(", "peso": 2},
+            ],
+            "solucion_referencia": (
+                f"{coleccion}<{tipo_clave}, {tipo_valor}> datos = new {coleccion}<>();\n"
+                f"datos.put(clave1, valor1);\n"
+                f"datos.put(clave2, valor2);\n"
+                f"for (Map.Entry<{tipo_clave}, {tipo_valor}> e : datos.entrySet()) {{\n"
+                f"  System.out.println(e.getKey() + \"=\" + e.getValue());\n"
+                f"}}"
+            ),
+        }
+
+    coleccion = random.choice(["ArrayList", "HashSet"])
     tipo_valor = random.choice(["String", "Producto", "Double"])
     return {
         "id": _generar_identificador(),
         "modulo": "poo",
         "titulo": f"Uso de {coleccion} para agrupar datos",
         "enunciado": (
-            f"Necesitas almacenar pares clave-valor de tipo `{tipo_clave}` / `{tipo_valor}` "
-            f"sin duplicados de clave, usando `{coleccion}`.\n\n"
+            f"Necesitas almacenar elementos de tipo `{tipo_valor}` usando `{coleccion}`.\n\n"
             "Escribe la declaración genérica, la inserción de al menos dos elementos "
             "y la iteración para listarlos."
         ),
-        "parametros": {"coleccion": coleccion, "clave": tipo_clave, "valor": tipo_valor},
+        "parametros": {"coleccion": coleccion, "valor": tipo_valor},
         "criterios": [
-            {"tipo": "regex", "patron": coleccion, "peso": 2},
-            {"tipo": "regex", "patron": rf"{coleccion}<", "peso": 2},
-            {"tipo": "regex", "patron": r"put\(|add\(", "peso": 2},
-            {"tipo": "regex", "patron": r"for\s*\(|entrySet|keySet", "peso": 2},
+            {"tipo": "regex", "patron": re.escape(coleccion), "peso": 2},
+            {"tipo": "regex", "patron": re.escape(coleccion) + r"<", "peso": 2},
+            {"tipo": "regex", "patron": r"\.add\s*\(", "peso": 2},
+            {"tipo": "regex", "patron": r"for\s*\(|\.forEach\s*\(", "peso": 2},
         ],
         "solucion_referencia": (
             f"{coleccion}<{tipo_valor}> datos = new {coleccion}<>();\n"
+            f"datos.add(new {tipo_valor}());\n"
             f"datos.add(new {tipo_valor}());\n"
             f"for ({tipo_valor} item : datos) {{ System.out.println(item); }}"
         ),
@@ -268,6 +299,8 @@ def generar_poo_colecciones() -> dict:
 def generar_poo_encapsulamiento() -> dict:
     atributo = random.choice(["saldo", "dni", "stock", "password"])
     clase = random.choice(["CuentaBancaria", "Cliente", "Almacen", "Usuario"])
+    getter = f"get{atributo.capitalize()}"
+    setter = f"set{atributo.capitalize()}"
     return {
         "id": _generar_identificador(),
         "modulo": "poo",
@@ -279,16 +312,20 @@ def generar_poo_encapsulamiento() -> dict:
         ),
         "parametros": {"atributo": atributo, "clase": clase},
         "criterios": [
-            {"tipo": "regex", "patron": r"private\s+\w+\s+" + atributo, "peso": 3},
-            {"tipo": "regex", "patron": rf"get{atributo.capitalize()}|get[A-Z]\w*", "peso": 2},
-            {"tipo": "regex", "patron": rf"set{atributo.capitalize()}|set[A-Z]\w*", "peso": 2},
-            {"tipo": "regex", "patron": r"if\s*\(|throw new", "peso": 2},
+            {"tipo": "regex", "patron": r"private\s+\w+\s+" + re.escape(atributo), "peso": 3},
+            {"tipo": "regex", "patron": re.escape(getter) + r"\s*\(", "peso": 2},
+            {"tipo": "regex", "patron": re.escape(setter) + r"\s*\(", "peso": 2},
+            {
+                "tipo": "contiene_alguno",
+                "terminos": ["if (", "throw new"],
+                "peso": 2,
+            },
         ],
         "solucion_referencia": (
             f"public class {clase} {{\n"
             f"  private double {atributo};\n"
-            f"  public double get{atributo.capitalize()}() {{ return {atributo}; }}\n"
-            f"  public void set{atributo.capitalize()}(double v) {{\n"
+            f"  public double {getter}() {{ return {atributo}; }}\n"
+            f"  public void {setter}(double v) {{\n"
             f"    if (v < 0) throw new IllegalArgumentException();\n"
             f"    this.{atributo} = v;\n"
             f"  }}\n"
@@ -525,22 +562,12 @@ def _aplicar_nivel(escenario: dict, nivel: int) -> dict:
     criterios = escenario.get("criterios", [])
     modulo = escenario.get("modulo", "")
     pista_general = PISTAS_MODULO.get(modulo, "Lee el enunciado e incluye los pasos básicos.")
-    enunciado_base = _quitar_decoracion_nivel(str(escenario.get("enunciado", "")))
+    # Enunciado limpio: la UI decide cómo mostrar nivel y pista (campos JSON).
+    escenario["enunciado"] = _quitar_decoracion_nivel(str(escenario.get("enunciado", "")))
+    escenario["pista_general"] = pista_general if nivel == 1 else ""
 
-    if nivel == 1:
-        escenario["enunciado"] = (
-            "[Nivel principiante — menos criterios, más ayuda]\n\n"
-            + enunciado_base
-            + f"\n\n💡 Pista general: {pista_general}"
-        )
-        if len(criterios) > 2:
-            escenario["criterios"] = sorted(criterios, key=lambda c: c.get("peso", 1))[:2]
-    elif nivel == 3:
-        escenario["enunciado"] = (
-            "[Nivel avanzado — sin pistas extra]\n\n" + enunciado_base
-        )
-    else:
-        escenario["enunciado"] = "[Nivel intermedio]\n\n" + enunciado_base
+    if nivel == 1 and len(criterios) > 2:
+        escenario["criterios"] = sorted(criterios, key=lambda c: c.get("peso", 1))[:2]
 
     return escenario
 

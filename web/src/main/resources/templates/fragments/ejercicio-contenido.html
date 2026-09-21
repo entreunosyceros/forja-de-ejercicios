@@ -29,6 +29,9 @@
     <article class="card enunciado-card">
         <h2>Enunciado</h2>
         <pre class="enunciado" th:text="${escenario.enunciado}">...</pre>
+        <p class="hint" th:if="${escenario.pistaGeneral != null and !#strings.isEmpty(escenario.pistaGeneral)}">
+            <strong>Pista:</strong> <span th:text="${escenario.pistaGeneral}">—</span>
+        </p>
     </article>
 
     <article class="card solucion-profesor-card" th:if="${modoProfesor}"

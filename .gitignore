@@ -24,15 +24,18 @@ secrets.properties
 indice/*.json
 !indice/.gitkeep
 
-# Datos de uso local (no subir a GitHub)
-datos/usuarios.json
-datos/gemini.json
-datos/analitica_ejercicios.json
-datos/estadisticas/*
-!datos/estadisticas/.gitkeep
-datos/historial/*
-!datos/historial/.gitkeep
-!datos/.gitkeep
+# Datos de uso local (no subir a GitHub) — anclado y recursivo (arranque desde web/)
+**/datos/usuarios.json
+**/datos/gemini.json
+**/datos/analitica_ejercicios.json
+**/datos/estadisticas/**
+!**/datos/estadisticas/.gitkeep
+**/datos/historial/**
+!**/datos/historial/.gitkeep
+**/datos/tmp/**
+!**/datos/tmp/.gitkeep
+!**/datos/.gitkeep
+**/banco/catalogo.json
 datos-practica/*
 !datos-practica/.gitkeep
 banco/pendientes/

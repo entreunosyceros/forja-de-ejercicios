@@ -204,9 +204,11 @@ def registrar_en_generadores(
     generadores: dict[str, Callable[[], dict]],
     pistas_modulo: dict[str, str],
 ) -> tuple[str, ...]:
+    """Registra módulos del banco leyendo JSON aprobados (sin reescribir catálogo)."""
     global MODULOS_BANCO
     asegurar_estructura()
-    reconstruir_catalogo()
+    # No llamar reconstruir_catalogo() aquí: cada arranque de generador.py
+    # reescribiría catalogo.json en paralelo (precarga / varios alumnos).
     por_modulo: dict[str, list[Path]] = {}
     for ruta in listar_json_aprobados():
         try:

@@ -25,9 +25,16 @@ def slug(texto: str, defecto: str = "") -> str:
     return base or defecto
 
 
-def generar_identificador(longitud: int = 8) -> str:
-    """Identificador corto y único basado en UUID4."""
-    return str(uuid.uuid4())[:longitud]
+def generar_identificador(longitud: int | None = None) -> str:
+    """Identificador único basado en UUID4 (completo por defecto).
+
+    ``longitud`` solo se usa si se pide un prefijo corto de forma explícita
+    (p. ej. nombres temporales); el banco y los escenarios usan UUID entero.
+    """
+    completo = str(uuid.uuid4())
+    if longitud is None:
+        return completo
+    return completo[: max(8, longitud)]
 
 
 def escribir_json_atomico(ruta: Path | str, datos: object, *, indent: int = 2) -> None:

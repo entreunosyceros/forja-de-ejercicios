@@ -117,8 +117,7 @@ public class ServicioConfiguracionGemini {
         if (!cuentasUsuarios.verificarContrasena(contrasenaActual, cuenta.getPasswordHash())) {
             throw new IllegalArgumentException(
                     "La contraseña no es correcta para el usuario «" + login + "». "
-                            + "Usa la contraseña con la que entraste (no la clave API de Gemini). "
-                            + "Si no la cambiaste: alumno/practica, demo/demo o profesor/profesor.");
+                            + "Usa la contraseña con la que entraste (no la clave API de Gemini).");
         }
     }
 

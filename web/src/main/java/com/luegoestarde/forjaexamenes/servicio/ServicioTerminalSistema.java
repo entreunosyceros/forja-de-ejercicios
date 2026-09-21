@@ -1,6 +1,7 @@
 // Desarrollado por entreunosyceros - 2026
 package com.luegoestarde.forjaexamenes.servicio;
 
+import com.luegoestarde.forjaexamenes.util.DeteccionSO;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -17,25 +18,22 @@ import org.springframework.stereotype.Service;
 @Service
 public class ServicioTerminalSistema {
 
-    private static final String OS = System.getProperty("os.name", "").toLowerCase(Locale.ROOT);
+    private static final String OS = DeteccionSO.nombre();
 
     private static final String SCRIPT_DOCKER =
             "docker compose up -d --build practica && docker exec -it forjaexamenes-practica bash";
 
     /** Indica si parece haber terminal gráfica en este equipo. */
     public boolean disponible() {
-        if (esWindows() || esMac()) {
-            return true;
-        }
-        return System.getenv("DISPLAY") != null || System.getenv("WAYLAND_DISPLAY") != null;
+        return DeteccionSO.pareceEscritorioGrafico();
     }
 
     /** Etiqueta del botón según el sistema (consola, Terminal…). */
     public String etiquetaBoton() {
-        if (esWindows()) {
+        if (DeteccionSO.esWindows()) {
             return "Abrir consola de práctica";
         }
-        if (esMac()) {
+        if (DeteccionSO.esMac()) {
             return "Abrir Terminal";
         }
         return "Abrir terminal";
@@ -86,7 +84,7 @@ public class ServicioTerminalSistema {
      * «Redirect invalid for reading: WRITE»); cmd /start ya abre ventana aparte.
      */
     private void lanzarDesacoplado(List<String> comando) throws IOException {
-        if (esWindows()) {
+        if (DeteccionSO.esWindows()) {
             new ProcessBuilder(comando).start();
             return;
         }
@@ -103,10 +101,10 @@ public class ServicioTerminalSistema {
     }
 
     private List<String> comandoSegunSistema(Path raiz) throws IOException {
-        if (esWindows()) {
+        if (DeteccionSO.esWindows()) {
             return comandoWindows(raiz);
         }
-        if (esMac()) {
+        if (DeteccionSO.esMac()) {
             return comandoMac(raiz);
         }
         if (OS.contains("nux") || OS.contains("nix")) {
@@ -235,11 +233,4 @@ public class ServicioTerminalSistema {
         return false;
     }
 
-    private boolean esWindows() {
-        return OS.contains("win");
-    }
-
-    private boolean esMac() {
-        return OS.contains("mac") || OS.contains("darwin");
-    }
 }

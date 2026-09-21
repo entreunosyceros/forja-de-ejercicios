@@ -74,10 +74,14 @@ def probar_aplicar_nivel_sin_duplicar_prefijo():
         "criterios": [{"tipo": "contiene_todos", "terminos": ["implements"], "peso": 1}],
     }
     una_vez = generador._aplicar_nivel(dict(base), 2)
-    assert una_vez["enunciado"].count("[Nivel intermedio]") == 1
+    assert una_vez["dificultad"] == 2
+    assert "[Nivel" not in una_vez["enunciado"]
+    assert una_vez["enunciado"].strip() == "Implementa la interfaz."
     dos_veces = generador._aplicar_nivel(dict(una_vez), 2)
-    assert dos_veces["enunciado"].count("[Nivel intermedio]") == 1
-    assert "Implementa la interfaz." in dos_veces["enunciado"]
+    assert dos_veces["enunciado"].count("Implementa la interfaz.") == 1
+    nivel1 = generador._aplicar_nivel(dict(base), 1)
+    assert nivel1["dificultad"] == 1
+    assert nivel1.get("pista_general")
 
 
 def probar_evaluador_respuesta_vacia():

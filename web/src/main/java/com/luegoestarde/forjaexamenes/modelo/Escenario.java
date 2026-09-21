@@ -2,10 +2,12 @@
 package com.luegoestarde.forjaexamenes.modelo;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.List;
 import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class Escenario {
 
     private String id;
@@ -17,9 +19,13 @@ public class Escenario {
     private String solucionReferencia;
     private String generadoEn;
     private Integer dificultad;
+    private String pistaGeneral;
     private String usuario;
     private String fechaHora;
     private String usuarioAcceso;
+    /** Cache: la solución de referencia cumple todos los criterios. */
+    private Boolean solucionReferenciaValida;
+    private Double notaSolucionReferencia;
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
@@ -48,6 +54,9 @@ public class Escenario {
     public Integer getDificultad() { return dificultad; }
     public void setDificultad(Integer dificultad) { this.dificultad = dificultad; }
 
+    public String getPistaGeneral() { return pistaGeneral; }
+    public void setPistaGeneral(String pistaGeneral) { this.pistaGeneral = pistaGeneral; }
+
     public String getUsuario() { return usuario; }
     public void setUsuario(String usuario) { this.usuario = usuario; }
 
@@ -56,6 +65,16 @@ public class Escenario {
 
     public String getUsuarioAcceso() { return usuarioAcceso; }
     public void setUsuarioAcceso(String usuarioAcceso) { this.usuarioAcceso = usuarioAcceso; }
+
+    public Boolean getSolucionReferenciaValida() { return solucionReferenciaValida; }
+    public void setSolucionReferenciaValida(Boolean solucionReferenciaValida) {
+        this.solucionReferenciaValida = solucionReferenciaValida;
+    }
+
+    public Double getNotaSolucionReferencia() { return notaSolucionReferencia; }
+    public void setNotaSolucionReferencia(Double notaSolucionReferencia) {
+        this.notaSolucionReferencia = notaSolucionReferencia;
+    }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Criterio {

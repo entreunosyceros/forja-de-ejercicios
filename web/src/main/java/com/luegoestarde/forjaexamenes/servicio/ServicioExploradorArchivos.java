@@ -1,11 +1,11 @@
 // Desarrollado por entreunosyceros - 2026
 package com.luegoestarde.forjaexamenes.servicio;
 
+import com.luegoestarde.forjaexamenes.util.DeteccionSO;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Locale;
 import org.springframework.stereotype.Service;
 
 /**
@@ -16,15 +16,9 @@ import org.springframework.stereotype.Service;
 @Service
 public class ServicioExploradorArchivos {
 
-    private static final String OS = System.getProperty("os.name", "").toLowerCase(Locale.ROOT);
-
     /** Indica si el sistema parece tener un escritorio donde abrir el explorador. */
     public boolean disponible() {
-        if (esWindows() || esMac()) {
-            return true;
-        }
-        // En Linux solo tiene sentido con sesión gráfica (DISPLAY o Wayland).
-        return System.getenv("DISPLAY") != null || System.getenv("WAYLAND_DISPLAY") != null;
+        return DeteccionSO.pareceEscritorioGrafico();
     }
 
     /**
@@ -57,23 +51,16 @@ public class ServicioExploradorArchivos {
     }
 
     private List<String> comandoSegunSistema(String ruta) {
-        if (esWindows()) {
+        if (DeteccionSO.esWindows()) {
             return List.of("explorer.exe", ruta);
         }
-        if (esMac()) {
+        if (DeteccionSO.esMac()) {
             return List.of("open", ruta);
         }
-        if (OS.contains("nux") || OS.contains("nix")) {
+        String os = DeteccionSO.nombre();
+        if (os.contains("nux") || os.contains("nix")) {
             return List.of("xdg-open", ruta);
         }
         return null;
-    }
-
-    private boolean esWindows() {
-        return OS.contains("win");
-    }
-
-    private boolean esMac() {
-        return OS.contains("mac") || OS.contains("darwin");
     }
 }

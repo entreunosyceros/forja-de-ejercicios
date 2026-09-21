@@ -17,6 +17,18 @@ from typing import Any, ClassVar
 from alias_comandos import contiene_termino_flexible, variantes_termino
 from retroalimentacion_criterios import enriquecer_detalle
 
+try:
+    import regex as _regex_mod  # type: ignore
+except ImportError:  # pragma: no cover
+    _regex_mod = None
+
+_TIMEOUT_REGEX_S = 0.05
+_MAX_RESPUESTA_REGEX = 50_000
+# Cuantificadores anidados típicos de ReDoS: (a+)+, (a*)+, etc.
+_REDOS_ANIDADOS = re.compile(
+    r"\((?:[^()]*[+*][^()]*)\)[+*]|\((?:[^()]*[+*][^()]*)\)\{"
+)
+
 _BANDERAS = {
     "i": re.IGNORECASE,
     "m": re.MULTILINE,
@@ -73,6 +85,21 @@ def es_obligatorio(criterio: dict) -> bool:
     return bool(criterio.get("obligatorio"))
 
 
+def patron_sospecha_redos(patron: str) -> bool:
+    """Heurística: cuantificadores anidados peligrosos."""
+    return bool(_REDOS_ANIDADOS.search(patron or ""))
+
+
+def _buscar_regex(patron: str, texto: str, banderas: int) -> bool:
+    if len(texto) > _MAX_RESPUESTA_REGEX:
+        texto = texto[:_MAX_RESPUESTA_REGEX]
+    if _regex_mod is not None:
+        return bool(
+            _regex_mod.search(patron, texto, flags=banderas, timeout=_TIMEOUT_REGEX_S)
+        )
+    return bool(re.search(patron, texto, banderas))
+
+
 class Criterio(ABC):
     tipo: ClassVar[str]
 
@@ -98,12 +125,26 @@ class CriterioRegex(Criterio):
         patron = self.datos.get("patron", "")
         if not patron:
             raise ValueError("Criterio regex sin patrón")
+        if patron_sospecha_redos(patron):
+            raise ValueError(
+                f"Patrón regex con riesgo de ReDoS (cuantificadores anidados): {patron[:80]}"
+            )
         re.compile(patron, banderas_regex(self.datos))
 
     def evaluar(self, respuesta: str) -> dict[str, Any]:
         patron = self.datos.get("patron", "")
         try:
-            cumplido = bool(re.search(patron, respuesta, banderas_regex(self.datos)))
+            cumplido = _buscar_regex(patron, respuesta or "", banderas_regex(self.datos))
+        except TimeoutError:
+            return {
+                "cumplido": False,
+                "patron": patron,
+                "error": "Patrón regex demasiado costoso (timeout)",
+                "peso": self.peso,
+                "peso_parcial": 0.0,
+                "tipo": self.tipo,
+                "obligatorio": self.obligatorio,
+            }
         except re.error as error:
             return {
                 "cumplido": False,

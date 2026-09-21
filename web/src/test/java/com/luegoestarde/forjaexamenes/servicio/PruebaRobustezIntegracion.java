@@ -23,6 +23,7 @@ import org.junit.jupiter.api.io.TempDir;
 /**
  * Tests de robustez: mono rompe-teclados, JSON manipulado y contenedor sucio.
  */
+@org.junit.jupiter.api.Tag("integracion")
 class PruebaRobustezIntegracion {
 
     @TempDir

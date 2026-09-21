@@ -16,6 +16,8 @@ public class IntentoHistorial {
     private String ejercicioId = "";
     private String enunciado = "";
     private String respuesta = "";
+    /** Nivel 1–3 con el que se generó el ejercicio (para estadísticas comparables). */
+    private Integer dificultad;
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
@@ -46,4 +48,7 @@ public class IntentoHistorial {
 
     public String getRespuesta() { return respuesta; }
     public void setRespuesta(String respuesta) { this.respuesta = respuesta; }
+
+    public Integer getDificultad() { return dificultad; }
+    public void setDificultad(Integer dificultad) { this.dificultad = dificultad; }
 }

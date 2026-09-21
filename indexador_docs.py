@@ -267,7 +267,6 @@ def indexar_coleccion(
                     "archivo": meta_ruta["archivo"],
                     "fuente": meta_ruta["fuente"],
                     "parte": parte_local + 1,
-                    "fragmento": texto_fragmento,
                     "texto": texto_fragmento,
                 })
 

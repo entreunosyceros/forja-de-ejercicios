@@ -76,6 +76,7 @@ public class ServicioHistorialIntentos {
         intento.setEjercicioId(escenario.getId() != null ? escenario.getId() : "");
         intento.setEnunciado(truncar(escenario.getEnunciado()));
         intento.setRespuesta(truncar(respuesta));
+        intento.setDificultad(escenario.getDificultad());
 
         List<IntentoHistorial> lista = new ArrayList<>(historial.getIntentos());
         lista.add(0, intento);

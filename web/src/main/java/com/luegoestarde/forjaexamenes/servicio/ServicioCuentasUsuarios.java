@@ -51,8 +51,7 @@ public class ServicioCuentasUsuarios implements UserDetailsService {
         Files.createDirectories(fichero.getParent());
         if (Files.isRegularFile(fichero)) {
             cargarDesdeFichero(fichero);
-            anadirUsuariosFaltantesDesdePropiedades();
-            guardarEnFichero(fichero);
+            // No reseembra cuentas borradas: solo se siembran al crear el fichero.
         } else {
             sembrarDesdePropiedades();
             guardarEnFichero(fichero);
