@@ -51,8 +51,9 @@ B) PRACTICAR Y PREPARAR EJERCICIOS
    - Tras probar un ejercicio: «Guardar en banco» (pantalla de ejercicio o
      resultado) → indica un nombre descriptivo para el fichero (p. ej.
      docker-nginx-8080.json) y se escribe en banco/aprobados/ o pendientes/.
-     Si la solución de referencia no pasa todos los criterios, va a pendientes;
-     corrígela y vuelve a guardar o aprueba en /profesor/banco.
+     Si la solución de referencia no pasa todos los criterios (debe sacar 10),
+     va a pendientes; corrígela y vuelve a guardar o aprueba en /profesor/banco.
+     En JSON a mano usa el campo «banderas» para flags regex (no «flags»).
    - «Descargar .json portable» solo para copiar el ejercicio a otra instalación.
    - Revisas propuestas IA en /profesor/revisar y las apruebas en TU banco local.
 

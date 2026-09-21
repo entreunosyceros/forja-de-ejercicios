@@ -8,9 +8,10 @@
 
 | Módulo | Contenido |
 |--------|-----------|
-| `poo` | POO Java (certificado) |
-| `bd_sql`, `bd_modelo`, `bd_transacciones`, `bd_jdbc`, `bd` | Bases de datos |
-| `redes`, `sistemas`, `docker`, `git` | Infraestructura |
+| `poo` | POO Java (funciones en `generador.py`) |
+| `bd_sql`, `bd_modelo`, `bd_transacciones`, `bd_jdbc` | Bases de datos (funciones en `generador.py`) |
+| `bd`, `redes`, `docker`, `git` | Plantillas JSON en `plantillas/` |
+| `sistemas` | Infraestructura (función en `generador.py`) |
 | `docs_*` | Apuntes PDF indexados + Gemini (cualquier asignatura; ver [Apuntes PDF y Gemini](apuntes-gemini.md#tipos-de-materia-apuntes-pdf)) |
 | `banco_*` | Ejercicios JSON en `banco/aprobados/` |
 
@@ -37,6 +38,21 @@ Los criterios `contiene_todos` y `contiene_alguno` aceptan **sinónimos técnico
 - Para añadir sinónimos: edita `alias_comandos` en el JSON (frases completas, no palabras sueltas sueltas).
 
 Tipos de criterio soportados: `regex`, `contiene_todos`, `contiene_alguno`, `no_contiene` (y flag `obligatorio`).
+
+## Cómo se puntúa (reglas del corrector)
+
+| Regla | Detalle |
+|-------|---------|
+| Límites de palabra | `cat` no coincide dentro de `concatenar`; `ls` no dentro de `false`. Negar un comando (`no uses chmod`) **sí** encuentra la palabra: usa `no_contiene` u `obligatorio`. |
+| `contiene_todos` | Nota **parcial** (4 de 5 términos → 80 % de ese peso). |
+| `obligatorio` | Si falla, la nota queda tope 4 (suspenso). |
+| Pesos | Texto, negativo o 0 se normalizan a entero ≥ 1; la nota final siempre queda en 0–10. |
+| `banderas` | Campo canónico de flags regex (`i`, `m`, `s` o `ignorecase` / `multiline` / `dotall`). El legado `flags` solo se lee. `"multiline"` **no** activa IGNORECASE. |
+| Interpolación | En plantillas y generador, las variables (ruta, archivo, VLAN, tabla…) se insertan con `re.escape` para que un punto en `Main.java` no sea «cualquier carácter». |
+| ReDoS | Al validar el banco se rechazan cuantificadores anidados (`(a+)+`). En evaluación hay tope de longitud y timeout si está `regex`. |
+| Pistas | Texto claro desde [`reglas_retroalimentacion_regex.json`](../reglas_retroalimentacion_regex.json); no se publican tokens de clase (`A-Z`). |
+
+Un test recorre **todo** `banco/aprobados/**/*.json` y exige que cada `solucion_referencia` saque un 10.
 
 ## Qué mide la nota (honestidad)
 

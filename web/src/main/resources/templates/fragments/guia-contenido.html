@@ -45,13 +45,15 @@ pip install -r requirements-docs.txt</pre>
 
     <section id="guia-ejercicios" class="guia-seccion">
         <h2>Añadir un nuevo tipo de ejercicio</h2>
-        <p>Los ejercicios clásicos viven en Python; la web solo enlaza módulos ya registrados.</p>
+        <p>Lo habitual es una plantilla JSON. La web solo enlaza módulos ya registrados.</p>
 
         <ol class="guia-pasos">
-            <li>En <code>generador.py</code>, crea una función que devuelva un diccionario con
-                <code>titulo</code>, <code>enunciado</code>, <code>criterios</code> (regex) y
-                <code>solucion_referencia</code>.</li>
-            <li>Regístrala en las tuplas <code>MODULOS</code> y <code>GENERADORES</code> del mismo fichero.</li>
+            <li>Crea <code>plantillas/mi_modulo.json</code> (copia <code>docker.json</code> o <code>git.json</code>)
+                con <code>titulo</code>, <code>enunciado</code>, <code>criterios</code> y
+                <code>solucion_referencia</code>. Las variables entre llaves se escapan en los regex
+                (<code>re.escape</code>) para que un punto no signifique «cualquier carácter».</li>
+            <li>Si la lógica no cabe en JSON, escribe una función en <code>generador.py</code> y
+                añádela al diccionario <code>GENERADORES</code>.</li>
             <li>Prueba en terminal:</li>
         </ol>
         <pre class="code-block">python3 generador.py -m mi_modulo --formateado</pre>
@@ -61,7 +63,8 @@ pip install -r requirements-docs.txt</pre>
         <pre class="code-block">&lt;a class="btn btn-secondary"
    th:href="@{/ejercicio/nuevo(modulo='mi_modulo')}"&gt;Mi módulo&lt;/a&gt;</pre>
         <ol class="guia-pasos" start="5">
-            <li>Reinicia la aplicación. La corrección la hace <code>evaluador.py</code> con los criterios regex del JSON generado.</li>
+            <li>Reinicia la aplicación. La corrección la hace <code>evaluador.py</code> con los criterios del JSON generado.
+                Campo de flags regex: <code>banderas</code> (p. ej. <code>i</code>).</li>
         </ol>
         <p class="hint">Para ejercicios desde PDF + IA no hace falta editar <code>generador.py</code>: basta indexar apuntes y configurar la clave en Perfil.</p>
     </section>

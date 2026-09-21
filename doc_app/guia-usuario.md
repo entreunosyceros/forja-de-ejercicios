@@ -64,6 +64,7 @@ Estos ficheros se generan al usar la app y están en `.gitignore` (no deben subi
 | `datos-practica/` | Archivos del alumno en el contenedor de práctica |
 | `indice/*.json` | Índice de PDFs indexados |
 | `banco/pendientes/` | Propuestas Gemini pendientes de revisión |
+| `banco/catalogo.json` | Índice del banco (se regenera; no va a git) |
 | `examenes/paquetes/` | Paquetes ZIP generados para el profesor |
 | `.env` | Clave de Gemini y secretos |
 

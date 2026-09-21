@@ -29,7 +29,7 @@
 <!-- Pasos manuales, módulo de prueba, capturas. -->
 
 - [ ] He probado la app localmente (`./iniciar-forja.sh` o `iniciar-forja.bat`)
-- [ ] Tests Python: `python3 pruebas/pruebas_*.py` (los que apliquen)
+- [ ] Tests Python: `pip install -r requirements-dev.txt && pytest` (o las suites de `pruebas/` que apliquen)
 - [ ] Tests Java: `cd web && mvn test` (si toqué código Java)
 
 ## Checklist

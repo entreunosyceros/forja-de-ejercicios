@@ -8,15 +8,15 @@
 
 | Tipo | Origen | Corrección |
 |------|--------|------------|
-| **A — plantilla** | `generador.py` | `regex` definidos en código |
+| **A — plantilla** | `plantillas/<modulo>.json` (`motor_plantillas.py`) o función en `generador.py` | `regex` (variables interpoladas con `re.escape`) |
 | **B — apuntes + IA** | PDF → Gemini → `modelo_ejercicio.py` | `contiene_todos` / `contiene_alguno` + alias |
-| **Banco** | `banco/aprobados/*.json` | Tipos definidos en el JSON + alias |
+| **Banco** | `banco/aprobados/**/*.json` | Tipos del JSON + alias |
 
 Gemini solo propone `tema`, `pregunta`, `palabras_clave` (y opcional `variantes`). El sistema valida con [`tipo_materia.py`](../tipo_materia.py) y [`vocabulario_claves.json`](../vocabulario_claves.json) (prohibidas/permitidas por tipo y módulo) y exige que cada clave aparezca en el fragmento del PDF.
 
 ### Dónde se construye y envía el prompt a la IA
 
-El **único fichero** que habla con la API de Gemini es [`generador_gemini.py`](../generador_gemini.py). La corrección (`evaluador.py`) **no** usa IA.
+El **único fichero** que habla con la API de Gemini para **generar** es [`generador_gemini.py`](../generador_gemini.py). La nota automática la calcula [`evaluador.py`](../evaluador.py) + [`criterios.py`](../criterios.py) (sin IA). El segundo corrector opcional ([`corrector_ia.py`](../corrector_ia.py)) solo se activa con `FORJAEXAMENES_CORRECTOR_IA=true`.
 
 | Paso | Fichero | Función / detalle |
 |------|---------|-------------------|
@@ -55,7 +55,7 @@ Portada docs_*  →  generador_docs  →  tipo_materia  →  generador_gemini  �
 ```
 banco/aprobados/     → ejercicios verificados en ESTE equipo (portada + generador)
 banco/pendientes/    → propuestas Gemini en espera de revisión (solo profesor)
-banco/catalogo.json  → índice (se regenera al importar, aprobar o arrancar)
+banco/catalogo.json  → índice regenerado (no se versiona; `.gitignore`)
 ```
 
 Para repartir ejercicios entre equipos: exportar `forja-banco-ejercicios` (`GET /profesor/banco/exportar.json`) e importar en cada alumno (`POST /banco/importar`). Tras importar, los módulos del banco aparecen en la portada como «Ejercicios del banco (del profesor)».
@@ -76,12 +76,16 @@ examenforge/
 ├── install.sh / install.bat / install.ps1   # Instalación guiada (Linux/macOS / Windows)
 ├── iniciar-forja.sh / .bat      # Arranque tras instalar
 ├── arrancar-web.sh
-├── generador.py / evaluador.py
+├── generador.py / evaluador.py / criterios.py
+├── motor_plantillas.py / plantillas/   # redes, bd, docker, git
 ├── generador_gemini.py / generador_docs.py / indexador_docs.py
 ├── modelo_ejercicio.py / tipo_materia.py / banco_loader.py
-├── alias_comandos.py
+├── alias_comandos.py / retroalimentacion_criterios.py
+├── reglas_retroalimentacion_regex.json
 ├── comun.py                     # utilidades compartidas (slug, identificadores)
 ├── vocabulario_claves.json      # tipos_materia, prohibidas, alias_comandos
+├── pruebas/                     # pytest (probar_*, test_*, prueba_*)
+├── requirements-dev.txt         # pytest, regex, hypothesis (opcional)
 ├── documentacion/               # PDFs de entrada (apuntes del profesor)
 ├── indice/                      # JSON indexado
 ├── banco/
@@ -91,7 +95,8 @@ examenforge/
 ├── herramientas/
 │   ├── revisar_banco.py
 │   ├── revision_profesor.py     # JSON de revisión para la web/CLI
-│   └── paquete_entrega.py       # carpeta + HTML para el profesor
+│   ├── paquete_entrega.py       # carpeta + HTML para el profesor
+│   └── migrar_banderas_banco.py # flags → banderas (one-shot)
 ├── datos/
 │   ├── estadisticas/            # por usuario en este equipo
 │   └── entregas/<profesor>/    # entregas de alumnos importadas
@@ -103,7 +108,7 @@ examenforge/
             ├── inicio.html            # importar banco + entrega alumno
             ├── como-funciona.html
             ├── profesor-alumnos-lista.html
-            ├── profesor-alumnos-detalle.html
+            ├── profesor-alumno-detalle.html
             ├── profesor-revisar-lista.html
             ├── profesor-revisar-detalle.html
             ├── profesor-banco.html    # exportar banco completo

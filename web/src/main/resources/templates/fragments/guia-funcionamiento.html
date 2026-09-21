@@ -42,7 +42,7 @@
             <li>La web ejecuta <code>generador.py</code> y muestra el ejercicio con tu <strong>nombre</strong> y la <strong>fecha de inicio</strong>.</li>
             <li>Escribes tu respuesta (con coloreado de sintaxis en vivo) y pulsas <strong>Enviar y corregir</strong> (hay temporizador orientativo, sin penalización).</li>
             <li><code>evaluador.py</code> devuelve nota (0–10), criterios cumplidos o no, y enlace a apuntes si el ejercicio venía de un PDF.</li>
-            <li>Puedes pedir <strong>Otro ejercicio</strong> del mismo módulo o volver al inicio; tus últimos resultados y medallas se guardan en el navegador.</li>
+            <li>Puedes pedir <strong>Otro ejercicio</strong> del mismo módulo o volver al inicio; el progreso y las medallas salen del <strong>servidor</strong> (el navegador solo cachea una copia).</li>
         </ol>
         <p class="hint">Los ejercicios generados con IA desde PDF muestran una pantalla de carga mientras se prepara la propuesta.</p>
     </section>
@@ -56,7 +56,7 @@
             <tbody>
             <tr>
                 <td><strong>A — Plantilla</strong></td>
-                <td><code>generador.py</code> (POO, SQL, redes, Docker, Git…)</td>
+                <td><code>plantillas/*.json</code> + <code>generador.py</code> (POO, SQL, redes, Docker, Git…)</td>
                 <td>No</td>
             </tr>
             <tr>
@@ -82,12 +82,13 @@
         <h2>Cómo se corrige</h2>
         <p>Cada ejercicio lleva una lista de <strong>criterios</strong> con peso. El evaluador comprueba la respuesta del alumno:</p>
         <ul class="guia-pasos">
-            <li><code>regex</code> — expresión regular (módulos plantilla, ejercicios del banco escritos a mano).</li>
-            <li><code>contiene_todos</code> — deben aparecer todos los términos (orden irrelevante).</li>
+            <li><code>regex</code> — expresión regular (plantillas y banco). Variables interpoladas van escapadas; flags en el campo <code>banderas</code>.</li>
+            <li><code>contiene_todos</code> — deben aparecer los términos (orden irrelevante; nota parcial si faltan algunos). Búsqueda con límites de palabra (no marca <code>cat</code> dentro de <code>concatenar</code>).</li>
             <li><code>contiene_alguno</code> — basta con un sinónimo de la lista (p. ej. <code>nginx</code> o <code>nginx:latest</code>).</li>
+            <li><code>no_contiene</code> y <code>obligatorio</code> — penalizan lo que no debe aparecer o un criterio eliminatorio (tope de nota 4 si falla).</li>
         </ul>
-        <p>La nota es proporcional al peso de criterios cumplidos; ≥ 5 aprueba. Las palabras clave vagas («configurar», «servidor»)
-            se rechazan al generar ejercicios desde apuntes.</p>
+        <p>La nota es proporcional al peso de criterios cumplidos (siempre entre 0 y 10); ≥ 5 aprueba. Las palabras clave vagas («configurar», «servidor»)
+            se rechazan al generar ejercicios desde apuntes. Opcional: segundo corrector con IA si <code>FORJAEXAMENES_CORRECTOR_IA=true</code>.</p>
     </section>
 
     <section id="gf-banco" class="guia-seccion">

@@ -5,7 +5,7 @@
 [![Wiki](https://img.shields.io/badge/Wiki-DeepWiki-blue?style=for-the-badge&logo=wikipedia)](https://deepwiki.com/entreunosyceros/forja-de-ejercicios/)
 ![Version: 1.0.0](https://img.shields.io/badge/version-1.0.0-brightgreen)
 
-Genera ejercicios prácticos al azar (informática, idiomas u otras materias desde PDF), permite practicar en Docker y corrige la respuesta del alumno con criterios verificables. La interfaz es **Spring Boot**; la generación y corrección las hace **Python** (`generador.py`, `evaluador.py`, `modelo_ejercicio.py`, `tipo_materia.py`).
+Genera ejercicios prácticos al azar (informática, idiomas u otras materias desde PDF), permite practicar en Docker y corrige la respuesta del alumno con criterios verificables. La interfaz es **Spring Boot**; la generación y corrección las hace **Python** (`generador.py`, `plantillas/`, `evaluador.py`, `criterios.py`, `modelo_ejercicio.py`).
 
 > 📘 **Documentación ampliada:** [doc_app/README.md](doc_app/README.md) · guías por rol ([alumno.txt](alumno.txt) · [profesor.txt](profesor.txt)) · ayuda en la web (**/como-funciona**). [DeepWiki](https://deepwiki.com/entreunosyceros/forja-de-ejercicios/) es complementaria.
 

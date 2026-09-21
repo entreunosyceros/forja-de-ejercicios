@@ -16,7 +16,7 @@
 - **Proponer mejoras** explicando el caso de uso (alumno, profesor o aula con PCs independientes).
 - **Enviar pull requests** acotados y probados.
 - **Mejorar documentación** (README, `doc_app/`, ayuda web en `/como-funciona`).
-- **Añadir o afinar módulos** en `generador.py`, criterios en `evaluador.py` o alias en `vocabulario_claves.json`.
+- **Añadir o afinar módulos** en `plantillas/*.json` (preferido) o `generador.py`, criterios en `criterios.py` / `evaluador.py` o alias en `vocabulario_claves.json`.
 - **Corregir prompts o validación** de ejercicios `docs_*` (PDF + Gemini).
 
 ## Entorno de desarrollo
@@ -51,8 +51,8 @@ cp .env.example .env   # GEMINI_API_KEY si pruebas docs_*
 ### Pruebas
 
 ```bash
-python3 pruebas/pruebas_generador_evaluador.py
-# … resto de suites en pruebas/
+pip install -r requirements-dev.txt
+pytest
 cd web && mvn test
 ```
 
@@ -63,8 +63,8 @@ Detalle en [doc_app/desarrollo.md](doc_app/desarrollo.md).
 | Área | Ubicación habitual |
 |------|-------------------|
 | Web Spring Boot | `web/src/main/java/`, `web/src/main/resources/templates/` |
-| Generación plantillas | `generador.py` |
-| Corrección | `evaluador.py`, `retroalimentacion_criterios.py`, `reglas_retroalimentacion_regex.json`, `alias_comandos.py` |
+| Generación plantillas | `plantillas/`, `motor_plantillas.py`, `generador.py` |
+| Corrección | `evaluador.py`, `criterios.py`, `retroalimentacion_criterios.py`, `reglas_retroalimentacion_regex.json`, `alias_comandos.py` |
 | PDF + Gemini | `indexador_docs.py`, `generador_docs.py`, `generador_gemini.py`, `modelo_ejercicio.py` |
 | Tipos de materia | `tipo_materia.py`, `vocabulario_claves.json` |
 | Banco portable | `banco_loader.py`, `ServicioBancoPortable.java` |

@@ -50,6 +50,8 @@ QUÉ PUEDES HACER COMO ALUMNO
      (no expresiones regulares técnicas).
    - Dificultad adaptativa (1–3, todos los módulos): 5 aprobados seguidos suben
      nivel; 3 suspensos seguidos lo bajan. También puedes fijarla en Perfil.
+     La nota media de estadísticas pondera por nivel (fácil ×0,7 · medio ×1,0 ·
+     exigente ×1,3).
    - En módulos de sistemas puedes practicar en el contenedor Docker (tarjeta
      «Entorno Docker» en la portada).
    - «Limpiar entorno de práctica» vacía la carpeta datos-practica/ del host.

@@ -25,6 +25,8 @@
 | `403` en `/profesor/revisar` | Entra con cuenta profesor (`profesor` / `profesor`) |
 | `403` al enviar ejercicio | Recarga la página (token CSRF en el formulario) |
 | Sinónimo no aceptado | Añádelo en `vocabulario_claves.json` → `alias_comandos` |
+| El regex del banco no ignora mayúsculas | Usa `"banderas": "i"` (no `flags`; `"multiline"` no activa ignorecase) |
+| Patrón regex rechazado al aprobar (ReDoS) | Evita cuantificadores anidados tipo `(a+)+`; simplifica el patrón |
 | El panel de progreso muestra datos viejos | «Recargar desde el servidor»; o limpia estadísticas del servidor si quieres empezar de cero |
 
 | Quiero empezar de cero en totales e historial del servidor | «Limpiar estadísticas» en la portada (también vacía el panel de progreso al recargar) |

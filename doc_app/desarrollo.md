@@ -16,7 +16,7 @@
 | Nuevos sinónimos de comandos | `vocabulario_claves.json` → `alias_comandos` |
 | Textos de corrección (esperado / pista) | `retroalimentacion_criterios.py` + tabla `reglas_retroalimentacion_regex.json`; `evaluador.py` |
 | Botón en portada | `templates/inicio.html` |
-| Nuevo módulo plantilla | `plantillas/<modulo>.json` (+ opcional entrada en `generador.py`) |
+| Nuevo módulo plantilla | Preferido: `plantillas/<modulo>.json` (el motor escapa variables en regex). Función en `generador.py` solo si la lógica no cabe en JSON |
 | Nuevo tipo de criterio | Clase en `criterios.py` con `@registrar` |
 | Flags de regex en criterios | Campo canónico `banderas` (legacy `flags` solo se lee). Migración banco: `python3 herramientas/migrar_banderas_banco.py` |
 | Nuevo tema PDF | `documentacion/<tema>/` + indexar |
@@ -57,6 +57,8 @@ pytest pruebas/pruebas_hypothesis_nota.py
 cd web && mvn test
 ```
 
+`pytest.ini` recoge `probar_*`, `test_*` y `prueba_*`. CI instala `requirements-dev.txt` (incluye *hypothesis*).
+
 Cobertura clave del corrector: falsos positivos de límites de palabra, pesos/banderas inválidos, ReDoS, y que **toda** `solucion_referencia` de `banco/aprobados/**/*.json` saque un 10.
 
 Hay integración continua en `.github/workflows/ci.yml` (`pytest` + `mvn test` con JDK 21).
@@ -70,7 +72,6 @@ Este proyecto no habría sido posible sin el increíble trabajo de las comunidad
 - [Spring Boot](https://spring.io/projects/spring-boot) — framework web.
 - [Thymeleaf](https://www.thymeleaf.org/) — motor de plantillas.
 - [Python](https://www.python.org/) y sus bibliotecas: `pypdf`, `google-genai`, `rapidfuzz`, etc.
-- [SQLite](https://www.sqlite.org/) — base de datos ligera.
 - [Docker](https://www.docker.com/) — contenedor de práctica.
 - [Highlight.js](https://highlightjs.org/) — resaltado de sintaxis en el navegador.
 

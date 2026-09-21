@@ -11,7 +11,7 @@ Flujo recomendado para validar ejercicios generados desde apuntes **en el equipo
 3. Abre **Perfil → Revisar propuestas** o ve a `/profesor/revisar`.
 4. Pulsa **Revisar** en un pendiente. Verás:
    - **Comparativa** propuesta Gemini vs criterios del escenario (palabras clave, enunciado).
-   - **Tabla de criterios** con pruebas automáticas: solución de referencia (debe pasar), variante con sinónimo (p. ej. `docker container run`) e respuesta insuficiente (debe fallar).
+   - **Tabla de criterios** con pruebas automáticas: solución de referencia (debe sacar 10), variante con sinónimo (p. ej. `docker container run`) e respuesta insuficiente (debe fallar). Los criterios regex del banco usan el campo `banderas` (el legado `flags` se lee y se normaliza).
    - **Alias** aplicados a cada término (desde `vocabulario_claves.json`).
 5. **Aprobar y publicar**, **Rechazar** o **Descargar paquete ZIP** desde la misma pantalla.
 6. **Exportar** el banco o ejercicios sueltos a la carpeta compartida para que los alumnos los importen (ver [Compartir ejercicios del banco](aula-compartida.md#compartir-ejercicios-del-banco-carpeta-compartida)).
