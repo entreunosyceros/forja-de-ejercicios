@@ -123,10 +123,38 @@ public class ServicioEstadisticasUsuario {
 
     private static final int MAX_ULTIMOS_INTENTOS = 5;
 
+    /**
+     * Nivel efectivo 1–3. Sin dato (historial antiguo) se asume 2 (referencia).
+     */
+    public static int normalizarNivel(Integer dificultad) {
+        if (dificultad == null) {
+            return 2;
+        }
+        return Math.max(1, Math.min(3, dificultad));
+    }
+
+    /**
+     * Factor de ponderación: nivel 2 = 1.0 (referencia), nivel 1 = 0.7, nivel 3 = 1.3.
+     * Así un 10 fácil no pesa igual que un 10 exigente en la media.
+     */
+    public static double factorNivel(Integer dificultad) {
+        return switch (normalizarNivel(dificultad)) {
+            case 1 -> 0.7;
+            case 3 -> 1.3;
+            default -> 1.0;
+        };
+    }
+
+    /** Nota comparable 0–10 tras aplicar el factor de nivel. */
+    public static double notaPonderada(double nota, Integer dificultad) {
+        double ponderada = nota * factorNivel(dificultad);
+        return redondear(Math.min(10.0, Math.max(0.0, ponderada)));
+    }
+
     public synchronized void registrar(
             String login, String modulo, double nota, boolean aprobado, Long tiempoSegundos)
             throws IOException {
-        registrar(login, modulo, nota, aprobado, tiempoSegundos, null, null);
+        registrar(login, modulo, nota, aprobado, tiempoSegundos, null, null, null, null);
     }
 
     public synchronized void registrar(
@@ -137,26 +165,56 @@ public class ServicioEstadisticasUsuario {
             Long tiempoSegundos,
             String titulo,
             String ejercicioId) throws IOException {
+        registrar(login, modulo, nota, aprobado, tiempoSegundos, titulo, ejercicioId, null, null);
+    }
+
+    /**
+     * @param dificultad      nivel 1–3 del ejercicio corregido (puede ser null)
+     * @param nivelUsuario    nivel actual del alumno (para rachas adaptativas; null = usar el del intento)
+     */
+    public synchronized void registrar(
+            String login,
+            String modulo,
+            double nota,
+            boolean aprobado,
+            Long tiempoSegundos,
+            String titulo,
+            String ejercicioId,
+            Integer dificultad,
+            Integer nivelUsuario) throws IOException {
         if (login == null || login.isBlank() || modulo == null || modulo.isBlank()) {
             return;
         }
+
+        int nivelEjercicio = normalizarNivel(dificultad);
+        int nivelRef = nivelUsuario != null ? normalizarNivel(nivelUsuario) : nivelEjercicio;
+        double notaComp = notaPonderada(nota, dificultad);
 
         EstadisticasUsuario stats = obtener(login);
         stats.setTotalIntentos(stats.getTotalIntentos() + 1);
         if (aprobado) {
             stats.setTotalAprobados(stats.getTotalAprobados() + 1);
-            stats.setRachaActual(stats.getRachaActual() + 1);
             stats.setRachaSuspensos(0);
+            if (nivelEjercicio >= nivelRef) {
+                stats.setRachaActual(stats.getRachaActual() + 1);
+            } else {
+                // Aprobado en nivel más fácil: no infla la racha de subida.
+                stats.setRachaActual(0);
+            }
         } else {
             stats.setTotalSuspensos(stats.getTotalSuspensos() + 1);
             stats.setRachaActual(0);
-            stats.setRachaSuspensos(stats.getRachaSuspensos() + 1);
+            if (nivelEjercicio <= nivelRef) {
+                stats.setRachaSuspensos(stats.getRachaSuspensos() + 1);
+            } else {
+                stats.setRachaSuspensos(0);
+            }
         }
 
         double sumaPrev = stats.getNotaMedia() * (stats.getTotalIntentos() - 1);
-        stats.setNotaMedia(redondear((sumaPrev + nota) / stats.getTotalIntentos()));
-        if (nota > stats.getMejorNota()) {
-            stats.setMejorNota(nota);
+        stats.setNotaMedia(redondear((sumaPrev + notaComp) / stats.getTotalIntentos()));
+        if (notaComp > stats.getMejorNota()) {
+            stats.setMejorNota(notaComp);
         }
 
         if (tiempoSegundos != null && tiempoSegundos > 0) {
@@ -167,15 +225,16 @@ public class ServicioEstadisticasUsuario {
         EstadisticasModulo pm = stats.getPorModulo().computeIfAbsent(modulo, m -> new EstadisticasModulo());
         pm.setIntentos(pm.getIntentos() + 1);
         double sumaMod = pm.getNotaMedia() * (pm.getIntentos() - 1);
-        pm.setNotaMedia(redondear((sumaMod + nota) / pm.getIntentos()));
-        if (nota > pm.getMejorNota()) {
-            pm.setMejorNota(nota);
+        pm.setNotaMedia(redondear((sumaMod + notaComp) / pm.getIntentos()));
+        if (notaComp > pm.getMejorNota()) {
+            pm.setMejorNota(notaComp);
         }
         if (aprobado) {
             pm.setAprobados(pm.getAprobados() + 1);
         }
 
-        registrarIntentoReciente(stats, modulo, titulo, nota, aprobado, tiempoSegundos, ejercicioId);
+        registrarIntentoReciente(
+                stats, modulo, titulo, nota, aprobado, tiempoSegundos, ejercicioId, nivelEjercicio);
         guardar(login, stats);
     }
 
@@ -186,7 +245,8 @@ public class ServicioEstadisticasUsuario {
             double nota,
             boolean aprobado,
             Long tiempoSegundos,
-            String ejercicioId) {
+            String ejercicioId,
+            int dificultad) {
         var intento = new IntentoReciente();
         intento.setModulo(modulo);
         intento.setTitulo(titulo != null && !titulo.isBlank() ? titulo.strip() : modulo);
@@ -195,6 +255,7 @@ public class ServicioEstadisticasUsuario {
         intento.setTiempoSegundos(tiempoSegundos != null ? tiempoSegundos : 0L);
         intento.setFecha(Instant.now().toString());
         intento.setEjercicioId(ejercicioId);
+        intento.setDificultad(dificultad);
 
         var lista = stats.getUltimosIntentos() != null
                 ? new ArrayList<>(stats.getUltimosIntentos())

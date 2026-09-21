@@ -35,7 +35,7 @@ PDF  →  indexador_docs.py  →  indice/docs_*.json (tipo_materia)
 Portada docs_*  →  generador_docs  →  tipo_materia  →  generador_gemini  →  modelo_ejercicio  →  evaluador
 ```
 
-- **Nivel (1–3):** Perfil del alumno o **[dificultad adaptativa](guia-usuario.md#dificultad-adaptativa)** (5 aprobados seguidos ↑, 3 suspensos ↓, para todos los módulos) → `--nivel` en Python (`_instrucciones_nivel()`).
+- **Nivel (1–3):** Perfil del alumno o **[dificultad adaptativa](guia-usuario.md#dificultad-adaptativa)** (5 aprobados en nivel ≥ actual ↑, 3 suspensos en nivel ≤ actual ↓) → `--nivel` en Python (`_instrucciones_nivel()`). Las estadísticas ponderan la nota por nivel (1×0,7 · 2×1,0 · 3×1,3).
 - **Tipo de materia:** carpeta, `.forja-tipo` o `vocabulario_claves.json` → prompt y validación distintos.
 - **Clave API / modelo:** `datos/gemini.json` o `.env` (`GEMINI_API_KEY`, `FORJAEXAMENES_GEMINI_MODEL`).
 - **Pre-generación:** `forjaexamenes.precarga-ejercicios-activa` — pool de ejercicios `docs_*` listos.

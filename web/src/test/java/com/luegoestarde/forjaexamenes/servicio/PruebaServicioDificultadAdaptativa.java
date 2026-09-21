@@ -82,4 +82,26 @@ class PruebaServicioDificultadAdaptativa {
         assertEquals(1, cuentas.obtenerNivelGemini("alumno"));
         assertEquals(0, estadisticas.obtener("alumno").getRachaSuspensos());
     }
+
+    @Test
+    void cincoAprobadosFacilesNoSubenSiNivelEsDos() throws Exception {
+        cuentas.actualizarNivelGemini("alumno", 2);
+        for (int i = 0; i < 5; i++) {
+            estadisticas.registrar("alumno", "poo", 10.0, true, 60L, "fácil", "e" + i, 1, 2);
+        }
+        assertTrue(adaptativa.evaluarTrasIntento("alumno").isEmpty());
+        assertEquals(2, cuentas.obtenerNivelGemini("alumno"));
+        assertEquals(0, estadisticas.obtener("alumno").getRachaActual());
+    }
+
+    @Test
+    void cincoAprobadosAlNivelActualSuben() throws Exception {
+        cuentas.actualizarNivelGemini("alumno", 2);
+        for (int i = 0; i < 5; i++) {
+            estadisticas.registrar("alumno", "poo", 8.0, true, 60L, "ok", "n" + i, 2, 2);
+        }
+        var ajuste = adaptativa.evaluarTrasIntento("alumno");
+        assertTrue(ajuste.isPresent());
+        assertEquals(3, ajuste.get().nivelNuevo());
+    }
 }

@@ -7,7 +7,8 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 
 /**
- * Ajusta automáticamente el nivel de dificultad del alumno según rachas de resultados.
+ * Ajusta automáticamente el nivel de dificultad del alumno según rachas de resultados
+ * en el nivel actual (las notas de distinto nivel no cuentan igual para subir/bajar).
  */
 @Service
 public class ServicioDificultadAdaptativa {
@@ -31,7 +32,8 @@ public class ServicioDificultadAdaptativa {
     }
 
     /**
-     * Tras registrar un intento, comprueba rachas y sube/baja el nivel si corresponde.
+     * Tras registrar un intento, comprueba rachas al nivel actual y sube/baja si corresponde.
+     * Subir: aprobados en nivel ≥ actual. Bajar: suspensos en nivel ≤ actual.
      */
     public Optional<AjusteDificultad> evaluarTrasIntento(String login) throws IOException {
         if (login == null || login.isBlank() || accesoProfesor.esProfesor(login)) {
@@ -49,8 +51,9 @@ public class ServicioDificultadAdaptativa {
                 return Optional.of(new AjusteDificultad(
                         nivelActual,
                         nuevo,
-                        "¡" + APROBADOS_PARA_SUBIR + " aprobados seguidos! Dificultad subida a nivel "
-                                + nuevo + "."));
+                        "¡" + APROBADOS_PARA_SUBIR
+                                + " aprobados seguidos en nivel " + nivelActual
+                                + " o superior! Dificultad subida a nivel " + nuevo + "."));
             }
             servicioEstadisticas.reiniciarRachaAprobados(login);
         }
@@ -63,7 +66,8 @@ public class ServicioDificultadAdaptativa {
                 return Optional.of(new AjusteDificultad(
                         nivelActual,
                         nuevo,
-                        SUSPENSOS_PARA_BAJAR + " suspensos seguidos. Dificultad bajada a nivel "
+                        SUSPENSOS_PARA_BAJAR
+                                + " suspensos seguidos en tu nivel. Dificultad bajada a nivel "
                                 + nuevo + " para ayudarte a repasar."));
             }
             servicioEstadisticas.reiniciarRachaSuspensos(login);

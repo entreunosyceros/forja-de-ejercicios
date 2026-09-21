@@ -305,7 +305,8 @@ docker exec -it forjaexamenes-practica bash</pre>
         <p class="alerta-indexacion alerta-error" th:if="${errorEstadisticas}" th:text="${errorEstadisticas}">Error</p>
         <p class="hint">
             Totales acumulados en el <strong>servidor</strong> de <strong th:text="${nombreUsuario}">Usuario</strong>
-            (todos los ejercicios corregidos desde que usas la app)
+            (todos los ejercicios corregidos desde que usas la app).
+            La <strong>nota media</strong> pondera por nivel de dificultad (1×0,7 · 2×1,0 · 3×1,3; tope 10).
             <span th:if="${estadisticas.ultimaActividad != null and !estadisticas.ultimaActividad.isEmpty()}">
                 · Última actividad: <span th:text="${estadisticas.ultimaActividad}">—</span>
             </span>

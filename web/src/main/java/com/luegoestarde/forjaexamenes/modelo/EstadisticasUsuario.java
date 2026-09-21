@@ -70,6 +70,8 @@ public class EstadisticasUsuario {
         private long tiempoSegundos;
         private String fecha;
         private String ejercicioId;
+        /** Nivel 1–3 del ejercicio (null = legacy, se trata como 2). */
+        private Integer dificultad;
 
         public String getModulo() { return modulo; }
         public void setModulo(String modulo) { this.modulo = modulo; }
@@ -85,6 +87,8 @@ public class EstadisticasUsuario {
         public void setFecha(String fecha) { this.fecha = fecha; }
         public String getEjercicioId() { return ejercicioId; }
         public void setEjercicioId(String ejercicioId) { this.ejercicioId = ejercicioId; }
+        public Integer getDificultad() { return dificultad; }
+        public void setDificultad(Integer dificultad) { this.dificultad = dificultad; }
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)

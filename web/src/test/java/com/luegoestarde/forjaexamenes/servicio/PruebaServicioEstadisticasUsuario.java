@@ -54,12 +54,30 @@ class PruebaServicioEstadisticasUsuario {
 
     @Test
     void registrarGuardaUltimosIntentos() throws Exception {
-        servicio.registrar("alumno", "docs_forense", 8.0, true, 90L, "Ejercicio forense", "abc123");
+        servicio.registrar("alumno", "docs_forense", 8.0, true, 90L, "Ejercicio forense", "abc123", 2, 2);
         var intentos = servicio.obtener("alumno").getUltimosIntentos();
         assertEquals(1, intentos.size());
         assertEquals("docs_forense", intentos.get(0).getModulo());
         assertEquals("Ejercicio forense", intentos.get(0).getTitulo());
         assertEquals("abc123", intentos.get(0).getEjercicioId());
+        assertEquals(2, intentos.get(0).getDificultad());
+    }
+
+    @Test
+    void notaMediaPonderaPorNivel() throws Exception {
+        // 10 en nivel 1 → 7.0; 10 en nivel 3 → 10.0 (tope); media 8.5
+        servicio.registrar("alumno", "poo", 10.0, true, 30L, "Fácil", "e1", 1, 2);
+        servicio.registrar("alumno", "poo", 10.0, true, 30L, "Difícil", "e2", 3, 2);
+        assertEquals(8.5, servicio.obtener("alumno").getNotaMedia(), 0.01);
+        assertEquals(10.0, servicio.obtener("alumno").getMejorNota(), 0.01);
+    }
+
+    @Test
+    void aprobadoEnNivelMasFacilNoSumaRachaSubida() throws Exception {
+        servicio.registrar("alumno", "poo", 9.0, true, 30L, "t", "a1", 1, 2);
+        assertEquals(0, servicio.obtener("alumno").getRachaActual());
+        servicio.registrar("alumno", "poo", 9.0, true, 30L, "t", "a2", 2, 2);
+        assertEquals(1, servicio.obtener("alumno").getRachaActual());
     }
 
     @Test

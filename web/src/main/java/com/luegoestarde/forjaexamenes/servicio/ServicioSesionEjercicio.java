@@ -98,6 +98,9 @@ public class ServicioSesionEjercicio {
         metadatosEjercicio.enriquecerResultado(resultado, escenario, nombreVisible, tiempoSegundos);
         almacenSesiones.guardarResultado(id, resultado, tiempoSegundos);
         String login = metadatosEjercicio.loginActual();
+        Integer nivelUsuario = (login != null && !login.isBlank())
+                ? cuentasUsuarios.obtenerNivelGemini(login)
+                : null;
         servicioEstadisticas.registrar(
                 login,
                 escenario.getModulo(),
@@ -105,7 +108,9 @@ public class ServicioSesionEjercicio {
                 resultado.isAprobado(),
                 tiempoSegundos,
                 escenario.getTitulo(),
-                escenario.getId());
+                escenario.getId(),
+                escenario.getDificultad(),
+                nivelUsuario);
         servicioHistorial.registrar(
                 login,
                 nombreVisible,
@@ -147,6 +152,9 @@ public class ServicioSesionEjercicio {
         datos.put("aprobado", resultado.isAprobado());
         datos.put("tiempoSegundos", tiempoSegundos);
         datos.put("ejercicioId", ejercicioId);
+        if (escenario.getDificultad() != null) {
+            datos.put("dificultad", escenario.getDificultad());
+        }
         ajusteDificultad.ifPresent(a -> {
             datos.put("mensajeDificultad", a.mensaje());
             datos.put("nivelDificultad", a.nivelNuevo());

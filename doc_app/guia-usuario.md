@@ -38,15 +38,17 @@ El nivel de dificultad (1–3) de cada alumno **se ajusta solo** según sus resu
 
 | Racha consecutiva | Efecto |
 |-------------------|--------|
-| **5 aprobados seguidos** | Sube un nivel (máximo 3) |
-| **3 suspensos seguidos** | Baja un nivel (mínimo 1) |
+| **5 aprobados seguidos** en el nivel actual o superior | Sube un nivel (máximo 3) |
+| **3 suspensos seguidos** en el nivel actual o inferior | Baja un nivel (mínimo 1) |
 
 - Aplica a **todos los módulos** (clásicos y `docs_*`), no solo a los de IA.
 - Solo afecta a **cuentas de alumno**; el profesor mantiene el nivel que elija manualmente.
+- Un aprobado en un nivel **más fácil** que el actual **no** suma a la racha de subida (evita subir solo con ejercicios fáciles).
 - Tras un ajuste, la racha correspondiente se reinicia (no encadena varias subidas/bajadas seguidas) y el alumno ve un aviso en pantalla.
 - El nivel se guarda por usuario (`datos/usuarios.json`, campo `nivelGemini`) y también puede fijarse a mano en **Perfil → «Dificultad de ejercicios»**.
+- Cada intento guarda su nivel en el historial; la **nota media** de estadísticas usa nota ponderada (nivel 1 ×0,7, 2 ×1,0, 3 ×1,3, tope 10).
 
-Lógica en `ServicioDificultadAdaptativa.java` (umbrales 5/3) apoyada en las rachas de `EstadisticasUsuario` (`rachaActual` / `rachaSuspensos`).
+Lógica en `ServicioDificultadAdaptativa.java` y ponderación en `ServicioEstadisticasUsuario` (umbrales 5/3).
 
 ## Datos locales (no en Git)
 

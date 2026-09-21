@@ -51,6 +51,7 @@ public class ServicioProgresoUsuario {
             fila.put("tiempoSegundos", i.getTiempoSegundos());
             fila.put("ejercicioId", i.getEjercicioId() != null ? i.getEjercicioId() : "");
             fila.put("fecha", i.getFecha() != null ? i.getFecha() : "");
+            fila.put("dificultad", i.getDificultad() != null ? i.getDificultad() : 2);
             lista.add(fila);
         }
         return lista;
