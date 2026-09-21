@@ -98,14 +98,14 @@ def generar_bd() -> dict:
         ),
         "parametros": {"tabla": tabla, "columna": columna, "segundos": segundos},
         "criterios": [
-            {"tipo": "regex", "patron": r"EXPLAIN", "peso": 3, "flags": "i"},
+            {"tipo": "regex", "patron": r"EXPLAIN", "peso": 3, "banderas": "i"},
             {
                 "tipo": "regex",
                 "patron": rf"CREATE\s+INDEX\s+\S+\s+ON\s+{tabla}|CREATE\s+INDEX[\s\S]{{0,40}}\({columna}\)",
                 "peso": 4,
-                "flags": "i",
+                "banderas": "i",
             },
-            {"tipo": "regex", "patron": tabla, "peso": 1, "flags": "i"},
+            {"tipo": "regex", "patron": tabla, "peso": 1, "banderas": "i"},
         ],
         "solucion_referencia": (
             f"EXPLAIN SELECT * FROM {tabla} WHERE {columna} = 'valor';\n"
@@ -129,9 +129,9 @@ def generar_docker() -> dict:
         ),
         "parametros": {"contenedor": contenedor, "puerto": puerto},
         "criterios": [
-            {"tipo": "regex", "patron": r"docker\s+logs", "peso": 3, "flags": "i"},
-            {"tipo": "regex", "patron": r"docker(-compose)?\s+(ps|inspect)", "peso": 2, "flags": "i"},
-            {"tipo": "regex", "patron": r"docker-compose\s+up.*--build|docker\s+compose\s+up.*--build", "peso": 4, "flags": "i"},
+            {"tipo": "regex", "patron": r"docker\s+logs", "peso": 3, "banderas": "i"},
+            {"tipo": "regex", "patron": r"docker(-compose)?\s+(ps|inspect)", "peso": 2, "banderas": "i"},
+            {"tipo": "regex", "patron": r"docker-compose\s+up.*--build|docker\s+compose\s+up.*--build", "peso": 4, "banderas": "i"},
         ],
         "solucion_referencia": (
             f"docker logs {contenedor}\n"
@@ -377,11 +377,11 @@ def generar_bd_sql() -> dict:
         ),
         "parametros": {"tabla_a": tabla_a, "tabla_b": tabla_b, "columna": columna},
         "criterios": [
-            {"tipo": "regex", "patron": r"SELECT", "peso": 2, "flags": "i"},
-            {"tipo": "regex", "patron": r"LEFT\s+JOIN|LEFT\s+OUTER\s+JOIN", "peso": 4, "flags": "i"},
-            {"tipo": "regex", "patron": tabla_a, "peso": 1, "flags": "i"},
-            {"tipo": "regex", "patron": tabla_b, "peso": 1, "flags": "i"},
-            {"tipo": "regex", "patron": columna, "peso": 2, "flags": "i"},
+            {"tipo": "regex", "patron": r"SELECT", "peso": 2, "banderas": "i"},
+            {"tipo": "regex", "patron": r"LEFT\s+JOIN|LEFT\s+OUTER\s+JOIN", "peso": 4, "banderas": "i"},
+            {"tipo": "regex", "patron": tabla_a, "peso": 1, "banderas": "i"},
+            {"tipo": "regex", "patron": tabla_b, "peso": 1, "banderas": "i"},
+            {"tipo": "regex", "patron": columna, "peso": 2, "banderas": "i"},
         ],
         "solucion_referencia": (
             f"SELECT a.*, b.*\n"
@@ -405,14 +405,14 @@ def generar_bd_modelo() -> dict:
         ),
         "parametros": {"entidad": entidad, "dependencia": dependencia},
         "criterios": [
-            {"tipo": "regex", "patron": r"PRIMARY\s+KEY", "peso": 2, "flags": "i"},
-            {"tipo": "regex", "patron": r"FOREIGN\s+KEY|REFERENCES", "peso": 3, "flags": "i"},
-            {"tipo": "regex", "patron": entidad[:4], "peso": 1, "flags": "i"},
+            {"tipo": "regex", "patron": r"PRIMARY\s+KEY", "peso": 2, "banderas": "i"},
+            {"tipo": "regex", "patron": r"FOREIGN\s+KEY|REFERENCES", "peso": 3, "banderas": "i"},
+            {"tipo": "regex", "patron": entidad[:4], "peso": 1, "banderas": "i"},
             {
                 "tipo": "regex",
                 "patron": r"3FN|tercera\s+forma\s+normal|normalizaci[oó]n",
                 "peso": 2,
-                "flags": "i",
+                "banderas": "i",
             },
         ],
         "solucion_referencia": (
@@ -439,15 +439,15 @@ def generar_bd_transacciones() -> dict:
         ),
         "parametros": {"cuenta_origen": cuenta_origen, "destino": cuenta_destino, "importe": importe},
         "criterios": [
-            {"tipo": "regex", "patron": r"START\s+TRANSACTION|\bBEGIN(\s+TRANSACTION)?\b", "peso": 2, "flags": "i"},
+            {"tipo": "regex", "patron": r"START\s+TRANSACTION|\bBEGIN(\s+TRANSACTION)?\b", "peso": 2, "banderas": "i"},
             {
                 "tipo": "regex",
                 "patron": r"UPDATE\s+\w+\s+SET\s+[\s\S]{0,80}\bsaldo\b",
                 "peso": 3,
-                "flags": "i",
+                "banderas": "i",
             },
-            {"tipo": "regex", "patron": r"COMMIT", "peso": 2, "flags": "i"},
-            {"tipo": "regex", "patron": r"ROLLBACK", "peso": 2, "flags": "i"},
+            {"tipo": "regex", "patron": r"COMMIT", "peso": 2, "banderas": "i"},
+            {"tipo": "regex", "patron": r"ROLLBACK", "peso": 2, "banderas": "i"},
             {"tipo": "regex", "patron": str(importe), "peso": 1},
         ],
         "solucion_referencia": (
@@ -505,9 +505,9 @@ def generar_git() -> dict:
         ),
         "parametros": {"archivo": archivo, "rama": rama},
         "criterios": [
-            {"tipo": "regex", "patron": r"git\s+status", "peso": 2, "flags": "i"},
-            {"tipo": "regex", "patron": r"git\s+merge\s+--abort|git\s+add|git\s+commit", "peso": 3, "flags": "i"},
-            {"tipo": "regex", "patron": archivo.replace(".", r"\."), "peso": 1, "flags": "i"},
+            {"tipo": "regex", "patron": r"git\s+status", "peso": 2, "banderas": "i"},
+            {"tipo": "regex", "patron": r"git\s+merge\s+--abort|git\s+add|git\s+commit", "peso": 3, "banderas": "i"},
+            {"tipo": "regex", "patron": archivo.replace(".", r"\."), "peso": 1, "banderas": "i"},
         ],
         "solucion_referencia": (
             "git status\n"
@@ -557,8 +557,10 @@ MODULOS = tuple(sorted(GENERADORES.keys()))
 
 
 def _enriquecer_criterios(escenario: dict) -> None:
+    from criterios import normalizar_banderas_en_escenario
     from retroalimentacion_criterios import aplicar_retroalimentacion_a_criterio
 
+    normalizar_banderas_en_escenario(escenario)
     for criterio in escenario.get("criterios", []):
         aplicar_retroalimentacion_a_criterio(criterio)
 

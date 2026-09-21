@@ -84,6 +84,25 @@ def probar_banderas_i_sigue_funcionando():
     assert r["detalles"][0]["cumplido"]
 
 
+def probar_flags_legacy_se_normaliza_a_banderas():
+    from criterios import normalizar_banderas_en_criterio
+
+    c = {"tipo": "regex", "patron": r"x", "peso": 1, "flags": "i"}
+    normalizar_banderas_en_criterio(c)
+    assert c.get("banderas") == "i"
+    assert "flags" not in c
+    escenario = {
+        "id": "legacy",
+        "modulo": "test",
+        "criterios": [
+            {"tipo": "regex", "patron": r"HELLO", "peso": 10, "flags": "i"},
+        ],
+    }
+    assert evaluador.evaluar(escenario, "hello")["detalles"][0]["cumplido"]
+    assert escenario["criterios"][0].get("banderas") == "i"
+    assert "flags" not in escenario["criterios"][0]
+
+
 def probar_peso_texto_no_rompe():
     escenario = {
         "id": "t6",
@@ -131,6 +150,7 @@ if __name__ == "__main__":
     probar_regex_sigue_funcionando()
     probar_banderas_multiline_no_activa_ignorecase()
     probar_banderas_i_sigue_funcionando()
+    probar_flags_legacy_se_normaliza_a_banderas()
     probar_peso_texto_no_rompe()
     probar_peso_negativo_no_nota_disparatada()
     probar_nota_siempre_entre_0_y_10()

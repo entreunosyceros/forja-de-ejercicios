@@ -34,6 +34,7 @@ def _etiqueta_honestidad(nota_elementos: float, juicio: dict | None, nota_final:
 
 
 def evaluar(escenario: dict, respuesta: str) -> dict:
+    criterios.normalizar_banderas_en_escenario(escenario)
     lista = escenario.get("criterios", [])
     detalles = [evaluar_criterio(respuesta, c) for c in lista]
     peso_total = sum(peso_criterio(c) for c in lista) or 1

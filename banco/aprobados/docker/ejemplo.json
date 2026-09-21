@@ -8,7 +8,7 @@
       "tipo": "regex",
       "patron": "docker\\s+run\\b",
       "peso": 3,
-      "flags": "i",
+      "banderas": "i",
       "obligatorio": true,
       "esperado": "Usar docker run",
       "pista": "Empieza con docker run"
@@ -17,7 +17,7 @@
       "tipo": "regex",
       "patron": "-p\\s*8080\\s*:\\s*80\\b",
       "peso": 3,
-      "flags": "i",
+      "banderas": "i",
       "esperado": "Mapear puerto 8080:80 con -p",
       "pista": "Usa -p 8080:80 para publicar el puerto"
     },
@@ -25,7 +25,7 @@
       "tipo": "regex",
       "patron": "docker\\s+run\\b(?:\\s+\\S+){0,12}\\s+nginx\\b",
       "peso": 2,
-      "flags": "i",
+      "banderas": "i",
       "esperado": "Imagen nginx como argumento de docker run",
       "pista": "La imagen va al final del docker run (p. ej. nginx)"
     }

@@ -18,6 +18,7 @@
 | Botón en portada | `templates/inicio.html` |
 | Nuevo módulo plantilla | `plantillas/<modulo>.json` (+ opcional entrada en `generador.py`) |
 | Nuevo tipo de criterio | Clase en `criterios.py` con `@registrar` |
+| Flags de regex en criterios | Campo canónico `banderas` (legacy `flags` solo se lee). Migración banco: `python3 herramientas/migrar_banderas_banco.py` |
 | Nuevo tema PDF | `documentacion/<tema>/` + indexar |
 | Ejercicio verificado manual | `banco/aprobados/<tema>/<id>.json` + `reindexar` |
 | Exportar/importar banco entre PCs | `ServicioBancoPortable.java`, `ControladorBanco.java` |

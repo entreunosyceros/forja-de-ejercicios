@@ -72,6 +72,28 @@ def banderas_regex(criterio: dict) -> int:
     return valor
 
 
+def normalizar_banderas_en_criterio(criterio: dict[str, Any]) -> dict[str, Any]:
+    """Unifica el campo canónico ``banderas`` y elimina el legacy ``flags``."""
+    if not isinstance(criterio, dict):
+        return criterio
+    banderas = criterio.get("banderas")
+    flags = criterio.pop("flags", None)
+    if (banderas is None or str(banderas).strip() == "") and flags is not None:
+        criterio["banderas"] = flags
+    elif "banderas" in criterio and (banderas is None or str(banderas).strip() == ""):
+        criterio.pop("banderas", None)
+    return criterio
+
+
+def normalizar_banderas_en_escenario(escenario: dict[str, Any]) -> dict[str, Any]:
+    """Normaliza todos los criterios del escenario a «banderas» (sin «flags»)."""
+    criterios = escenario.get("criterios")
+    if isinstance(criterios, list):
+        for c in criterios:
+            normalizar_banderas_en_criterio(c)
+    return escenario
+
+
 def peso_criterio(criterio: dict) -> int:
     bruto = criterio.get("peso", 1)
     try:

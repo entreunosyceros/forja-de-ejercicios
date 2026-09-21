@@ -1,6 +1,7 @@
 // Desarrollado por entreunosyceros - 2026
 package com.luegoestarde.forjaexamenes.modelo;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.List;
@@ -77,6 +78,7 @@ public class Escenario {
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class Criterio {
         private String esperado;
         private String pista;
@@ -95,10 +97,9 @@ public class Escenario {
         public int getPeso() { return peso; }
         public void setPeso(int peso) { this.peso = peso; }
         public String getBanderas() { return banderas; }
+        /** Nombre canónico; acepta también el legacy {@code flags} al deserializar. */
+        @JsonAlias("flags")
         public void setBanderas(String banderas) { this.banderas = banderas; }
-        /** Compatibilidad JSON legacy {@code flags}. */
-        public String getFlags() { return banderas; }
-        public void setFlags(String flags) { this.banderas = flags; }
         public String getEsperado() { return esperado; }
         public void setEsperado(String esperado) { this.esperado = esperado; }
         public String getPista() { return pista; }

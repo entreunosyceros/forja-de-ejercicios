@@ -120,7 +120,7 @@ def probar_criterios_no_colador_update_y_for():
                 "tipo": "regex",
                 "patron": r"UPDATE\s+\w+\s+SET\s+[\s\S]{0,80}\bsaldo\b",
                 "peso": 10,
-                "flags": "i",
+                "banderas": "i",
             },
         ],
     }

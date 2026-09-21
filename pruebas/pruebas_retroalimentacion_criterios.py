@@ -42,7 +42,7 @@ def probar_create_index_bd():
         "tipo": "regex",
         "patron": r"CREATE\s+INDEX.*pedidos|INDEX.*fecha",
         "peso": 4,
-        "flags": "i",
+        "banderas": "i",
     }
     aplicar_retroalimentacion_a_criterio(criterio)
     assert not parece_patron_regex(criterio["esperado"])

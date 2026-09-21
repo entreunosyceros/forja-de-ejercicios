@@ -98,7 +98,10 @@ def reconstruir_catalogo() -> dict[str, Any]:
 
 
 def _preparar_escenario(datos: dict[str, Any], ruta: Path | None = None) -> dict[str, Any]:
+    import criterios as criterios_mod
+
     escenario = dict(datos)
+    criterios_mod.normalizar_banderas_en_escenario(escenario)
     modelo_ejercicio.validar_escenario_verificable(escenario)
     if not escenario.get("id"):
         escenario["id"] = _generar_id()

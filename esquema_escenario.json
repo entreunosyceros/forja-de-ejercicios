@@ -32,8 +32,10 @@
           "peso": { "type": "integer", "minimum": 1 },
           "obligatorio": { "type": "boolean" },
           "patron": { "type": "string" },
-          "banderas": { "type": "string" },
-          "flags": { "type": "string" },
+          "banderas": {
+            "type": "string",
+            "description": "Flags de regex (i/m/s). Nombre canónico; no usar «flags»."
+          },
           "terminos": {
             "type": "array",
             "items": { "type": "string" }

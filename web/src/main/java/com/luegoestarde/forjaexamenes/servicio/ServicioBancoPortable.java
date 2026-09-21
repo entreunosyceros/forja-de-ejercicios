@@ -253,6 +253,8 @@ public class ServicioBancoPortable {
             nodo.put("enunciado", TextoPlano.quitarDecoracionNivel(nodo.path("enunciado").asText("")));
         }
 
+        normalizarBanderasCriterios(nodo);
+
         if (!nodo.has("id") || nodo.path("id").asText("").isBlank()) {
             nodo.put("id", "banco-" + UUID.randomUUID().toString().substring(0, 8));
         }
@@ -269,6 +271,27 @@ public class ServicioBancoPortable {
         params.put("importado_en", Instant.now().toString());
         nodo.set("parametros", params);
         return nodo;
+    }
+
+    /** Unifica {@code flags} legacy → {@code banderas} en criterios al exportar/importar. */
+    static void normalizarBanderasCriterios(ObjectNode escenario) {
+        JsonNode criterios = escenario.path("criterios");
+        if (!criterios.isArray()) {
+            return;
+        }
+        for (JsonNode nodo : criterios) {
+            if (!(nodo instanceof ObjectNode criterio)) {
+                continue;
+            }
+            String banderas = criterio.path("banderas").asText(null);
+            String flags = criterio.path("flags").asText(null);
+            criterio.remove("flags");
+            if ((banderas == null || banderas.isBlank()) && flags != null && !flags.isBlank()) {
+                criterio.put("banderas", flags);
+            } else if (banderas != null && banderas.isBlank()) {
+                criterio.remove("banderas");
+            }
+        }
     }
 
     private void validarEjercicio(JsonNode ejercicio) throws IOException {
