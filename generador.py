@@ -36,8 +36,8 @@ def generar_redes() -> dict:
         "parametros": {"vlan_a": v1, "vlan_b": v2, "puerto": puerto},
         "criterios": [
             {"tipo": "regex", "patron": r"(vlan|ip\s+link)", "peso": 1},
-            {"tipo": "regex", "patron": rf"vlan.*{v1}|{v1}.*vlan", "peso": 2},
-            {"tipo": "regex", "patron": rf"vlan.*{v2}|{v2}.*vlan", "peso": 2},
+            {"tipo": "regex", "patron": rf"vlan.*{re.escape(str(v1))}|{re.escape(str(v1))}.*vlan", "peso": 2},
+            {"tipo": "regex", "patron": rf"vlan.*{re.escape(str(v2))}|{re.escape(str(v2))}.*vlan", "peso": 2},
             {"tipo": "regex", "patron": r"ip\s+route|ip\s+routing|sysctl.*ip_forward", "peso": 3},
         ],
         "solucion_referencia": (
@@ -68,10 +68,17 @@ def generar_sistemas() -> dict:
         ),
         "parametros": {"usuario": usuario, "ruta": ruta, "permiso": perm},
         "criterios": [
-            {"tipo": "regex", "patron": r"chmod\s+" + perm.replace("2", "") + r"|chmod\s+" + perm, "peso": 3},
-            {"tipo": "regex", "patron": rf"chown.*{usuario}|chown.*www-data", "peso": 2},
+            {
+                "tipo": "regex",
+                "patron": (
+                    r"chmod\s+" + re.escape(perm.replace("2", ""))
+                    + r"|chmod\s+" + re.escape(perm)
+                ),
+                "peso": 3,
+            },
+            {"tipo": "regex", "patron": rf"chown.*{re.escape(usuario)}|chown.*www-data", "peso": 2},
             {"tipo": "regex", "patron": r"setfacl|usermod.*-aG", "peso": 2},
-            {"tipo": "regex", "patron": ruta.replace("/", r"\/"), "peso": 1},
+            {"tipo": "regex", "patron": re.escape(ruta), "peso": 1},
         ],
         "solucion_referencia": (
             f"sudo chown -R {usuario}:www-data {ruta}\n"
@@ -101,11 +108,14 @@ def generar_bd() -> dict:
             {"tipo": "regex", "patron": r"EXPLAIN", "peso": 3, "banderas": "i"},
             {
                 "tipo": "regex",
-                "patron": rf"CREATE\s+INDEX\s+\S+\s+ON\s+{tabla}|CREATE\s+INDEX[\s\S]{{0,40}}\({columna}\)",
+                "patron": (
+                    rf"CREATE\s+INDEX\s+\S+\s+ON\s+{re.escape(tabla)}"
+                    rf"|CREATE\s+INDEX[\s\S]{{0,40}}\({re.escape(columna)}\)"
+                ),
                 "peso": 4,
                 "banderas": "i",
             },
-            {"tipo": "regex", "patron": tabla, "peso": 1, "banderas": "i"},
+            {"tipo": "regex", "patron": re.escape(tabla), "peso": 1, "banderas": "i"},
         ],
         "solucion_referencia": (
             f"EXPLAIN SELECT * FROM {tabla} WHERE {columna} = 'valor';\n"
@@ -158,12 +168,15 @@ def generar_poo_herencia() -> dict:
         ),
         "parametros": {"base": clase_base, "hija": clase_hija, "metodo": metodo},
         "criterios": [
-            {"tipo": "regex", "patron": r"extends\s+" + clase_base, "peso": 3},
+            {"tipo": "regex", "patron": r"extends\s+" + re.escape(clase_base), "peso": 3},
             {"tipo": "regex", "patron": r"@Override", "peso": 2},
-            {"tipo": "regex", "patron": metodo, "peso": 2},
+            {"tipo": "regex", "patron": re.escape(metodo), "peso": 2},
             {
                 "tipo": "regex",
-                "patron": rf"List<{clase_base}>|for\s*\(\s*{clase_base}\b",
+                "patron": (
+                    rf"List<{re.escape(clase_base)}>|"
+                    rf"for\s*\(\s*{re.escape(clase_base)}\b"
+                ),
                 "peso": 2,
             },
         ],
@@ -195,10 +208,10 @@ def generar_poo_interfaz() -> dict:
         ),
         "parametros": {"interfaz": interfaz, "clase": clase},
         "criterios": [
-            {"tipo": "regex", "patron": rf"implements\s+{interfaz}", "peso": 3},
+            {"tipo": "regex", "patron": rf"implements\s+{re.escape(interfaz)}", "peso": 3},
             {"tipo": "regex", "patron": r"exportar\s*\(", "peso": 2},
-            {"tipo": "regex", "patron": rf"{interfaz}\s+\w+\s*=", "peso": 2},
-            {"tipo": "regex", "patron": r"interface\s+" + interfaz, "peso": 2},
+            {"tipo": "regex", "patron": rf"{re.escape(interfaz)}\s+\w+\s*=", "peso": 2},
+            {"tipo": "regex", "patron": r"interface\s+" + re.escape(interfaz), "peso": 2},
         ],
         "solucion_referencia": (
             f"public interface {interfaz} {{\n"
@@ -229,9 +242,9 @@ def generar_poo_excepciones() -> dict:
         "parametros": {"excepcion": excepcion, "recurso": recurso},
         "criterios": [
             {"tipo": "regex", "patron": r"try\s*\(", "peso": 2},
-            {"tipo": "regex", "patron": r"catch\s*\(\s*" + excepcion, "peso": 3},
+            {"tipo": "regex", "patron": r"catch\s*\(\s*" + re.escape(excepcion), "peso": 3},
             {"tipo": "regex", "patron": r"finally|try-with-resources", "peso": 2},
-            {"tipo": "regex", "patron": r"throws\s+" + excepcion, "peso": 2},
+            {"tipo": "regex", "patron": r"throws\s+" + re.escape(excepcion), "peso": 2},
         ],
         "solucion_referencia": (
             f"public void leer() throws {excepcion} {{\n"
@@ -379,9 +392,9 @@ def generar_bd_sql() -> dict:
         "criterios": [
             {"tipo": "regex", "patron": r"SELECT", "peso": 2, "banderas": "i"},
             {"tipo": "regex", "patron": r"LEFT\s+JOIN|LEFT\s+OUTER\s+JOIN", "peso": 4, "banderas": "i"},
-            {"tipo": "regex", "patron": tabla_a, "peso": 1, "banderas": "i"},
-            {"tipo": "regex", "patron": tabla_b, "peso": 1, "banderas": "i"},
-            {"tipo": "regex", "patron": columna, "peso": 2, "banderas": "i"},
+            {"tipo": "regex", "patron": re.escape(tabla_a), "peso": 1, "banderas": "i"},
+            {"tipo": "regex", "patron": re.escape(tabla_b), "peso": 1, "banderas": "i"},
+            {"tipo": "regex", "patron": re.escape(columna), "peso": 2, "banderas": "i"},
         ],
         "solucion_referencia": (
             f"SELECT a.*, b.*\n"
@@ -407,7 +420,7 @@ def generar_bd_modelo() -> dict:
         "criterios": [
             {"tipo": "regex", "patron": r"PRIMARY\s+KEY", "peso": 2, "banderas": "i"},
             {"tipo": "regex", "patron": r"FOREIGN\s+KEY|REFERENCES", "peso": 3, "banderas": "i"},
-            {"tipo": "regex", "patron": entidad[:4], "peso": 1, "banderas": "i"},
+            {"tipo": "regex", "patron": re.escape(entidad[:4]), "peso": 1, "banderas": "i"},
             {
                 "tipo": "regex",
                 "patron": r"3FN|tercera\s+forma\s+normal|normalizaci[oó]n",
@@ -448,7 +461,7 @@ def generar_bd_transacciones() -> dict:
             },
             {"tipo": "regex", "patron": r"COMMIT", "peso": 2, "banderas": "i"},
             {"tipo": "regex", "patron": r"ROLLBACK", "peso": 2, "banderas": "i"},
-            {"tipo": "regex", "patron": str(importe), "peso": 1},
+            {"tipo": "regex", "patron": re.escape(str(importe)), "peso": 1},
         ],
         "solucion_referencia": (
             "START TRANSACTION;\n"
@@ -507,7 +520,7 @@ def generar_git() -> dict:
         "criterios": [
             {"tipo": "regex", "patron": r"git\s+status", "peso": 2, "banderas": "i"},
             {"tipo": "regex", "patron": r"git\s+merge\s+--abort|git\s+add|git\s+commit", "peso": 3, "banderas": "i"},
-            {"tipo": "regex", "patron": archivo.replace(".", r"\."), "peso": 1, "banderas": "i"},
+            {"tipo": "regex", "patron": re.escape(archivo), "peso": 1, "banderas": "i"},
         ],
         "solucion_referencia": (
             "git status\n"
