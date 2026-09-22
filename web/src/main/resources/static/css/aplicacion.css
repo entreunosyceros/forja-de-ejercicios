@@ -240,12 +240,8 @@ body {
 
 .hero-inicio .hero-logo-banda .hero-logo {
     box-sizing: border-box;
-    width: 640px;
-    height: 320px;
-    min-width: 640px;
-    min-height: 320px;
-    max-width: min(640px, 100vw);
-    max-height: min(320px, 50vw);
+    width: 320px;
+    height: 220px;
     flex-shrink: 0;
     object-fit: contain;
     object-position: center;
@@ -254,12 +250,9 @@ body {
 
 @media (max-width: 640px) {
     .hero-inicio .hero-logo-banda .hero-logo {
-        width: 100vw;
+        width: min(320px, 88vw);
         height: auto;
-        min-width: unset;
-        min-height: unset;
-        aspect-ratio: 640 / 320;
-        max-height: none;
+        aspect-ratio: 320 / 220;
     }
 }
 
@@ -1161,8 +1154,12 @@ pre.editor-codigo-highlight code.hljs {
 }
 
 .login-logo {
+    width: 320px;
+    height: 220px;
     margin: 0 auto 0.75rem;
     display: block;
+    object-fit: contain;
+    object-position: center;
 }
 
 .form-login {
@@ -1384,11 +1381,9 @@ body.carga-ia-activa {
 
 /* ——— Portada responsive ——— */
 .pagina-inicio .hero-inicio .hero-logo-banda .hero-logo {
-    width: min(640px, 100%);
-    height: auto;
-    min-width: unset;
-    min-height: unset;
-    aspect-ratio: 640 / 320;
+    width: 320px;
+    height: 220px;
+    object-fit: contain;
 }
 
 .card-grid-inicio {
