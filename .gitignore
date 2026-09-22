@@ -53,6 +53,9 @@ banco/pendientes/
 tools/
 !tools/.gitkeep
 
+# Artefactos de empaquetado .deb
+dist/
+
 # Copias obsoletas: el runtime usa banco/ y datos/ en la raíz del proyecto.
 web/banco/
 web/datos/

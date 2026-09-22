@@ -70,6 +70,7 @@ Detalle en [doc_app/desarrollo.md](doc_app/desarrollo.md).
 | Banco portable | `banco_loader.py`, `ServicioBancoPortable.java` |
 | Revisión profesor (CLI) | `herramientas/revisar_banco.py`, `revision_profesor.py` |
 | Instaladores | `install.sh`, `install.ps1`, `install.bat` |
+| Paquete `.deb` | `empaquetado/construir-deb.sh`, `empaquetado/forjaexamenes-launcher.sh` |
 
 ## Estilo de código
 

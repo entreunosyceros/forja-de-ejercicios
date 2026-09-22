@@ -28,6 +28,9 @@
 | El regex del banco no ignora mayúsculas | Usa `"banderas": "i"` (no `flags`; `"multiline"` no activa ignorecase) |
 | Patrón regex rechazado al aprobar (ReDoS) | Evita cuantificadores anidados tipo `(a+)+`; simplifica el patrón |
 | El panel de progreso muestra datos viejos | «Recargar desde el servidor»; o limpia estadísticas del servidor si quieres empezar de cero |
+| Tras instalar el `.deb`, `forjaexamenes` no abre | Comprueba `java -version` (JRE 21) y `python3 --version`; `forjaexamenes --status`; log en `~/.local/share/forjaexamenes/forjaexamenes.log` |
+| Puerto 8080 ocupado al arrancar el `.deb` | `forjaexamenes --stop` o `fuser -k 8080/tcp`; luego vuelve a lanzar |
+| No encuentro banco/datos con el `.deb` | Están en `~/.local/share/forjaexamenes/`, no en `/usr/share/forjaexamenes/` |
 
 | Quiero empezar de cero en totales e historial del servidor | «Limpiar estadísticas» en la portada (también vacía el panel de progreso al recargar) |
 | El profesor no ve el progreso de un alumno en otro PC | El alumno deja el JSON en la carpeta compartida; el profesor lo importa en `/profesor/alumnos` con un nombre personalizado |

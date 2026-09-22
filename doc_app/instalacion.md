@@ -8,19 +8,63 @@
 
 | Herramienta | Versión | Obligatorio |
 |-------------|---------|-------------|
-| JDK | 21 | Sí |
-| Maven | 3.8+ | Sí |
+| JDK / JRE | 21 | Sí (con `.deb` basta el JRE; para desarrollo, JDK + Maven) |
+| Maven | 3.8+ | Solo si compilas desde fuentes o generas el `.deb` |
 | Python | 3.10+ | Sí (al crear/corregir ejercicios) |
 | pip + `requirements-docs.txt` | — | Solo si usas PDF + Gemini |
 | Docker Desktop / Docker Engine | — | No; solo para el contenedor de práctica |
 
 ```bash
 java -version
-mvn -version
 python3 --version
+# Solo desarrollo / construcción del .deb:
+mvn -version
 ```
 
-## Instalación guiada (recomendado)
+## Paquete Debian / Ubuntu (`.deb`)
+
+En Debian/Ubuntu es la forma más simple: instala el paquete, abre el icono del menú y usa el navegador.
+
+### Instalar (usuario / aula)
+
+Si ya tienes el fichero `forjaexamenes_1.0.0_all.deb` (p. ej. en `dist/` o en la carpeta compartida):
+
+```bash
+sudo apt install ./forjaexamenes_1.0.0_all.deb
+# equivalente: sudo dpkg -i ./forjaexamenes_1.0.0_all.deb && sudo apt -f install
+```
+
+| Qué | Dónde / cómo |
+|-----|----------------|
+| Arrancar | Menú **Forja de ejercicios** o `forjaexamenes` |
+| URL | http://127.0.0.1:8080 |
+| Parar (si usaste el icono / `--daemon`) | `forjaexamenes --stop` |
+| Estado | `forjaexamenes --status` |
+| Datos (banco, estadísticas, PDFs…) | `~/.local/share/forjaexamenes/` |
+| Desinstalar | `sudo apt remove forjaexamenes` |
+
+Dependencias que resuelve `apt`: `openjdk-21-jre` (o *headless*) y `python3` (≥ 3.10).  
+PDF + Gemini (opcional), tras instalar:
+
+```bash
+python3 -m venv ~/.local/share/forjaexamenes/.venv
+~/.local/share/forjaexamenes/.venv/bin/pip install -r /usr/share/forjaexamenes/requirements-docs.txt
+```
+
+### Construir el `.deb` (desarrollador)
+
+Requiere `dpkg-dev`, `fakeroot`, ImageMagick, JDK 21 y Maven:
+
+```bash
+sudo apt install dpkg-dev fakeroot imagemagick
+chmod +x empaquetado/construir-deb.sh
+./empaquetado/construir-deb.sh
+# → dist/forjaexamenes_1.0.0_all.deb (~27 MB)
+```
+
+Detalle del layout del paquete: [empaquetado/README.md](../empaquetado/README.md).
+
+## Instalación guiada (sin `.deb`)
 
 Los scripts comprueban requisitos, crean carpetas locales, compilan el JAR, ofrecen instalar dependencias Python y guían la configuración opcional de Gemini y Docker.
 
@@ -61,7 +105,17 @@ Notas de Windows:
 
 ## Arrancar la web
 
-Tras instalar:
+### Si instalaste el `.deb`
+
+Menú **Forja de ejercicios**, o en terminal:
+
+```bash
+forjaexamenes              # primer plano + navegador
+forjaexamenes --daemon     # segundo plano (como el icono del menú)
+forjaexamenes --stop
+```
+
+### Si usaste `install.sh` / fuentes
 
 | Sistema | Comando recomendado | Alternativa |
 |---------|---------------------|-------------|

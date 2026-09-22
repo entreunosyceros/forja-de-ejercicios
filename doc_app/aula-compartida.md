@@ -8,7 +8,9 @@
 
 En clase, **cada alumno y el profesor suelen tener la app en su propio PC**. No hay servidor central que sincronice datos: lo que el profesor aprueba en su banco **no aparece solo** en los equipos de los alumnos.
 
-El intercambio es manual mediante una **carpeta compartida** (red del aula, Google Drive con Drive para escritorio, USB, etc.). La app **no envía correos ni sube a la nube** por sí sola.
+En Ubuntu/Debian puedes repartir el paquete `forjaexamenes_*.deb` (carpeta compartida o USB) e instalar con `sudo apt install ./forjaexamenes_1.0.0_all.deb`. Cada PC sigue siendo independiente; los datos quedan en `~/.local/share/forjaexamenes/`. Ver [Instalación → Paquete .deb](instalacion.md#paquete-debian--ubuntu-deb).
+
+El intercambio de **ejercicios y entregas** es manual mediante una **carpeta compartida** (red del aula, Google Drive con Drive para escritorio, USB, etc.). La app **no envía correos ni sube a la nube** por sí sola.
 
 > ℹ️ **La «carpeta compartida» no forma parte del programa.** Es una carpeta cualquiera que **tú creas en el sistema operativo** (un recurso de red SMB/NFS, una carpeta de Google Drive/OneDrive sincronizada, una memoria USB…). La Forja solo **exporta** ficheros `.json` (que guardas ahí) e **importa** ficheros que tú seleccionas desde ahí; no crea, monta ni gestiona esa carpeta. En todo el documento «carpeta compartida» se refiere a ese sitio externo de tu elección.
 

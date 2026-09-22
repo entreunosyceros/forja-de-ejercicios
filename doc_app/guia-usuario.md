@@ -52,9 +52,16 @@ Lógica en `ServicioDificultadAdaptativa.java` y ponderación en `ServicioEstadi
 
 ## Datos locales (no en Git)
 
-Estos ficheros se generan al usar la app y están en `.gitignore` (no deben subirse a GitHub):
+Estos ficheros se generan al usar la app y están en `.gitignore` (no deben subirse a GitHub).
 
-| Ruta | Contenido |
+**Ruta según instalación:**
+
+| Instalación | Carpeta de datos |
+|-------------|------------------|
+| Fuentes / `install.sh` | `examenforge/datos/`, `banco/`, `indice/`, … (raíz del proyecto) |
+| Paquete `.deb` | `~/.local/share/forjaexamenes/` (misma estructura: `datos/`, `banco/`, …) |
+
+| Ruta (relativa a la carpeta de datos) | Contenido |
 |------|-----------|
 | `datos/estadisticas/*.json` | Estadísticas por usuario en el **servidor** (totales acumulados). Se borran con «Limpiar estadísticas» en la portada |
 | `datos/entregas/<profesor>/` | Entregas JSON importadas por el profesor (carpeta compartida → panel) |

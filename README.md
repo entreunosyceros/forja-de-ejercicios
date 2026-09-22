@@ -17,16 +17,18 @@ Genera ejercicios prácticos al azar (informática, idiomas u otras materias des
 
 | Sistema | Comando |
 |---------|---------|
-| Linux / macOS | `chmod +x install.sh iniciar-forja.sh && ./install.sh` |
+| **Debian / Ubuntu (`.deb`)** | `sudo apt install ./dist/forjaexamenes_1.0.0_all.deb` → menú **Forja de ejercicios** |
+| Linux / macOS (fuentes) | `chmod +x install.sh iniciar-forja.sh && ./install.sh` |
 | Windows | `install.bat` (doble clic o desde cmd/PowerShell) |
 
-Detalle (Windows, Docker, arranque manual): [doc_app/instalacion.md](doc_app/instalacion.md).
+Detalle (`.deb`, Windows, Docker, arranque manual): [doc_app/instalacion.md](doc_app/instalacion.md) · [empaquetado/README.md](empaquetado/README.md).
 
 ### Arrancar
 
 | Sistema | Comando |
 |---------|---------|
-| Linux / macOS | `./iniciar-forja.sh` |
+| Con `.deb` | `forjaexamenes` (o el icono del menú) |
+| Linux / macOS (fuentes) | `./iniciar-forja.sh` |
 | Windows | `.\iniciar-forja.bat` |
 
 Abre **http://localhost:8080** cuando veas `Started AplicacionForjaExamenes`.
@@ -56,7 +58,7 @@ Abre **http://localhost:8080** cuando veas `Started AplicacionForjaExamenes`.
 | Tema | Enlace |
 |------|--------|
 | **Índice completo** | [doc_app/README.md](doc_app/README.md) |
-| Instalación y arranque | [instalacion.md](doc_app/instalacion.md) |
+| Instalación y arranque | [instalacion.md](doc_app/instalacion.md) (incluye paquete `.deb`) |
 | Uso (alumno / profesor) | [guia-usuario.md](doc_app/guia-usuario.md) |
 | Aula con PCs independientes | [aula-compartida.md](doc_app/aula-compartida.md) |
 | Cuenta y perfil | [cuenta-perfil.md](doc_app/cuenta-perfil.md) |
@@ -67,6 +69,7 @@ Abre **http://localhost:8080** cuando veas `Started AplicacionForjaExamenes`.
 | Configuración | [configuracion.md](doc_app/configuracion.md) |
 | Problemas frecuentes | [problemas-frecuentes.md](doc_app/problemas-frecuentes.md) |
 | Desarrollo y pruebas | [desarrollo.md](doc_app/desarrollo.md) |
+| Empaquetado `.deb` | [empaquetado/README.md](empaquetado/README.md) |
 | PDFs de apuntes (carpeta) | [documentacion/README.md](documentacion/README.md) |
 
 ---

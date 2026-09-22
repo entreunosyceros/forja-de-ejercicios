@@ -13,7 +13,7 @@
 
 ## Área afectada
 
-- [ ] Instalación (`install.sh` / `install.bat` / `install.ps1`)
+- [ ] Instalación (`install.sh` / `install.bat` / `install.ps1` / empaquetado `.deb`)
 - [ ] Backend Java (`web/`, Spring Boot)
 - [ ] Generación (`generador.py`, módulos plantilla)
 - [ ] Corrección (`evaluador.py`, criterios, alias)

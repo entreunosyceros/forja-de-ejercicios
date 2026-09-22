@@ -12,6 +12,14 @@ ACCESO
   Ayuda: http://localhost:8080/como-funciona (menú Ayuda; sin sesión → Entrar;
   con sesión → botón Inicio a la portada)
 
+INSTALACIÓN EN UBUNTU / DEBIAN (opcional)
+----------------------------------------
+  Si el profesor te da el fichero forjaexamenes_*.deb:
+    sudo apt install ./forjaexamenes_1.0.0_all.deb
+  Arranca desde el menú «Forja de ejercicios» o con: forjaexamenes
+  Tus datos quedan en: ~/.local/share/forjaexamenes/
+  Parar el servidor: forjaexamenes --stop
+
 IMPORTANTE: cada alumno suele tener su PROPIA instalación en su PC. No está
 conectada con la del profesor ni con la de otros alumnos.
 

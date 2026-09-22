@@ -16,6 +16,17 @@ ACCESO
   Revisión banco IA:    http://localhost:8080/profesor/revisar
   Ayuda:                http://localhost:8080/como-funciona (con sesión → Inicio)
 
+INSTALACIÓN EN UBUNTU / DEBIAN (opcional)
+----------------------------------------
+  Paquete .deb (icono del logo en el menú):
+    sudo apt install ./forjaexamenes_1.0.0_all.deb
+  Arranque: menú «Forja de ejercicios» o forjaexamenes
+  Datos en este PC: ~/.local/share/forjaexamenes/
+  (banco, entregas importadas, historial, PDFs indexados…)
+  Parar: forjaexamenes --stop
+  Generar el .deb desde el código: ./empaquetado/construir-deb.sh
+  → dist/forjaexamenes_1.0.0_all.deb  (reparte ese fichero a la clase)
+
 IMPORTANTE: la app del profesor y la de cada alumno son instalaciones
 INDEPENDIENTES (cada uno en su PC). Publicar en tu banco local NO llega solo
 a los alumnos: debes EXPORTAR e importar vía carpeta compartida.
@@ -126,10 +137,14 @@ FLUJO TÍPICO (instalaciones separadas)
 
 DATOS EN DISCO (tu equipo)
 --------------------------
+  Con instalación desde fuentes (examenforge/):
   banco/aprobados/           — ejercicios verificados (tuyos)
   datos/entregas/<profesor>/ — entregas de alumnos importadas
   datos/historial/           — intentos por alumno (enunciado, respuesta, nota)
   banco/pendientes/          — propuestas IA por revisar
   indice/                    — fragmentos indexados de PDFs (docs_*)
+
+  Con paquete .deb:
+  ~/.local/share/forjaexamenes/  — misma estructura (banco/, datos/, indice/…)
 
 ================================================================================

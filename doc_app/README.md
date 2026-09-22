@@ -6,7 +6,7 @@ Guías ampliadas del proyecto. También puedes usar la ayuda integrada en la web
 
 | Guía | Contenido |
 |------|-----------|
-| [Instalación y arranque](instalacion.md) | Requisitos, scripts, Windows, Docker de práctica |
+| [Instalación y arranque](instalacion.md) | Requisitos, paquete `.deb`, scripts, Windows, Docker de práctica |
 | [Guía de uso](guia-usuario.md) | Alumno y profesor, dificultad adaptativa, progreso, datos locales |
 | [Aula con PCs independientes](aula-compartida.md) | Carpeta compartida, banco, entregas, seguimiento, resultados CSV |
 | [Cuenta y perfil](cuenta-perfil.md) | Login, contraseñas, rutas de la web |

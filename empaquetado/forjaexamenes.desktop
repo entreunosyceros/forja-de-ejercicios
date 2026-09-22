@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Forja de ejercicios
+GenericName=Generador de ejercicios
+Comment=Genera y corrige ejercicios prácticos (luego es tarde… para estudiar)
+Exec=forjaexamenes --daemon
+Icon=forjaexamenes
+Terminal=false
+Categories=Education;Java;
+Keywords=ejercicios;examen;formación;python;java;
+StartupNotify=true

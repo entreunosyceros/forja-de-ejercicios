@@ -29,7 +29,9 @@
 
 - Los logins listados en `forjaexamenes.login.profesores` (o `FORJAEXAMENES_PROFESORES`) tienen rol **PROFESOR** y acceden a `/profesor/**`.
 - Los demás son **ALUMNO**.
-- Tras el primer arranque, las contraseñas quedan guardadas (cifradas) en `datos/usuarios.json`. Cambiar `application.properties` **no** actualiza cuentas que ya existen en ese fichero.
+- Tras el primer arranque, las contraseñas quedan guardadas (cifradas) en `datos/usuarios.json`
+  (con `.deb`: `~/.local/share/forjaexamenes/datos/usuarios.json`). Cambiar `application.properties`
+  **no** actualiza cuentas que ya existen en ese fichero.
 
 `FORJAEXAMENES_MODO_PROFESOR=true` sigue siendo útil para **mostrar la solución** antes de enviar en cualquier cuenta; la **zona de revisión** (`/profesor/*`) requiere rol profesor.
 
@@ -38,9 +40,9 @@
 | Situación | Qué archivo tocar | Qué hacer |
 |-----------|-------------------|-----------|
 | **Instalación nueva** (aún no existe `datos/usuarios.json`) | [`web/src/main/resources/application.properties`](../web/src/main/resources/application.properties) | Edita `forjaexamenes.login.usuarios` y, si hace falta, `forjaexamenes.login.profesores`. Formato: `usuario:contraseña` separados por coma. |
-| **Misma máquina, sin tocar el JAR** | [`examenforge/.env`](../.env) (créalo si no está) | Añade `FORJAEXAMENES_USUARIOS=alumno:tu_clave,demo:demo,profesor:clave_profesor` y opcionalmente `FORJAEXAMENES_PROFESORES=profesor`. Reinicia la app. Solo aplica si `datos/usuarios.json` **no** existe todavía. |
+| **Misma máquina, sin tocar el JAR** | `.env` en la raíz de datos (fuentes: `examenforge/.env`; `.deb`: `~/.local/share/forjaexamenes/.env`) | Añade `FORJAEXAMENES_USUARIOS=alumno:tu_clave,demo:demo,profesor:clave_profesor` y opcionalmente `FORJAEXAMENES_PROFESORES=profesor`. Reinicia la app. Solo aplica si `datos/usuarios.json` **no** existe todavía. |
 | **La app ya se ha usado** | — (no edites `usuarios.json` a mano) | Entra en **`/perfil`** y cambia la contraseña con la actual. Es la forma habitual en producción. |
-| **Resetear todas las cuentas** | Borra `datos/usuarios.json` | Para la app, ajusta `application.properties` o `.env` como arriba y vuelve a arrancar: se regeneran los usuarios con las claves nuevas. Pierdes perfiles y estadísticas de esos logins. |
+| **Resetear todas las cuentas** | Borra `datos/usuarios.json` (ruta según instalación) | Para la app, ajusta `application.properties` o `.env` como arriba y vuelve a arrancar: se regeneran los usuarios con las claves nuevas. Pierdes perfiles y estadísticas de esos logins. |
 
 Ejemplo en `application.properties` (líneas ~53–55):
 

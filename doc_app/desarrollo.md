@@ -63,6 +63,18 @@ Cobertura clave del corrector: falsos positivos de límites de palabra, pesos/ba
 
 Hay integración continua en `.github/workflows/ci.yml` (`pytest` + `mvn test` con JDK 21).
 
+## Paquete `.deb` (Debian / Ubuntu)
+
+```bash
+sudo apt install dpkg-dev fakeroot imagemagick   # solo para construir
+./empaquetado/construir-deb.sh
+# → dist/forjaexamenes_1.0.0_all.deb
+sudo apt install ./dist/forjaexamenes_1.0.0_all.deb
+```
+
+El script empaqueta el JAR, los `.py`, plantillas e iconos del logo (`forja-de-examenes.png`).  
+Documentación de usuario: [instalacion.md](instalacion.md#paquete-debian--ubuntu-deb) · [empaquetado/README.md](../empaquetado/README.md).
+
 ## Licencia y agradecimientos
 
 Creado por entreunosyceros con ☕ y 🚬 para el ICFT0112.

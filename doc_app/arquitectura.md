@@ -74,7 +74,12 @@ examenforge/
 ├── alumno.txt / profesor.txt    # Guías por rol (instalaciones independientes)
 ├── doc_app/                     # Documentación del proyecto (esta carpeta)
 ├── install.sh / install.bat / install.ps1   # Instalación guiada (Linux/macOS / Windows)
-├── iniciar-forja.sh / .bat      # Arranque tras instalar
+├── iniciar-forja.sh / .bat      # Arranque tras instalar (fuentes)
+├── empaquetado/                 # Construcción del .deb (Debian/Ubuntu)
+│   ├── construir-deb.sh
+│   ├── forjaexamenes-launcher.sh
+│   └── forjaexamenes.desktop
+├── dist/                        # Salida: forjaexamenes_*.deb (no versionado)
 ├── arrancar-web.sh
 ├── generador.py / evaluador.py / criterios.py
 ├── motor_plantillas.py / plantillas/   # redes, bd, docker, git
