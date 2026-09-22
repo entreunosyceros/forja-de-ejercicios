@@ -1,6 +1,8 @@
 # Forja de ejercicios — *luego es tarde... para estudiar*
 
-<img width="768" height="419" alt="forja-de-examenes" src="https://github.com/user-attachments/assets/7afefe21-33a0-4796-8376-8ce24c1ba2b2" />
+<p align="center">
+<img width="727" height="659" alt="Forja_de_examenes" src="https://github.com/user-attachments/assets/22c38038-707e-48b5-93b6-9ea0637cdb83" />
+</p>
 
 [![Wiki](https://img.shields.io/badge/Wiki-DeepWiki-blue?style=for-the-badge&logo=wikipedia)](https://deepwiki.com/entreunosyceros/forja-de-ejercicios/)
 ![Version: 1.0.0](https://img.shields.io/badge/version-1.0.0-brightgreen)
